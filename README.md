@@ -1,23 +1,23 @@
 # 🌑 EclipseUI
 
-> **由 AI 助手独立开发的跨平台 UI 框架**
+> **基于 Blazor + SkiaSharp 的跨平台 UI 框架**
 
-EclipseUI 是一个**由 AI 助手独立开发**的 UI 框架，使用 **Razor 语法**描述界面，通过 **SkiaSharp** 进行原生渲染。从渲染引擎到布局系统，从控件库到窗口管理，全部由 AI 助手独立完成。
+EclipseUI 是一个使用 **Razor 语法**描述界面，通过 **SkiaSharp** 进行自绘渲染的跨平台 UI 框架。基于 Blazor 组件模型，从渲染引擎到布局系统，从控件库到窗口管理，全部独立实现。
 
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-blue)](https://github.com/EclipseUI/EclipseUI)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-blue)](https://github.com/CeSun/EclipseUI)
 
 ---
 
 ## 🎯 项目定位
 
-EclipseUI 是 **AI 助手** 为用户开发的 UI 框架，提供：
+EclipseUI 提供一个轻量级的跨平台 UI 解决方案：
 
-- ✅ **AI 独立开发** - 从架构到代码，全部由 AI 助手完成
 - ✅ **Razor 语法** - 使用熟悉的 Blazor 语法描述 UI
-- ✅ **SkiaSharp 渲染** - 跨平台 2D 图形库，像素级控制
-- ✅ **无框架依赖** - 不依赖 Avalonia、MAUI 等现有 UI 框架
-- ✅ **跨平台** - Windows/Linux/macOS 一致表现
+- ✅ **SkiaSharp 自绘** - 跨平台 2D 图形库，像素级控制
+- ✅ **无 UI 框架依赖** - 不依赖 Avalonia、MAUI 等现有 UI 框架
+- ✅ **跨平台一致性** - Windows/Linux/macOS 像素级一致表现
+- ✅ **轻量级** - 最小依赖，快速启动
 
 ---
 
@@ -67,17 +67,17 @@ EclipseUI 是 **AI 助手** 为用户开发的 UI 框架，提供：
                     ↓
 ┌─────────────────────────────────────────┐
 │         EclipseRenderer                 │
-│   (AI 设计的渲染引擎，继承 Blazor Renderer) │
+│   (继承 Blazor Renderer，管理渲染生命周期) │
 └─────────────────────────────────────────┘
                     ↓
 ┌─────────────────────────────────────────┐
-│    SkiaComponentAdapter                 │
-│   (连接 Blazor 和 Skia 元素树)            │
+│    EclipseComponentAdapter              │
+│   (将 RenderTree 转换为 EclipseElement 树) │
 └─────────────────────────────────────────┘
                     ↓
 ┌─────────────────────────────────────────┐
-│         SkiaElement 树                  │
-│   (SkiaStackPanel, SkiaButton...)       │
+│         EclipseElement 树               │
+│   (StackPanel, TextBlock, Button...)    │
 └─────────────────────────────────────────┘
                     ↓
 ┌─────────────────────────────────────────┐
@@ -93,7 +93,7 @@ EclipseUI 是 **AI 助手** 为用户开发的 UI 框架，提供：
 ### 环境要求
 
 - .NET 8.0 或更高版本
-- 支持 OpenGL 3.0+ 的显卡
+- 支持 OpenGL 3.0+ / DirectX 11+ 的显卡
 
 ### 运行示例
 
@@ -106,12 +106,16 @@ dotnet run
 
 ```
 EclipseUI/
-├── src/EclipseUI/              # 核心渲染引擎
-│   ├── Core/                   # 渲染器、适配器
-│   ├── Layout/                 # 布局容器
-│   └── Controls/               # 基础控件
-├── src/EclipseUI.Host/         # Silk.NET 窗口外壳
-└── samples/EclipseUI.Demo/     # 演示应用
+├── src/EclipseUI/              # 核心库
+│   ├── Core/                   # 渲染器、组件基类、元素基类
+│   ├── Layout/                 # 布局容器（StackPanel 等）
+│   └── Controls/               # 基础控件（TextBlock, Button 等）
+├── src/EclipseUI.Host/         # 窗口宿主（Silk.NET）
+├── samples/EclipseUI.Demo/     # 演示应用
+└── docs/                       # 文档
+    ├── FEATURES.md             # 功能文档
+    ├── ROADMAP.md              # 开发路线图
+    └── guidelines/             # 开发规范
 ```
 
 ---
@@ -145,54 +149,56 @@ EclipseUI/
 |------|-----------|------|----------|--------------|
 | UI 描述 | Razor | XAML/C# | XAML | XAML/WinUI |
 | 渲染引擎 | SkiaSharp (自绘) | 原生控件 | SkiaSharp (自绘) | SkiaSharp/Wasm/原生 |
-| 跨平台一致性 | 像素级一致 | 依赖平台 | 像素级一致 | 依赖平台 |
+| 跨平台 | Windows/Linux/macOS | 多平台 | 多平台 | 多平台 |
+| 一致性 | 像素级一致 | 依赖平台 | 像素级一致 | 依赖平台 |
 | 组件模型 | Blazor | MVVM | MVVM | MVVM |
-| 学习曲线 | 低 (Web 背景) | 中 | 中 | 高 |
-| 包大小 | 较小 | 大 | 中 | 大 |
+| 学习曲线 | 低 (Web 背景) | 中 | 中 | 中 |
+| 包大小 | 小 | 大 | 中 | 大 |
+| 当前状态 | 早期开发 | 成熟 | 成熟 | 成熟 |
 
 ### 技术栈
 
 - **.NET 8.0** - 运行时
 - **SkiaSharp** - 2D 图形渲染
-- **Silk.NET** - 跨平台窗口管理
+- **Silk.NET** - 跨平台窗口管理（基于 GLFW）
 - **Blazor** - 组件模型和渲染树
+- **OpenGL/DirectX** - GPU 加速（通过 SkiaSharp）
 
 ---
 
 ## 📝 开发路线
 
-### Phase 1 - 基础框架 ✅
+详细规划请参阅 [ROADMAP.md](docs/ROADMAP.md)
 
-- [x] 核心渲染引擎
-- [x] SkiaElement 基类
+### 已完成 ✅
+
+- [x] 核心渲染引擎（EclipseRenderer）
+- [x] 组件模型（EclipseComponentBase）
+- [x] 元素系统（EclipseElement）
 - [x] StackPanel 布局
 - [x] TextBlock 控件
 - [x] Button 控件
 - [x] 事件处理系统
-- [x] Silk.NET 窗口集成
+- [x] 窗口宿主（Silk.NET）
 
-### Phase 2 - 完善控件
+### 计划中 📋
 
-- [ ] Grid 布局
-- [ ] Image 控件
-- [ ] TextBox 输入
-- [ ] CheckBox/RadioButton
-- [ ] ListBox/ComboBox
+**Phase 1 - 布局完善**
+- [ ] Grid 网格布局
+- [ ] WrapPanel 自动换行
+- [ ] DockPanel 停靠布局
 
-### Phase 3 - 高级特性
+**Phase 2 - 输入控件**
+- [ ] TextBox 文本输入
+- [ ] TextEditor 多行编辑
+- [ ] NumberBox 数字输入
+- [ ] ComboBox 下拉选择
 
-- [ ] 数据绑定
-- [ ] 样式系统
-- [ ] 动画支持
-- [ ] 主题系统
-- [ ] 导航系统
-
-### Phase 4 - 工具链
-
-- [ ] Visual Studio 模板
-- [ ] 设计器预览
-- [ ] 热重载支持
-- [ ] NuGet 发布
+**Phase 3-6 - 更多功能**
+- [ ] 选择控件（CheckBox, RadioButton, Slider）
+- [ ] 高级控件（Image, Border, ProgressBar, ListBox）
+- [ ] 容器控件（ScrollViewer, TabControl, Expander）
+- [ ] 高级特性（样式、数据绑定、动画、主题）
 
 ---
 
@@ -200,11 +206,13 @@ EclipseUI/
 
 欢迎贡献代码！
 
-1. Fork 项目
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交改动 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
+1. Fork 本仓库
+2. 创建特性分支 (`git checkout -b feature/feature-name`)
+3. 提交改动 (`git commit -m 'Add some feature'`)
+4. 推送到分支 (`git push origin feature/feature-name`)
 5. 创建 Pull Request
+
+**开发前请阅读：** [docs/guidelines/development-rules.md](docs/guidelines/development-rules.md)
 
 ---
 
@@ -225,4 +233,4 @@ MIT License - 详见 [LICENSE](LICENSE)
 
 **EclipseUI** - 用 Razor 绘制你的世界 🌑
 
-*由 AI 助手独立开发，为你而生*
+*轻量 · 跨平台 · 像素级控制*
