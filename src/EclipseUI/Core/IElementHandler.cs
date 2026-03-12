@@ -1,0 +1,12 @@
+namespace EclipseUI.Core;
+
+/// <summary>
+/// 元素处理器接�?- 用于获取 Skia 元素
+/// </summary>
+public interface IElementHandler
+{
+    /// <summary>
+    /// 获取对应�?Skia 元素
+    /// </summary>
+    EclipseElement Element { get; }
+}

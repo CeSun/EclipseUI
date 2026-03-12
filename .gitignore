@@ -1,0 +1,59 @@
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio files
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+*.pidb
+*.pdb
+
+# Rider
+.idea/
+
+# VS Code
+.vscode/
+
+# Build results
+*.dll
+*.exe
+*.ilk
+*.log
+*.ipdb
+*.iobj
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+
+# Test results
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Resharper
+_ReSharper*/
+*.resharper
+*.resharper.user
+
+# JetBrains Rider
+*.sln.iml
