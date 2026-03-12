@@ -4,7 +4,7 @@
 
 EclipseUI 是一个使用 **Razor 语法**描述界面，通过 **SkiaSharp** 进行自绘渲染的跨平台 UI 框架。基于 Blazor 组件模型，从渲染引擎到布局系统，从控件库到窗口管理，全部独立实现。
 
-> ⚠️ **实验性项目** - 本项目通过 [OpenClaw](https://github.com/openclaw/openclaw) 开发，是一个实验性 UI 框架，目前处于早期开发阶段，API 和功能可能会发生重大变化。
+> ⚠️ **实验性项目** - 本项目通过 [OpenClaw](https://github.com/openclaw/openclaw) 开发，旨在验证 OpenClaw 框架的 AI 辅助开发能力。**本项目仅供学习和研究使用，不建议用于生产环境或商业用途。**
 
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-blue)](https://github.com/CeSun/EclipseUI)
