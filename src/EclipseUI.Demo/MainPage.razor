@@ -1,0 +1,25 @@
+@using EclipseUI.Controls
+@using EclipseUI.Layout
+@using EclipseUI.Core
+@inherits EclipseComponentBase
+
+<CascadingValue Value="Element" IsFixed="true">
+    <StackPanel Orientation="StackOrientation.Vertical" Spacing="20" 
+                PaddingLeft="40" PaddingTop="40" PaddingRight="40" PaddingBottom="40">
+        <TextBlock Text="🌑 欢迎使用 EclipseUI!" FontSize="32" />
+        <Button Text="点我 +1" Background="#4CAF50" FontSize="20" OnClick="HandleButtonClick" />
+        <TextBlock Text="@GetCountText()" FontSize="24" FontWeight="true" Foreground="#4CAF50" />
+    </StackPanel>
+</CascadingValue>
+
+@code {
+    private int _count = 0;
+
+    private async Task HandleButtonClick()
+    {
+        _count++;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private string GetCountText() => $"点击了{_count}次";
+}
