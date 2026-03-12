@@ -43,6 +43,7 @@ public class EclipseWindow : IDisposable
         var builder = new EclipseApplicationBuilder();
         _context = builder.Build();
         _renderer = _context.Renderer;
+        // 直接添加用户组件，适配器会自动处理元素传递
         _ = _context.RunAsync<TComponent>(parameters);
         
         _context.RenderRequested += () => { };

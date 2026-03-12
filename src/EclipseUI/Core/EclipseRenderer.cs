@@ -15,6 +15,9 @@ public class EclipseRenderer : Renderer
     {
         // 设置静态引用
         EclipseComponentBase.CurrentRenderer = this;
+        
+        // 初始化根元素
+        RootElement = RootElementHandler.Element;
     }
     
     protected override void HandleException(Exception exception)
@@ -29,6 +32,11 @@ public class EclipseRenderer : Renderer
     /// 根元素
     /// </summary>
     public EclipseElement? RootElement { get; private set; }
+    
+    /// <summary>
+    /// 根元素处理器
+    /// </summary>
+    internal RootElementHandler RootElementHandler { get; } = new RootElementHandler();
     
     /// <summary>
     /// Skia 画布
@@ -82,9 +90,10 @@ public class EclipseRenderer : Renderer
             
             _rootComponents.Add((componentId, component));
             
-            var rootAdapter = new EclipseComponentAdapter(this)
+            // 创建根适配器，传入根元素作为 knownTargetElement
+            var rootAdapter = new EclipseComponentAdapter(this, null, knownTargetElement: RootElementHandler)
             {
-                Name = $"RootAdapter for {componentType.Name}"
+                Name = $"RootAdapter for {componentType.Name}",
             };
             
             RegisterComponentAdapter(rootAdapter, componentId);
@@ -93,29 +102,7 @@ public class EclipseRenderer : Renderer
                 ? ParameterView.FromDictionary(parameters) 
                 : ParameterView.Empty;
             
-            // 触发 Blazor 渲染批次并等待处理完成
-            var renderTask = RenderRootComponentAsync(componentId, parameterView);
-            
-            // 强制处理渲染队列
-            await Dispatcher.InvokeAsync(() => { });
-            
-            await renderTask;
-            
-            // 从组件获取 Element 并设置为 RootElement
-            if (component is IElementHandler handler)
-            {
-                RootElement = handler.Element;
-                
-                // 如果根元素没有子元素，尝试使用第一个子元素作为实际的根
-                if (RootElement.Children.Count == 0)
-                {
-                    var firstChild = RootElement.Children.FirstOrDefault();
-                    if (firstChild != null)
-                    {
-                        RootElement = firstChild;
-                    }
-                }
-            }
+            await RenderRootComponentAsync(componentId, parameterView);
             
             return component;
         });
@@ -146,7 +133,7 @@ public class EclipseRenderer : Renderer
             }
         }
         
-        foreach (var adapter in adaptersWithPendingEdits.OrderByDescending(a => a.Depth))
+        foreach (var adapter in adaptersWithPendingEdits.OrderByDescending(a => a.DeepLevel))
         {
             adapter.ApplyPendingEdits();
         }
