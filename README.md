@@ -143,8 +143,8 @@ EclipseUI/
 
 | 特性 | EclipseUI | MAUI | Avalonia | Uno Platform |
 |------|-----------|------|----------|--------------|
-| UI 描述 | Razor | XAML/C# | XAML/Avalonia | XAML/WinUI |
-| 渲染引擎 | SkiaSharp (自绘) | 原生控件 | SkiaSharp/原生 | WebAssembly/原生 |
+| UI 描述 | Razor | XAML/C# | XAML | XAML/WinUI |
+| 渲染引擎 | SkiaSharp (自绘) | 原生控件 | SkiaSharp (自绘) | SkiaSharp/Wasm/原生 |
 | 跨平台一致性 | 像素级一致 | 依赖平台 | 像素级一致 | 依赖平台 |
 | 组件模型 | Blazor | MVVM | MVVM | MVVM |
 | 学习曲线 | 低 (Web 背景) | 中 | 中 | 高 |
