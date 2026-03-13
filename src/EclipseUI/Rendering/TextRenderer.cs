@@ -36,12 +36,68 @@ public static class TextRenderer
     }
     
     /// <summary>
-    /// 测量文本宽度
+    /// 绘制文本（支持 Emoji，带文本对齐）
+    /// </summary>
+    public static void DrawText(IRenderContext context, string text, float x, float y, float fontSize, Color color, SKTextAlign align)
+    {
+        if (string.IsNullOrEmpty(text)) return;
+        
+        // 计算文本总宽度
+        float totalWidth = MeasureText(text, fontSize);
+        
+        // 根据对齐方式调整 x 坐标
+        float startX = x;
+        if (align == SKTextAlign.Center)
+        {
+            startX = x - totalWidth / 2;
+        }
+        else if (align == SKTextAlign.Right)
+        {
+            startX = x - totalWidth;
+        }
+        
+        DrawText(context, text, startX, y, fontSize, color);
+    }
+    
+    /// <summary>
+    /// 测量文本宽度（自动检测 Emoji）
     /// </summary>
     public static float MeasureText(string text, float fontSize)
     {
-        using var paint = new SKPaint { TextSize = fontSize, Typeface = ChineseTypeface };
-        return paint.MeasureText(text);
+        if (string.IsNullOrEmpty(text)) return 0;
+        
+        float totalWidth = 0;
+        
+        for (int i = 0; i < text.Length; i++)
+        {
+            var c = text[i];
+            string character;
+            
+            if (char.IsHighSurrogate(c) && i + 1 < text.Length && char.IsLowSurrogate(text[i + 1]))
+            {
+                character = text.Substring(i, 2);
+                totalWidth += MeasureCharacter(character, fontSize, true);
+                i++;
+            }
+            else
+            {
+                bool isEmoji = IsEmojiChar(c);
+                character = c.ToString();
+                totalWidth += MeasureCharacter(character, fontSize, isEmoji);
+            }
+        }
+        
+        return totalWidth;
+    }
+    
+    private static float MeasureCharacter(string character, float fontSize, bool isEmoji)
+    {
+        using var paint = new SKPaint
+        {
+            TextSize = fontSize,
+            Typeface = isEmoji ? EmojiTypeface : ChineseTypeface
+        };
+        return paint.MeasureText(character);
     }
     
     private static void DrawMixedText(IRenderContext context, string text, float x, float y, float fontSize, Color color)
@@ -71,7 +127,7 @@ public static class TextRenderer
             }
             
             var font = isEmoji ? emojiFont : chineseFont;
-            var width = MeasureText(character, fontSize);
+            var width = MeasureCharacter(character, fontSize, isEmoji);
             context.DrawText(character, currentX, y, font, color);
             currentX += width;
         }
@@ -84,7 +140,10 @@ public static class TextRenderer
                (c >= 0xFE00 && c <= 0xFE0F);
     }
     
-    private static bool ContainsEmoji(string text)
+    /// <summary>
+    /// 检测文本是否包含 Emoji（公开方法供 IRenderContext 使用）
+    /// </summary>
+    public static bool ContainsEmoji(string text)
     {
         if (string.IsNullOrEmpty(text)) return false;
         

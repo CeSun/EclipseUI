@@ -21,9 +21,14 @@ public interface IRenderContext
     void DrawRoundedRectangle(float x, float y, float width, float height, float cornerRadius, IBrush? brush = null, IPen? pen = null);
     
     /// <summary>
-    /// 绘制文本
+    /// 绘制文本（使用指定字体）
     /// </summary>
     void DrawText(string text, float x, float y, IFont font, Color color);
+    
+    /// <summary>
+    /// 绘制文本（自动选择字体，支持 Emoji）
+    /// </summary>
+    void DrawText(string text, float x, float y, float fontSize, Color color);
     
     /// <summary>
     /// 绘制图片

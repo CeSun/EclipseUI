@@ -5,7 +5,7 @@ namespace EclipseUI.Rendering;
 /// <summary>
 /// SkiaSharp 渲染上下文实现
 /// </summary>
-public class SkiaRenderContext : IRenderContext
+public class SkiaRenderContext : IRenderContext, IDisposable
 {
     private readonly SKCanvas _canvas;
     private readonly SKPaint _defaultPaint;
@@ -14,6 +14,11 @@ public class SkiaRenderContext : IRenderContext
     {
         _canvas = canvas;
         _defaultPaint = new SKPaint { IsAntialias = true };
+    }
+    
+    public void Dispose()
+    {
+        _defaultPaint?.Dispose();
     }
     
     public void Clear(Color color)
@@ -74,6 +79,28 @@ public class SkiaRenderContext : IRenderContext
         };
         
         _canvas.DrawText(text, x, y, paint);
+    }
+    
+    public void DrawText(string text, float x, float y, float fontSize, Color color)
+    {
+        // 自动检测 Emoji 并使用合适的字体
+        if (TextRenderer.ContainsEmoji(text))
+        {
+            TextRenderer.DrawText(this, text, x, y, fontSize, color);
+        }
+        else
+        {
+            using var typeface = SKTypeface.FromFamilyName("Microsoft YaHei", SKFontStyle.Normal);
+            using var paint = new SKPaint
+            {
+                TextSize = fontSize,
+                IsAntialias = true,
+                Color = new SKColor(color.R, color.G, color.B, color.A),
+                Typeface = typeface
+            };
+            
+            _canvas.DrawText(text, x, y, paint);
+        }
     }
     
     public void DrawImage(IImage image, float x, float y, float? width = null, float? height = null)
