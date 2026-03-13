@@ -17,9 +17,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <!-- Core Dependencies -->
-        <PackageReference Include="SkiaSharp" Version="2.88.7" />
-        <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.7" />
+        <!-- Core Dependencies - SkiaSharp 3.x -->
+        <PackageReference Include="SkiaSharp" Version="3.116.1" />
+        <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.116.1" />
         <PackageReference Include="Microsoft.AspNetCore.Components" Version="8.0.0" />
         <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.0" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
