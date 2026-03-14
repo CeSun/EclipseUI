@@ -30,15 +30,26 @@ public class TextBlockElement : EclipseElement
         var contentHeight = lines.Height;
         var contentMaxWidth = lines.Width;
         
+        // 计算内容尺寸（包含 Padding）
+        // 如果设置了 MaxWidth，使用 MaxWidth 作为宽度（确保背景正确）
+        float baseWidth = MaxWidth.HasValue 
+            ? MaxWidth.Value 
+            : (contentMaxWidth + PaddingLeft + PaddingRight);
+        float baseHeight = contentHeight + PaddingTop + PaddingBottom;
+        
         // 应用用户设置的尺寸
-        float finalWidth = RequestedWidth ?? (contentMaxWidth + PaddingLeft + PaddingRight);
-        float finalHeight = RequestedHeight ?? (contentHeight + PaddingTop + PaddingBottom);
+        float finalWidth = RequestedWidth ?? baseWidth;
+        float finalHeight = RequestedHeight ?? baseHeight;
         
         // 应用 Min/Max 限制
         if (MinWidth.HasValue) finalWidth = Math.Max(finalWidth, MinWidth.Value);
         if (MinHeight.HasValue) finalHeight = Math.Max(finalHeight, MinHeight.Value);
         if (MaxWidth.HasValue) finalWidth = Math.Min(finalWidth, MaxWidth.Value);
         if (MaxHeight.HasValue) finalHeight = Math.Min(finalHeight, MaxHeight.Value);
+        
+        // 不要超过可用空间
+        finalWidth = Math.Min(finalWidth, availableWidth);
+        finalHeight = Math.Min(finalHeight, availableHeight);
         
         return new SKSize(finalWidth, finalHeight);
     }
@@ -75,14 +86,39 @@ public class TextBlockElement : EclipseElement
         // 创建 SkiaRenderContext
         using var renderContext = new SkiaRenderContext(canvas);
         
-        // 计算可用宽度
+        // 计算可用宽度（使用 MaxWidth 如果设置了）
         float contentWidth = Width - PaddingLeft - PaddingRight;
+        if (MaxWidth.HasValue)
+        {
+            contentWidth = Math.Min(contentWidth, MaxWidth.Value - PaddingLeft - PaddingRight);
+        }
         
-        // 计算基线
-        var baselineY = Y + PaddingTop + FontSize;
+        // 测量文本高度
+        var lines = TextRenderer.MeasureTextWithWrap(Text, FontSize, contentWidth);
+        float textHeight = lines.Height;
+        
+        // 计算基线（根据垂直对齐方式）
+        float contentHeight = Height - PaddingTop - PaddingBottom;
+        float startY;
+        
+        if (VerticalAlignment == VerticalAlignment.Center)
+        {
+            // 垂直居中
+            startY = Y + PaddingTop + (contentHeight - textHeight) / 2 + FontSize;
+        }
+        else if (VerticalAlignment == VerticalAlignment.Bottom)
+        {
+            // 底部对齐
+            startY = Y + PaddingTop + (contentHeight - textHeight) + FontSize;
+        }
+        else
+        {
+            // 顶部对齐（默认）
+            startY = Y + PaddingTop + FontSize;
+        }
         
         // 使用 TextRenderer 绘制（自动处理 Emoji 和换行）
-        TextRenderer.DrawTextWithWrap(renderContext, Text, X + PaddingLeft, baselineY, FontSize, 
+        TextRenderer.DrawTextWithWrap(renderContext, Text, X + PaddingLeft, startY, FontSize, 
             new Color(TextColor.Red, TextColor.Green, TextColor.Blue, TextColor.Alpha), contentWidth);
     }
 }

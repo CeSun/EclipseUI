@@ -21,7 +21,7 @@ public class ButtonElement : EclipseElement
     {
         var textWidth = TextRenderer.MeasureText(Text, FontSize);
         
-        // 计算内容尺寸
+        // 计算内容尺寸（基于文本，而不是 availableWidth/Height）
         float contentWidth = Math.Max(textWidth + 24, 80);
         float contentHeight = Math.Max(FontSize + 16, 36);
         
@@ -34,6 +34,10 @@ public class ButtonElement : EclipseElement
         if (MinHeight.HasValue) finalHeight = Math.Max(finalHeight, MinHeight.Value);
         if (MaxWidth.HasValue) finalWidth = Math.Min(finalWidth, MaxWidth.Value);
         if (MaxHeight.HasValue) finalHeight = Math.Min(finalHeight, MaxHeight.Value);
+        
+        // 不要超过可用空间
+        finalWidth = Math.Min(finalWidth, availableWidth);
+        finalHeight = Math.Min(finalHeight, availableHeight);
         
         return new SKSize(finalWidth, finalHeight);
     }

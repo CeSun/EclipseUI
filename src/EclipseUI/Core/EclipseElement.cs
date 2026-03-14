@@ -3,15 +3,15 @@ using SkiaSharp;
 namespace EclipseUI.Core;
 
 /// <summary>
-/// EclipseUI 元素基类 - 所�?UI 元素的抽象基�?/// </summary>
+/// EclipseUI 元素基类 - 所�?UI 元素的抽象基�?/// </summary>
 public class EclipseElement
 {
     /// <summary>
-    /// 父元�?    /// </summary>
+    /// 父元�?    /// </summary>
     public EclipseElement? Parent { get; internal set; }
     
     /// <summary>
-    /// 子元素列�?    /// </summary>
+    /// 子元素列�?    /// </summary>
     public List<EclipseElement> Children { get; } = new();
     
     /// <summary>
@@ -20,73 +20,73 @@ public class EclipseElement
     public bool IsVisible { get; set; } = true;
     
     /// <summary>
-    /// 元素的位置（相对于父元素�?    /// </summary>
+    /// 元素的位置（相对于父元素�?    /// </summary>
     public float X { get; set; }
     
     /// <summary>
-    /// 元素的位置（相对于父元素�?    /// </summary>
+    /// 元素的位置（相对于父元素�?    /// </summary>
     public float Y { get; set; }
     
     /// <summary>
-    /// 元素的宽�?    /// </summary>
+    /// 元素的宽�?    /// </summary>
     public float Width { get; set; }
     
     /// <summary>
-    /// 元素的高�?    /// </summary>
+    /// 元素的高�?    /// </summary>
     public float Height { get; set; }
     /// <summary>
-    /// �û�����Ŀ��ȣ���ѡ��null ��ʾ�Զ���
+    /// �û�����Ŀ��ȣ���ѡ��null ��ʾ�Զ���
     /// </summary>
     public float? RequestedWidth { get; set; }
     
     /// <summary>
-    /// �û�����ĸ߶ȣ���ѡ��null ��ʾ�Զ���
+    /// �û�����ĸ߶ȣ���ѡ��null ��ʾ�Զ���
     /// </summary>
     public float? RequestedHeight { get; set; }    
     /// <summary>
-    /// ��С���ȣ���ѡ��
+    /// ��С���ȣ���ѡ��
     /// </summary>
     public float? MinWidth { get; set; }
     
     /// <summary>
-    /// ��С�߶ȣ���ѡ��
+    /// ��С�߶ȣ���ѡ��
     /// </summary>
     public float? MinHeight { get; set; }
     
     /// <summary>
-    /// �����ȣ���ѡ��
+    /// �����ȣ���ѡ��
     /// </summary>
     public float? MaxWidth { get; set; }
     
     /// <summary>
-    /// ���߶ȣ���ѡ��
+    /// ���߶ȣ���ѡ��
     /// </summary>
     public float? MaxHeight { get; set; }
     
     /// <summary>
-    /// ˮƽ���뷽ʽ
+    /// ˮƽ���뷽ʽ
     /// </summary>
     public HorizontalAlignment HorizontalAlignment { get; set; } = HorizontalAlignment.Stretch;
     
     /// <summary>
-    /// ��ֱ���뷽ʽ
+    /// ��ֱ���뷽ʽ
     /// </summary>
     public VerticalAlignment VerticalAlignment { get; set; } = VerticalAlignment.Stretch;
     
     /// <summary>
-    /// 左边�?    /// </summary>
+    /// 左边�?    /// </summary>
     public float MarginLeft { get; set; }
     
     /// <summary>
-    /// 上边�?    /// </summary>
+    /// 上边�?    /// </summary>
     public float MarginTop { get; set; }
     
     /// <summary>
-    /// 右边�?    /// </summary>
+    /// 右边�?    /// </summary>
     public float MarginRight { get; set; }
     
     /// <summary>
-    /// 下边�?    /// </summary>
+    /// 下边�?    /// </summary>
     public float MarginBottom { get; set; }
     
     /// <summary>
@@ -140,7 +140,7 @@ public class EclipseElement
     );
     
     /// <summary>
-    /// 获取包含边距的外框区�?    /// </summary>
+    /// 获取包含边距的外框区�?    /// </summary>
     public SKRect OuterRect => new(
         X - MarginLeft,
         Y - MarginTop,
@@ -149,10 +149,10 @@ public class EclipseElement
     );
     
     /// <summary>
-    /// 测量元素所需的最小尺�?    /// </summary>
+    /// 测量元素所需的最小尺�?    /// </summary>
     public virtual SKSize Measure(SKCanvas canvas, float availableWidth, float availableHeight)
     {
-        // 如果有用户设置的 RequestedWidth/Height，优先使�?
+        // 如果有用户设置的 RequestedWidth/Height，优先使�?
         if (RequestedWidth.HasValue && RequestedHeight.HasValue)
         {
             return new SKSize(RequestedWidth.Value + PaddingLeft + PaddingRight, 
@@ -171,7 +171,7 @@ public class EclipseElement
                 maxHeight = Math.Max(maxHeight, childSize.Height);
             }
             
-            // 如果只设置了 RequestedWidth �?RequestedHeight 中的一�?
+            // 如果只设置了 RequestedWidth �?RequestedHeight 中的一�?
             float finalWidth = RequestedWidth ?? maxWidth;
             float finalHeight = RequestedHeight ?? maxHeight;
             
@@ -183,7 +183,7 @@ public class EclipseElement
     }
     
     /// <summary>
-    /// 排列元素及其子元�?    /// </summary>
+    /// 排列元素及其子元�?    /// </summary>
     public virtual void Arrange(SKCanvas canvas, float x, float y, float width, float height)
     {
         X = x;
@@ -194,7 +194,7 @@ public class EclipseElement
     }
     
     /// <summary>
-    /// 排列子元�?    /// </summary>
+    /// 排列子元�?    /// </summary>
     protected virtual void ArrangeChildren(SKCanvas canvas)
     {
         foreach (var child in Children)
@@ -206,7 +206,7 @@ public class EclipseElement
     }
     
     /// <summary>
-    /// 绘制元素及其子元�?    /// </summary>
+    /// 绘制元素及其子元�?    /// </summary>
     public virtual void Render(SKCanvas canvas)
     {
         if (!IsVisible) return;
@@ -232,11 +232,11 @@ public class EclipseElement
     }
     
     /// <summary>
-    /// 绘制元素内容（由子类实现�?    /// </summary>
+    /// 绘制元素内容（由子类实现�?    /// </summary>
     protected virtual void RenderContent(SKCanvas canvas) { }
     
     /// <summary>
-    /// 绘制子元�?    /// </summary>
+    /// 绘制子元�?    /// </summary>
     protected void RenderChildren(SKCanvas canvas)
     {
         foreach (var child in Children)
@@ -265,7 +265,53 @@ public class EclipseElement
     }
     
     /// <summary>
-    /// 添加子元�?    /// </summary>
+    /// 处理鼠标按下事件
+    /// </summary>
+    public virtual bool HandleMouseDown(float x, float y)
+    {
+        for (int i = Children.Count - 1; i >= 0; i--)
+        {
+            if (Children[i].HandleMouseDown(x, y)) return true;
+        }
+        return false;
+    }
+    
+    /// <summary>
+    /// 处理鼠标移动事件
+    /// </summary>
+    public virtual bool HandleMouseMove(float x, float y)
+    {
+        for (int i = Children.Count - 1; i >= 0; i--)
+        {
+            if (Children[i].HandleMouseMove(x, y)) return true;
+        }
+        return false;
+    }
+    
+    /// <summary>
+    /// 处理鼠标释放事件
+    /// </summary>
+    public virtual void HandleMouseUp()
+    {
+        foreach (var child in Children)
+        {
+            child.HandleMouseUp();
+        }
+    }
+    
+    /// <summary>
+    /// 处理鼠标离开元素区域事件
+    /// </summary>
+    public virtual void HandleMouseLeave()
+    {
+        foreach (var child in Children)
+        {
+            child.HandleMouseLeave();
+        }
+    }
+    
+    /// <summary>
+    /// 添加子元�?    /// </summary>
     public void AddChild(EclipseElement child)
     {
         child.Parent = this;
@@ -273,7 +319,7 @@ public class EclipseElement
     }
     
     /// <summary>
-    /// 移除子元�?    /// </summary>
+    /// 移除子元�?    /// </summary>
     public void RemoveChild(EclipseElement child)
     {
         child.Parent = null;
@@ -290,12 +336,12 @@ public class EclipseElement
     }
     
     /// <summary>
-    /// 附加属性值存�?
+    /// 附加属性值存�?
     /// </summary>
     private readonly Dictionary<int, object?> _attachedProperties = new();
     
     /// <summary>
-    /// 设置附加属性�?
+    /// 设置附加属性�?
     /// </summary>
     public void SetValue(int propertyKey, object? value)
     {
@@ -303,7 +349,7 @@ public class EclipseElement
     }
     
     /// <summary>
-    /// 获取附加属性�?
+    /// 获取附加属性�?
     /// </summary>
     public T GetValue<T>(int propertyKey, T defaultValue)
     {

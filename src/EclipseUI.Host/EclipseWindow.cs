@@ -72,12 +72,49 @@ public class EclipseWindow : IDisposable
         _input = _window.CreateInput();
         foreach (var mouse in _input.Mice)
         {
+            mouse.MouseDown += (m, b) =>
+            {
+                var pos = m.Position;
+                if (_renderer != null)
+                {
+                    _renderer.HandleMouseDown(pos.X, pos.Y);
+                }
+            };
+            
             mouse.Click += (m, b, p) =>
             {
                 var pos = m.Position;
                 if (_renderer != null)
                 {
                     _renderer.HandleClick(pos.X, pos.Y);
+                }
+            };
+            
+            mouse.Scroll += (m, s) =>
+            {
+                if (_renderer != null)
+                {
+                    _renderer.HandleMouseWheel(s.Y);
+                }
+            };
+            
+            mouse.MouseMove += (m, p) =>
+            {
+                if (_renderer != null)
+                {
+                    _renderer.HandleMouseMove(p.X, p.Y);
+                }
+            };
+        }
+        
+        // 鼠标释放事件
+        foreach (var mouse in _input.Mice)
+        {
+            mouse.MouseUp += (m, b) =>
+            {
+                if (b == Silk.NET.Input.MouseButton.Left || b == Silk.NET.Input.MouseButton.Right)
+                {
+                    _renderer?.HandleMouseUp();
                 }
             };
         }

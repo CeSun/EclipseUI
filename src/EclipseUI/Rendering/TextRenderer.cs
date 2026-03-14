@@ -15,7 +15,7 @@ public static class TextRenderer
         _emojiTypeface ??= SKTypeface.FromFamilyName("Segoe UI Emoji", SKFontStyle.Normal);
 
     private static SKTypeface ChineseTypeface =>
-        _chineseTypeface ??= SKTypeface.FromFamilyName("SimSun", SKFontStyle.Normal) 
+        _chineseTypeface ??= SKTypeface.FromFamilyName("SimSun", SKFontStyle.Normal)
             ?? SKTypeface.FromFamilyName("Microsoft YaHei", SKFontStyle.Normal)
             ?? SKTypeface.Default;
 
@@ -109,48 +109,57 @@ public static class TextRenderer
     {
         if (string.IsNullOrEmpty(text))
             return (0, 0);
-
+        
         float lineHeight = fontSize * 1.2f;
         float totalWidth = 0;
         float currentLineWidth = 0;
         int lineCount = 1;
-
-        // 按空格和标点符号分割
-        var words = text.Split(new[] { ' ', '\u3000' }, StringSplitOptions.None);
-
-        foreach (var word in words)
+        
+        // 按字符遍历（正确处理 emoji surrogate pair）
+        for (int i = 0; i < text.Length; i++)
         {
-            if (string.IsNullOrEmpty(word))
-                continue;
-
-            float wordWidth = MeasureText(word, fontSize);
-
-            // 如果单词本身就超过最大宽度，强制换行
-            if (wordWidth > maxWidth && currentLineWidth > 0)
+            var c = text[i];
+            string character;
+            float charWidth;
+            
+            // 跳过换行符
+            if (c == '\n' || c == '\r')
             {
                 totalWidth = Math.Max(totalWidth, currentLineWidth);
-                currentLineWidth = wordWidth;
+                currentLineWidth = 0;
                 lineCount++;
+                continue;
             }
-            // 如果加上单词后超过最大宽度，换行
-            else if (currentLineWidth + wordWidth > maxWidth && currentLineWidth > 0)
+            
+            // 处理 emoji surrogate pair
+            if (char.IsHighSurrogate(c) && i + 1 < text.Length && char.IsLowSurrogate(text[i + 1]))
+            {
+                character = text.Substring(i, 2);
+                charWidth = MeasureText(character, fontSize);
+                i++; // 跳过下一个 low surrogate
+            }
+            else
+            {
+                character = c.ToString();
+                charWidth = MeasureText(character, fontSize);
+            }
+            
+            // 如果加上字符后超过最大宽度，换行
+            if (currentLineWidth + charWidth > maxWidth && currentLineWidth > 0)
             {
                 totalWidth = Math.Max(totalWidth, currentLineWidth);
-                currentLineWidth = wordWidth;
+                currentLineWidth = charWidth;
                 lineCount++;
             }
             else
             {
-                // 添加到当前行
-                if (currentLineWidth > 0)
-                    currentLineWidth += MeasureText(" ", fontSize); // 空格宽度
-                currentLineWidth += wordWidth;
+                currentLineWidth += charWidth;
             }
         }
-
+        
         totalWidth = Math.Max(totalWidth, currentLineWidth);
         float totalHeight = lineCount * lineHeight;
-
+        
         return (totalWidth, totalHeight);
     }
 
@@ -164,41 +173,50 @@ public static class TextRenderer
 
         float lineHeight = fontSize * 1.2f;
         float currentY = y;
-
-        // 按空格和标点符号分割
-        var words = text.Split(new[] { ' ', '\u3000' }, StringSplitOptions.None);
-
         float currentX = x;
         float currentLineWidth = 0;
 
-        foreach (var word in words)
+        // 按字符遍历（正确处理 emoji surrogate pair）
+        for (int i = 0; i < text.Length; i++)
         {
-            if (string.IsNullOrEmpty(word))
+            var c = text[i];
+            string character;
+            float charWidth;
+
+            // 跳过换行符
+            if (c == '\n' || c == '\r')
+            {
+                currentX = x;
+                currentY += lineHeight;
+                currentLineWidth = 0;
                 continue;
+            }
 
-            float wordWidth = MeasureText(word, fontSize);
-            float spaceWidth = MeasureText(" ", fontSize);
+            // 处理 emoji surrogate pair
+            if (char.IsHighSurrogate(c) && i + 1 < text.Length && char.IsLowSurrogate(text[i + 1]))
+            {
+                character = text.Substring(i, 2);
+                charWidth = MeasureText(character, fontSize);
+                i++; // 跳过下一个 low surrogate
+            }
+            else
+            {
+                character = c.ToString();
+                charWidth = MeasureText(character, fontSize);
+            }
 
-            // 如果加上单词后超过最大宽度，换行
-            if (currentLineWidth + wordWidth > maxWidth && currentLineWidth > 0)
+            // 如果加上字符后超过最大宽度，换行
+            if (currentLineWidth + charWidth > maxWidth && currentLineWidth > 0)
             {
                 currentX = x;
                 currentY += lineHeight;
                 currentLineWidth = 0;
             }
 
-            // 绘制单词
-            DrawMixedText(context, word, currentX, currentY, fontSize, color);
-            currentX += wordWidth;
-            currentLineWidth += wordWidth;
-
-            // 添加空格（如果不是最后一个单词）
-            if (currentLineWidth + spaceWidth <= maxWidth)
-            {
-                DrawMixedText(context, " ", currentX, currentY, fontSize, color);
-                currentX += spaceWidth;
-                currentLineWidth += spaceWidth;
-            }
+            // 绘制字符（包括空格）
+            DrawMixedText(context, character, currentX, currentY, fontSize, color);
+            currentX += charWidth;
+            currentLineWidth += charWidth;
         }
     }
 

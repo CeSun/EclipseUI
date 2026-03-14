@@ -20,8 +20,8 @@ public class TextBlock : ComponentBase, IElementHandler, IDisposable
     [Parameter] public float? MinHeight { get; set; }
     [Parameter] public float? MaxWidth { get; set; }
     [Parameter] public float? MaxHeight { get; set; }
-    [Parameter] public HorizontalAlignment HorizontalAlignment { get; set; } = HorizontalAlignment.Stretch;
-    [Parameter] public VerticalAlignment VerticalAlignment { get; set; } = VerticalAlignment.Stretch;
+    [Parameter] public HorizontalAlignment HorizontalAlignment { get; set; } = HorizontalAlignment.Left;
+    [Parameter] public VerticalAlignment VerticalAlignment { get; set; } = VerticalAlignment.Top;
     
     [Parameter] public float PaddingLeft { get; set; }
     [Parameter] public float PaddingTop { get; set; }

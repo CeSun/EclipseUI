@@ -139,7 +139,11 @@ public class GridElement : EclipseElement
     
     public override void Arrange(SKCanvas canvas, float x, float y, float width, float height)
     {
-        base.Arrange(canvas, x, y, width, height);
+        // 设置自身位置和尺寸，但不调用 ArrangeChildren（我们会手动排列子元素）
+        X = x;
+        Y = y;
+        Width = width;
+        Height = height;
         
         var gridChildren = GetGridChildren();
         EnsureRowColumnDefinitions(gridChildren);
@@ -315,7 +319,11 @@ public class GridElement : EclipseElement
             float childX = cellX;
             float childW = cellWidth;
             
-            if (child.HorizontalAlignment == HorizontalAlignment.Left)
+            // 如果子元素有 RequestedWidth 或 MaxWidth，不使用 Stretch
+            bool hasRequestedWidth = child.RequestedWidth.HasValue;
+            bool hasMaxWidth = child.MaxWidth.HasValue;
+            
+            if (hasRequestedWidth || hasMaxWidth || child.HorizontalAlignment == HorizontalAlignment.Left)
             {
                 childW = childSize.Width;
             }
@@ -329,13 +337,17 @@ public class GridElement : EclipseElement
                 childX = cellX + cellWidth - childSize.Width;
                 childW = childSize.Width;
             }
-            // Stretch: 使用 cellWidth
+            // Stretch 且没有 RequestedWidth/MaxWidth: 使用 cellWidth
             
             // 应用垂直对齐
             float childY = cellY;
             float childH = cellHeight;
             
-            if (child.VerticalAlignment == VerticalAlignment.Top)
+            // 如果子元素有 RequestedHeight 或 MaxHeight，不使用 Stretch
+            bool hasRequestedHeight = child.RequestedHeight.HasValue;
+            bool hasMaxHeight = child.MaxHeight.HasValue;
+            
+            if (hasRequestedHeight || hasMaxHeight || child.VerticalAlignment == VerticalAlignment.Top)
             {
                 childH = childSize.Height;
             }
@@ -349,7 +361,7 @@ public class GridElement : EclipseElement
                 childY = cellY + cellHeight - childSize.Height;
                 childH = childSize.Height;
             }
-            // Stretch: 使用 cellHeight
+            // Stretch 且没有 RequestedHeight/MaxHeight: 使用 cellHeight
             
             child.Arrange(canvas, childX, childY, childW, childH);
         }
@@ -646,8 +658,13 @@ public class GridItemElement : EclipseElement
     
     public override void Arrange(SKCanvas canvas, float x, float y, float width, float height)
     {
-        base.Arrange(canvas, x, y, width, height);
+        // 设置自身位置和尺寸
+        X = x;
+        Y = y;
+        Width = width;
+        Height = height;
         
+        // 排列子元素
         if (Children.Count > 0)
             Children[0].Arrange(canvas, x, y, width, height);
     }

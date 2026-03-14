@@ -91,7 +91,11 @@ public class StackPanelElement : EclipseElement
     
     public override void Arrange(SKCanvas canvas, float x, float y, float width, float height)
     {
-        base.Arrange(canvas, x, y, width, height);
+        // 设置自身位置和尺寸，但不调用 ArrangeChildren（我们会手动排列子元素）
+        X = x;
+        Y = y;
+        Width = width;
+        Height = height;
         
         float currentX = x + PaddingLeft;
         float currentY = y + PaddingTop;
@@ -106,23 +110,30 @@ public class StackPanelElement : EclipseElement
             {
                 // 应用水平对齐
                 float childX = currentX;
-                float childWidth = contentWidth;
+                float childWidth = size.Width;
                 
-                if (child.HorizontalAlignment == HorizontalAlignment.Left)
-                {
-                    childWidth = size.Width;
-                }
-                else if (child.HorizontalAlignment == HorizontalAlignment.Center)
+                // 如果子元素有 RequestedWidth 或 MaxWidth，不使用 Stretch
+                bool hasRequestedWidth = child.RequestedWidth.HasValue;
+                bool hasMaxWidth = child.MaxWidth.HasValue;
+                
+                if (child.HorizontalAlignment == HorizontalAlignment.Center)
                 {
                     childX = currentX + (contentWidth - size.Width) / 2;
-                    childWidth = size.Width;
                 }
                 else if (child.HorizontalAlignment == HorizontalAlignment.Right)
                 {
                     childX = currentX + contentWidth - size.Width;
+                }
+                else if (hasRequestedWidth || hasMaxWidth || child.HorizontalAlignment == HorizontalAlignment.Left)
+                {
+                    // Left 或有 RequestedWidth/MaxWidth: 使用 size.Width，位置不变（左对齐）
                     childWidth = size.Width;
                 }
-                // Stretch: 使用 contentWidth
+                else
+                {
+                    // Stretch 且没有 RequestedWidth/MaxWidth: 使用 contentWidth
+                    childWidth = contentWidth;
+                }
                 
                 child.Arrange(canvas, childX, currentY, childWidth, size.Height);
                 currentY += size.Height + Spacing;

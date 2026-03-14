@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.RenderTree;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
+using EclipseUI.Layout;
 
 namespace EclipseUI.Core;
 
@@ -177,5 +178,74 @@ public class EclipseRenderer : Renderer
         var point = new SKPoint(x, y);
         var handled = RootElement.HandleClick(point);
         return handled;
+    }
+    
+    /// <summary>
+    /// 处理鼠标滚轮事件
+    /// </summary>
+    public bool HandleMouseWheel(float deltaY)
+    {
+        if (RootElement == null) return false;
+        
+        // 查找第一个支持滚轮的 ScrollView
+        var scrollView = FindScrollView(RootElement);
+        if (scrollView != null)
+        {
+            return scrollView.HandleMouseWheel(deltaY);
+        }
+        
+        return false;
+    }
+    
+    /// <summary>
+    /// 处理鼠标按下事件
+    /// </summary>
+    public bool HandleMouseDown(float x, float y)
+    {
+        if (RootElement == null) return false;
+        return RootElement.HandleMouseDown(x, y);
+    }
+    
+    /// <summary>
+    /// 处理鼠标移动事件
+    /// </summary>
+    public bool HandleMouseMove(float x, float y)
+    {
+        if (RootElement == null) return false;
+        return RootElement.HandleMouseMove(x, y);
+    }
+    
+    /// <summary>
+    /// 处理鼠标释放事件
+    /// </summary>
+    public void HandleMouseUp()
+    {
+        RootElement?.HandleMouseUp();
+    }
+    
+    /// <summary>
+    /// 处理鼠标离开窗口事件
+    /// </summary>
+    public void HandleMouseLeave()
+    {
+        RootElement?.HandleMouseLeave();
+    }
+    
+    /// <summary>
+    /// 查找第一个 ScrollView
+    /// </summary>
+    private ScrollViewElement? FindScrollView(EclipseElement element)
+    {
+        if (element is ScrollViewElement scrollView)
+            return scrollView;
+        
+        foreach (var child in element.Children)
+        {
+            var result = FindScrollView(child);
+            if (result != null)
+                return result;
+        }
+        
+        return null;
     }
 }
