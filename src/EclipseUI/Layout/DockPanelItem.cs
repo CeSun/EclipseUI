@@ -117,22 +117,25 @@ public class DockPanelItemElement : EclipseElement
     
     public override void Render(SKCanvas canvas)
     {
-        // 先绘制背景（如果有）- 使用 Arrange 时设置的完整区域
         if (!IsVisible) return;
         
         canvas.Save();
         
         try
         {
+            // 绘制背景
             if (BackgroundColor.HasValue)
             {
-                // 使用完整的 Width 和 Height（由 Arrange 设置）
                 var rect = new SKRect(X, Y, X + Width, Y + Height);
-                using var paint = new SKPaint { Color = BackgroundColor.Value, IsAntialias = true };
-                canvas.DrawRect(rect, paint);
+                using var bgPaint = new SKPaint { Color = BackgroundColor.Value, IsAntialias = true };
+                canvas.DrawRect(rect, bgPaint);
             }
             
-            // 再渲染子元素
+            // 设置裁剪区域，防止子元素超出边界
+            var clipRect = new SKRect(X, Y, X + Width, Y + Height);
+            canvas.ClipRect(clipRect);
+            
+            // 渲染子元素
             if (Children.Count > 0)
             {
                 Children[0].Render(canvas);

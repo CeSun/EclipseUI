@@ -25,6 +25,31 @@ public class TextBlockElement : EclipseElement
         );
     }
     
+    public override void Render(SKCanvas canvas)
+    {
+        if (!IsVisible) return;
+        
+        canvas.Save();
+        
+        try
+        {
+            // 绘制背景
+            if (BackgroundColor.HasValue)
+            {
+                var rect = new SKRect(X, Y, X + Width, Y + Height);
+                using var bgPaint = new SKPaint { Color = BackgroundColor.Value, IsAntialias = true };
+                canvas.DrawRect(rect, bgPaint);
+            }
+            
+            // 绘制内容
+            RenderContent(canvas);
+        }
+        finally
+        {
+            canvas.Restore();
+        }
+    }
+    
     protected override void RenderContent(SKCanvas canvas)
     {
         if (string.IsNullOrEmpty(Text)) return;
