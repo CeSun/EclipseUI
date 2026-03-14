@@ -40,6 +40,15 @@ public class GridItem : ComponentBase, IElementHandler, IDisposable
     /// </summary>
     [Parameter] public RenderFragment? ChildContent { get; set; }
     
+    [Parameter] public float? Width { get; set; }
+    [Parameter] public float? Height { get; set; }
+    [Parameter] public float? MinWidth { get; set; }
+    [Parameter] public float? MinHeight { get; set; }
+    [Parameter] public float? MaxWidth { get; set; }
+    [Parameter] public float? MaxHeight { get; set; }
+    [Parameter] public HorizontalAlignment HorizontalAlignment { get; set; } = HorizontalAlignment.Stretch;
+    [Parameter] public VerticalAlignment VerticalAlignment { get; set; } = VerticalAlignment.Stretch;
+    
     private GridItemElement? _element;
     private bool _disposed;
     
@@ -72,6 +81,14 @@ public class GridItem : ComponentBase, IElementHandler, IDisposable
             GridElement.SetRowSpan(_element, RowSpan);
             GridElement.SetColumnSpan(_element, ColumnSpan);
             _element.BackgroundColor = ParseBackground(Background);
+            _element.RequestedWidth = Width;
+            _element.RequestedHeight = Height;
+            _element.MinWidth = MinWidth;
+            _element.MinHeight = MinHeight;
+            _element.MaxWidth = MaxWidth;
+            _element.MaxHeight = MaxHeight;
+            _element.HorizontalAlignment = HorizontalAlignment;
+            _element.VerticalAlignment = VerticalAlignment;
         }
     }
     

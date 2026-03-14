@@ -16,6 +16,13 @@ public class TextBlock : ComponentBase, IElementHandler, IDisposable
     [Parameter] public string? Background { get; set; }
     [Parameter] public float? Width { get; set; }
     [Parameter] public float? Height { get; set; }
+    [Parameter] public float? MinWidth { get; set; }
+    [Parameter] public float? MinHeight { get; set; }
+    [Parameter] public float? MaxWidth { get; set; }
+    [Parameter] public float? MaxHeight { get; set; }
+    [Parameter] public HorizontalAlignment HorizontalAlignment { get; set; } = HorizontalAlignment.Stretch;
+    [Parameter] public VerticalAlignment VerticalAlignment { get; set; } = VerticalAlignment.Stretch;
+
     [Parameter] public EventCallback<MouseEventArgs> OnClick { get; set; }
     
     private TextBlockElement? _element;
@@ -57,7 +64,14 @@ public class TextBlock : ComponentBase, IElementHandler, IDisposable
         _element.TextColor = ParseColor(Foreground);
         _element.IsBold = FontWeight;
         _element.BackgroundColor = ParseBackground(Background);
-        _element.RequestedWidth = Width;
+                _element.RequestedWidth = Width;
+        _element.RequestedHeight = Height;
+        _element.MinWidth = MinWidth;
+        _element.MinHeight = MinHeight;
+        _element.MaxWidth = MaxWidth;
+        _element.MaxHeight = MaxHeight;
+        _element.HorizontalAlignment = HorizontalAlignment;
+        _element.VerticalAlignment = VerticalAlignment;
         _element.RequestedHeight = Height;
         
         _element.OnClick = OnClick.HasDelegate ? async (e, p) => 

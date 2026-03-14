@@ -36,6 +36,15 @@ public class Grid : ComponentBase, IElementHandler, IDisposable
     
     [Parameter] public RenderFragment? ChildContent { get; set; }
     
+    [Parameter] public float? Width { get; set; }
+    [Parameter] public float? Height { get; set; }
+    [Parameter] public float? MinWidth { get; set; }
+    [Parameter] public float? MinHeight { get; set; }
+    [Parameter] public float? MaxWidth { get; set; }
+    [Parameter] public float? MaxHeight { get; set; }
+    [Parameter] public HorizontalAlignment HorizontalAlignment { get; set; } = HorizontalAlignment.Stretch;
+    [Parameter] public VerticalAlignment VerticalAlignment { get; set; } = VerticalAlignment.Stretch;
+    
     private GridElement? _element;
     private bool _disposed;
     
@@ -86,6 +95,14 @@ public class Grid : ComponentBase, IElementHandler, IDisposable
         _element.PaddingTop = PaddingTop;
         _element.PaddingRight = PaddingRight;
         _element.PaddingBottom = PaddingBottom;
+        _element.RequestedWidth = Width;
+        _element.RequestedHeight = Height;
+        _element.MinWidth = MinWidth;
+        _element.MinHeight = MinHeight;
+        _element.MaxWidth = MaxWidth;
+        _element.MaxHeight = MaxHeight;
+        _element.HorizontalAlignment = HorizontalAlignment;
+        _element.VerticalAlignment = VerticalAlignment;
         
         // 解析行定义
         _element.RowDefinitions.Clear();
