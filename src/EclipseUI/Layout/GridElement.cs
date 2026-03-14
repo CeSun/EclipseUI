@@ -85,32 +85,45 @@ public class GridElement : EclipseElement
         var rowHeights = new float[rowCount];
         var colWidths = new float[colCount];
         
+        // 检查可用空间是否是无限的
+        bool isWidthInfinite = float.IsPositiveInfinity(availableWidth);
+        bool isHeightInfinite = float.IsPositiveInfinity(availableHeight);
+        
         // 第一次遍历：测量 Auto 和 Pixel 的行列
         MeasureAutoAndPixel(canvas, availableWidth, availableHeight, gridChildren, rowHeights, colWidths);
         
-        // 计算剩余空间用于 Star 分配
-        float usedWidth = 0, usedHeight = 0;
-        for (int i = 0; i < colCount; i++) usedWidth += colWidths[i];
-        for (int i = 0; i < rowCount; i++) usedHeight += rowHeights[i];
-        
-        float remainingWidth = Math.Max(0, availableWidth - PaddingLeft - PaddingRight - usedWidth);
-        float remainingHeight = Math.Max(0, availableHeight - PaddingTop - PaddingBottom - usedHeight);
-        
-        // 分配 Star 行列
-        DistributeStar(remainingWidth, remainingHeight, rowHeights, colWidths);
-        
-        // 第二次遍历：测量子元素并更新行列尺寸（可能会修改 Auto 类型的高度）
-        MeasureChildren(canvas, gridChildren, rowHeights, colWidths);
-        
-        // 重新计算 Star 类型的高度（因为 Auto 类型可能改变了）
-        float usedHeightAfter = 0;
-        for (int i = 0; i < rowCount; i++)
+        // 如果空间是无限的，Star 行/列表现得像 Auto（只占用子元素实际需要的空间）
+        if (isWidthInfinite || isHeightInfinite)
         {
-            if (RowDefinitions[i].Height.GridUnitType != GridUnitType.Star)
-                usedHeightAfter += rowHeights[i];
+            // 测量子元素来获取所有行列（包括 Star）的实际需要
+            MeasureChildrenForInfinite(canvas, gridChildren, rowHeights, colWidths, isWidthInfinite, isHeightInfinite);
         }
-        float remainingHeightAfter = Math.Max(0, availableHeight - PaddingTop - PaddingBottom - usedHeightAfter);
-        DistributeStar(remainingWidth, remainingHeightAfter, rowHeights, colWidths);
+        else
+        {
+            // 计算剩余空间用于 Star 分配
+            float usedWidth = 0, usedHeight = 0;
+            for (int i = 0; i < colCount; i++) usedWidth += colWidths[i];
+            for (int i = 0; i < rowCount; i++) usedHeight += rowHeights[i];
+            
+            float remainingWidth = Math.Max(0, availableWidth - PaddingLeft - PaddingRight - usedWidth);
+            float remainingHeight = Math.Max(0, availableHeight - PaddingTop - PaddingBottom - usedHeight);
+            
+            // 分配 Star 行列
+            DistributeStar(remainingWidth, remainingHeight, rowHeights, colWidths);
+            
+            // 第二次遍历：测量子元素并更新行列尺寸（可能会修改 Auto 类型的高度）
+            MeasureChildren(canvas, gridChildren, rowHeights, colWidths);
+            
+            // 重新计算 Star 类型的高度（因为 Auto 类型可能改变了）
+            float usedHeightAfter = 0;
+            for (int i = 0; i < rowCount; i++)
+            {
+                if (RowDefinitions[i].Height.GridUnitType != GridUnitType.Star)
+                    usedHeightAfter += rowHeights[i];
+            }
+            float remainingHeightAfter = Math.Max(0, availableHeight - PaddingTop - PaddingBottom - usedHeightAfter);
+            DistributeStar(remainingWidth, remainingHeightAfter, rowHeights, colWidths);
+        }
         
         // 计算总尺寸
         float totalWidth = 0, totalHeight = 0;
@@ -436,6 +449,63 @@ public class GridElement : EclipseElement
             for (int i = row; i < Math.Min(row + rowSpan, rowCount); i++)
             {
                 if (RowDefinitions[i].Height.GridUnitType == GridUnitType.Auto)
+                    rowHeights[i] = Math.Max(rowHeights[i], childSize.Height / rowSpan);
+            }
+        }
+    }
+    
+    /// <summary>
+    /// 在无限空间模式下测量子元素（Star 行/列表现得像 Auto）
+    /// </summary>
+    private void MeasureChildrenForInfinite(SKCanvas canvas, List<GridItemElement> children, 
+        float[] rowHeights, float[] colWidths, bool isWidthInfinite, bool isHeightInfinite)
+    {
+        int rowCount = RowDefinitions.Count;
+        int colCount = ColumnDefinitions.Count;
+        
+        foreach (var child in children)
+        {
+            int row = GetRow(child);
+            int col = GetColumn(child);
+            int rowSpan = GetRowSpan(child);
+            int colSpan = GetColumnSpan(child);
+            
+            // 计算子元素可用的空间（对于 Star 类型，使用 Infinity）
+            float availableWidth = 0;
+            for (int i = col; i < Math.Min(col + colSpan, colCount); i++)
+            {
+                if (isWidthInfinite || ColumnDefinitions[i].Width.GridUnitType == GridUnitType.Star || 
+                    ColumnDefinitions[i].Width.GridUnitType == GridUnitType.Auto)
+                    availableWidth = float.PositiveInfinity;
+                else
+                    availableWidth += colWidths[i];
+            }
+            
+            float availableHeight = 0;
+            for (int i = row; i < Math.Min(row + rowSpan, rowCount); i++)
+            {
+                if (isHeightInfinite || RowDefinitions[i].Height.GridUnitType == GridUnitType.Star || 
+                    RowDefinitions[i].Height.GridUnitType == GridUnitType.Auto)
+                    availableHeight = float.PositiveInfinity;
+                else
+                    availableHeight += rowHeights[i];
+            }
+            
+            // 测量子元素
+            var childSize = child.Measure(canvas, availableWidth, availableHeight);
+            
+            // 更新所有类型的行列尺寸（包括 Star）
+            for (int i = col; i < Math.Min(col + colSpan, colCount); i++)
+            {
+                if (isWidthInfinite || ColumnDefinitions[i].Width.GridUnitType == GridUnitType.Star || 
+                    ColumnDefinitions[i].Width.GridUnitType == GridUnitType.Auto)
+                    colWidths[i] = Math.Max(colWidths[i], childSize.Width / colSpan);
+            }
+            
+            for (int i = row; i < Math.Min(row + rowSpan, rowCount); i++)
+            {
+                if (isHeightInfinite || RowDefinitions[i].Height.GridUnitType == GridUnitType.Star || 
+                    RowDefinitions[i].Height.GridUnitType == GridUnitType.Auto)
                     rowHeights[i] = Math.Max(rowHeights[i], childSize.Height / rowSpan);
             }
         }

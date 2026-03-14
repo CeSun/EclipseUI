@@ -13,13 +13,57 @@ public class StackPanelElement : EclipseElement
     public StackOrientation Orientation { get; set; } = StackOrientation.Vertical;
     public float Spacing { get; set; }
     
+    public override void Render(SKCanvas canvas)
+    {
+        if (!IsVisible) return;
+        
+        canvas.Save();
+        
+        try
+        {
+            // 绘制背景
+            if (BackgroundColor.HasValue)
+            {
+                var rect = new SKRect(X, Y, X + Width, Y + Height);
+                using var bgPaint = new SKPaint { Color = BackgroundColor.Value, IsAntialias = true };
+                canvas.DrawRect(rect, bgPaint);
+            }
+            
+            // 设置裁剪区域为内容区域（不包括 Padding）
+            var clipRect = new SKRect(
+                X + PaddingLeft,
+                Y + PaddingTop,
+                X + Width - PaddingRight,
+                Y + Height - PaddingBottom
+            );
+            canvas.ClipRect(clipRect);
+            
+            // 渲染子元素
+            RenderChildren(canvas);
+        }
+        finally
+        {
+            canvas.Restore();
+        }
+    }
+    
     public override SKSize Measure(SKCanvas canvas, float availableWidth, float availableHeight)
     {
         float totalWidth = 0, totalHeight = 0, maxWidth = 0, maxHeight = 0;
         
         foreach (var child in Children)
         {
-            var size = child.Measure(canvas, availableWidth, availableHeight);
+            // 对于 Vertical 方向：宽度受限，高度无限（让子元素测量实际需要的高度）
+            // 对于 Horizontal 方向：宽度无限，高度受限
+            float childWidth = Orientation == StackOrientation.Vertical 
+                ? availableWidth - PaddingLeft - PaddingRight 
+                : float.PositiveInfinity;
+            float childHeight = Orientation == StackOrientation.Vertical 
+                ? float.PositiveInfinity 
+                : availableHeight - PaddingTop - PaddingBottom;
+            
+            var size = child.Measure(canvas, childWidth, childHeight);
+            
             if (Orientation == StackOrientation.Vertical)
             {
                 totalHeight += size.Height + Spacing;
@@ -32,6 +76,7 @@ public class StackPanelElement : EclipseElement
             }
         }
         
+        // 减去最后一个元素的 Spacing
         if (Children.Count > 0)
         {
             if (Orientation == StackOrientation.Vertical) totalHeight -= Spacing;
