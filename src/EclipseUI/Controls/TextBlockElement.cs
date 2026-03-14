@@ -27,10 +27,20 @@ public class TextBlockElement : EclipseElement
         
         // 测量文本（考虑换行）
         var lines = TextRenderer.MeasureTextWithWrap(Text, FontSize, contentWidth);
-        var totalHeight = lines.Height + PaddingTop + PaddingBottom;
-        var maxWidth = lines.Width + PaddingLeft + PaddingRight;
+        var contentHeight = lines.Height;
+        var contentMaxWidth = lines.Width;
         
-        return new SKSize(maxWidth, totalHeight);
+        // 应用用户设置的尺寸
+        float finalWidth = RequestedWidth ?? (contentMaxWidth + PaddingLeft + PaddingRight);
+        float finalHeight = RequestedHeight ?? (contentHeight + PaddingTop + PaddingBottom);
+        
+        // 应用 Min/Max 限制
+        if (MinWidth.HasValue) finalWidth = Math.Max(finalWidth, MinWidth.Value);
+        if (MinHeight.HasValue) finalHeight = Math.Max(finalHeight, MinHeight.Value);
+        if (MaxWidth.HasValue) finalWidth = Math.Min(finalWidth, MaxWidth.Value);
+        if (MaxHeight.HasValue) finalHeight = Math.Min(finalHeight, MaxHeight.Value);
+        
+        return new SKSize(finalWidth, finalHeight);
     }
     
     public override void Render(SKCanvas canvas)

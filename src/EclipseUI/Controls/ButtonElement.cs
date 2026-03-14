@@ -20,7 +20,22 @@ public class ButtonElement : EclipseElement
     public override SKSize Measure(SKCanvas canvas, float availableWidth, float availableHeight)
     {
         var textWidth = TextRenderer.MeasureText(Text, FontSize);
-        return new SKSize(Math.Max(textWidth + 24, 80), Math.Max(FontSize + 16, 36));
+        
+        // 计算内容尺寸
+        float contentWidth = Math.Max(textWidth + 24, 80);
+        float contentHeight = Math.Max(FontSize + 16, 36);
+        
+        // 应用用户设置的尺寸
+        float finalWidth = RequestedWidth ?? contentWidth;
+        float finalHeight = RequestedHeight ?? contentHeight;
+        
+        // 应用 Min/Max 限制
+        if (MinWidth.HasValue) finalWidth = Math.Max(finalWidth, MinWidth.Value);
+        if (MinHeight.HasValue) finalHeight = Math.Max(finalHeight, MinHeight.Value);
+        if (MaxWidth.HasValue) finalWidth = Math.Min(finalWidth, MaxWidth.Value);
+        if (MaxHeight.HasValue) finalHeight = Math.Min(finalHeight, MaxHeight.Value);
+        
+        return new SKSize(finalWidth, finalHeight);
     }
     
     protected override void RenderContent(SKCanvas canvas)
