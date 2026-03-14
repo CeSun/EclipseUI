@@ -2,226 +2,51 @@
 @using EclipseUI.Layout
 @using EclipseUI.Core
 
-<StackPanel PaddingLeft="20" PaddingTop="20" PaddingRight="20" PaddingBottom="20" Spacing="15">
+<StackPanel PaddingLeft="20" PaddingTop="20" PaddingRight="20" PaddingBottom="20" Spacing="10">
     <!-- 标题 -->
-    <TextBlock Text="🌑 EclipseUI 完整布局测试" FontSize="28" FontWeight="true" PaddingBottom="10" />
+    <TextBlock Text="EclipseUI - Layout Test" FontSize="24" FontWeight="true" />
     
-    <!-- 1. 固定尺寸测试 -->
-    <TextBlock Text="📏 1. 固定尺寸 (Width/Height)" FontSize="18" FontWeight="true" />
+    <!-- 固定尺寸 -->
+    <TextBlock Text="Width/Height" FontSize="16" FontWeight="true" />
     <Grid ColumnDefinitions="*, *, *" Spacing="10">
-        <GridItem Column="0" Background="#E3F2FD">
-            <StackPanel Padding="10">
-                <TextBlock Text="Width=100" FontSize="12" PaddingBottom="5" />
-                <Button Text="按钮 100x40" Width="100" Height="40" Background="#2196F3" />
-            </StackPanel>
-        </GridItem>
-        <GridItem Column="1" Background="#E8F5E9">
-            <StackPanel Padding="10">
-                <TextBlock Text="Width=150" FontSize="12" PaddingBottom="5" />
-                <Button Text="按钮 150x50" Width="150" Height="50" Background="#4CAF50" />
-            </StackPanel>
-        </GridItem>
-        <GridItem Column="2" Background="#FFF3E0">
-            <StackPanel Padding="10">
-                <TextBlock Text="Width=200" FontSize="12" PaddingBottom="5" />
-                <Button Text="按钮 200x60" Width="200" Height="60" Background="#FF9800" />
-            </StackPanel>
-        </GridItem>
+        <GridItem Column="0"><Button Text="100x40" Width="100" Height="40" Background="#2196F3" /></GridItem>
+        <GridItem Column="1"><Button Text="150x50" Width="150" Height="50" Background="#4CAF50" /></GridItem>
+        <GridItem Column="2"><Button Text="200x60" Width="200" Height="60" Background="#FF9800" /></GridItem>
     </Grid>
     
-    <!-- 2. 最小尺寸测试 -->
-    <TextBlock Text="📐 2. 最小尺寸 (MinWidth/MinHeight)" FontSize="18" FontWeight="true" />
+    <!-- 最小尺寸 -->
+    <TextBlock Text="MinWidth/MinHeight" FontSize="16" FontWeight="true" />
     <Grid ColumnDefinitions="*, *, *" Spacing="10">
-        <GridItem Column="0" Background="#F3E5F5">
-            <StackPanel Padding="10">
-                <TextBlock Text="MinWidth=120" FontSize="12" PaddingBottom="5" />
-                <Button Text="短" MinWidth="120" Background="#9C27B0" />
-            </StackPanel>
-        </GridItem>
-        <GridItem Column="1" Background="#FFEBEE">
-            <StackPanel Padding="10">
-                <TextBlock Text="MinWidth=150" FontSize="12" PaddingBottom="5" />
-                <Button Text="中等长度文本" MinWidth="150" Background="#E91E63" />
-            </StackPanel>
-        </GridItem>
-        <GridItem Column="2" Background="#E0F7FA">
-            <StackPanel Padding="10">
-                <TextBlock Text="MinHeight=60" FontSize="12" PaddingBottom="5" />
-                <Button Text="MinHeight=60" MinHeight="60" Background="#00BCD4" />
-            </StackPanel>
-        </GridItem>
+        <GridItem Column="0"><Button Text="MinWidth=120" MinWidth="120" Background="#9C27B0" /></GridItem>
+        <GridItem Column="1"><Button Text="MinWidth=150" MinWidth="150" Background="#E91E63" /></GridItem>
+        <GridItem Column="2"><Button Text="MinHeight=60" MinHeight="60" Background="#00BCD4" /></GridItem>
     </Grid>
     
-    <!-- 3. 最大尺寸测试 -->
-    <TextBlock Text="📏 3. 最大尺寸 (MaxWidth/MaxHeight)" FontSize="18" FontWeight="true" />
+    <!-- 最大尺寸 -->
+    <TextBlock Text="MaxWidth/MaxHeight" FontSize="16" FontWeight="true" />
     <Grid ColumnDefinitions="*, *" Spacing="10">
-        <GridItem Column="0" Background="#FFF8E1">
-            <StackPanel Padding="10">
-                <TextBlock Text="MaxWidth=150 (按钮)" FontSize="12" PaddingBottom="5" />
-                <Button Text="这个按钮有 MaxWidth=150 限制" MaxWidth="150" Background="#FFC107" />
-            </StackPanel>
-        </GridItem>
-        <GridItem Column="1" Background="#ECEFF1">
-            <StackPanel Padding="10">
-                <TextBlock Text="MaxWidth=200 (文本块自动换行)" FontSize="12" PaddingBottom="5" />
-                <TextBlock Text="这是一个很长的文本块，设置了 MaxWidth=200。当文本长度超过最大宽度时，应该会自动换行到下一行。这是测试换行功能的第三行文字，继续添加更多内容来验证换行是否正常工作。如果看到多行文本，说明换行功能正常！" MaxWidth="200" Background="#CFD8DC" PaddingLeft="10" PaddingTop="10" PaddingRight="10" PaddingBottom="10" />
-            </StackPanel>
-        </GridItem>
+        <GridItem Column="0"><Button Text="MaxWidth=150" MaxWidth="150" Background="#FFC107" /></GridItem>
+        <GridItem Column="1"><Button Text="MaxHeight=80" MaxHeight="80" Background="#FF5722" /></GridItem>
     </Grid>
     
-    <!-- 4. 水平对齐测试 -->
-    <TextBlock Text="📍 4. 水平对齐 (HorizontalAlignment)" FontSize="18" FontWeight="true" />
+    <!-- 水平对齐 -->
+    <TextBlock Text="HorizontalAlignment" FontSize="16" FontWeight="true" />
     <StackPanel Spacing="8">
-        <Button Text="Left 左对齐" HorizontalAlignment="HorizontalAlignment.Left" Background="#3F51B5" />
-        <Button Text="Center 居中对齐" HorizontalAlignment="HorizontalAlignment.Center" Background="#673AB7" />
-        <Button Text="Right 右对齐" HorizontalAlignment="HorizontalAlignment.Right" Background="#9C27B0" />
-        <Button Text="Stretch 拉伸填满" HorizontalAlignment="HorizontalAlignment.Stretch" Background="#E91E63" />
+        <Button Text="Left" HorizontalAlignment="HorizontalAlignment.Left" Background="#3F51B5" />
+        <Button Text="Center" HorizontalAlignment="HorizontalAlignment.Center" Background="#673AB7" />
+        <Button Text="Right" HorizontalAlignment="HorizontalAlignment.Right" Background="#9C27B0" />
+        <Button Text="Stretch" HorizontalAlignment="HorizontalAlignment.Stretch" Background="#E91E63" />
     </StackPanel>
     
-    <!-- 5. 垂直对齐测试 -->
-    <TextBlock Text="⬆️ 5. 垂直对齐 (VerticalAlignment)" FontSize="18" FontWeight="true" />
+    <!-- 垂直对齐 -->
+    <TextBlock Text="VerticalAlignment" FontSize="16" FontWeight="true" />
     <Grid RowDefinitions="60, 60" ColumnDefinitions="*, *, *, *" Spacing="5">
-        <GridItem Row="0" Column="0" Background="#FFEBEE">
-            <Button Text="Top" VerticalAlignment="VerticalAlignment.Top" Background="#F44336" />
-        </GridItem>
-        <GridItem Row="0" Column="1" Background="#E8F5E9">
-            <Button Text="Center" VerticalAlignment="VerticalAlignment.Center" Background="#4CAF50" />
-        </GridItem>
-        <GridItem Row="0" Column="2" Background="#FFF8E1">
-            <Button Text="Bottom" VerticalAlignment="VerticalAlignment.Bottom" Background="#FFC107" />
-        </GridItem>
-        <GridItem Row="0" Column="3" Background="#E3F2FD">
-            <Button Text="Stretch" VerticalAlignment="VerticalAlignment.Stretch" Background="#2196F3" />
-        </GridItem>
-        <GridItem Row="1" Column="0" Background="#F3E5F5">
-            <TextBlock Text="Center" VerticalAlignment="VerticalAlignment.Center" HorizontalAlignment="HorizontalAlignment.Center" Background="#9C27B0" Padding="10" />
-        </GridItem>
-        <GridItem Row="1" Column="1" Background="#E0F7FA">
-            <TextBlock Text="右下" VerticalAlignment="VerticalAlignment.Bottom" HorizontalAlignment="HorizontalAlignment.Right" Background="#00BCD4" Padding="10" />
-        </GridItem>
-        <GridItem Row="1" Column="2" Background="#FFFDE7">
-            <TextBlock Text="左上" VerticalAlignment="VerticalAlignment.Top" HorizontalAlignment="HorizontalAlignment.Left" Background="#FFEB3B" Padding="10" />
-        </GridItem>
-        <GridItem Row="1" Column="3" Background="#EFEBE9">
-            <TextBlock Text="居中" VerticalAlignment="VerticalAlignment.Center" HorizontalAlignment="HorizontalAlignment.Center" Background="#795548" Padding="10" />
-        </GridItem>
-    </Grid>
-    
-    <!-- 6. 组合使用测试 -->
-    <TextBlock Text="🔧 6. 组合使用 (Width + Alignment + Min/Max)" FontSize="18" FontWeight="true" />
-    <Grid ColumnDefinitions="*, *" Spacing="10">
-        <GridItem Column="0" Background="#E8EAF6">
-            <StackPanel Padding="10">
-                <TextBlock Text="Width=200 + Center" FontSize="12" PaddingBottom="5" />
-                <Button Text="固定宽度 + 居中" Width="200" HorizontalAlignment="HorizontalAlignment.Center" Background="#3F51B5" />
-            </StackPanel>
-        </GridItem>
-        <GridItem Column="1" Background="#E8F5E9">
-            <StackPanel Padding="10">
-                <TextBlock Text="MinWidth=100 + MaxWidth=250 + Right" FontSize="12" PaddingBottom="5" />
-                <Button Text="弹性宽度 + 右对齐" MinWidth="100" MaxWidth="250" HorizontalAlignment="HorizontalAlignment.Right" Background="#4CAF50" />
-            </StackPanel>
-        </GridItem>
-    </Grid>
-    
-    <!-- 7. Grid 布局中的对齐 -->
-    <TextBlock Text="📐 7. Grid 布局中的对齐" FontSize="18" FontWeight="true" />
-    <Grid RowDefinitions="Auto, Auto" ColumnDefinitions="*, *" Spacing="10">
-        <GridItem Row="0" Column="0" Background="#FFECB3">
-            <StackPanel Padding="15">
-                <TextBlock Text="Left + Top" FontSize="14" PaddingBottom="5" />
-                <Button Text="↖" Width="60" Height="60" 
-                        HorizontalAlignment="HorizontalAlignment.Left" 
-                        VerticalAlignment="VerticalAlignment.Top" 
-                        Background="#FFC107" FontSize="24" />
-            </StackPanel>
-        </GridItem>
-        <GridItem Row="0" Column="1" Background="#C8E6C9">
-            <StackPanel Padding="15">
-                <TextBlock Text="Center + Center" FontSize="14" PaddingBottom="5" />
-                <Button Text="↔" Width="60" Height="60" 
-                        HorizontalAlignment="HorizontalAlignment.Center" 
-                        VerticalAlignment="VerticalAlignment.Center" 
-                        Background="#4CAF50" FontSize="24" />
-            </StackPanel>
-        </GridItem>
-        <GridItem Row="1" Column="0" Background="#BBDEFB">
-            <StackPanel Padding="15">
-                <TextBlock Text="Right + Center" FontSize="14" PaddingBottom="5" />
-                <Button Text="→" Width="60" Height="60" 
-                        HorizontalAlignment="HorizontalAlignment.Right" 
-                        VerticalAlignment="VerticalAlignment.Center" 
-                        Background="#2196F3" FontSize="24" />
-            </StackPanel>
-        </GridItem>
-        <GridItem Row="1" Column="1" Background="#F8BBD9">
-            <StackPanel Padding="15">
-                <TextBlock Text="Stretch + Bottom" FontSize="14" PaddingBottom="5" />
-                <Button Text="⇊" Height="60" 
-                        HorizontalAlignment="HorizontalAlignment.Stretch" 
-                        VerticalAlignment="VerticalAlignment.Bottom" 
-                        Background="#E91E63" FontSize="24" />
-            </StackPanel>
-        </GridItem>
-    </Grid>
-    
-    <!-- 8. StackPanel 中的对齐 -->
-    <TextBlock Text="📚 8. StackPanel 中的对齐" FontSize="18" FontWeight="true" />
-    <StackPanel Spacing="8">
-        <Button Text="StackPanel - Left" Width="150" HorizontalAlignment="HorizontalAlignment.Left" Background="#009688" />
-        <Button Text="StackPanel - Center" Width="150" HorizontalAlignment="HorizontalAlignment.Center" Background="#00796B" />
-        <Button Text="StackPanel - Right" Width="150" HorizontalAlignment="HorizontalAlignment.Right" Background="#004D40" />
-    </StackPanel>
-    
-    <!-- 9. 综合测试 -->
-    <TextBlock Text="🎯 9. 综合测试 (所有属性组合)" FontSize="18" FontWeight="true" />
-    <Grid RowDefinitions="Auto, Auto" ColumnDefinitions="*, *" Spacing="10">
-        <GridItem Row="0" Column="0" Background="#FFE0B2">
-            <StackPanel Padding="15">
-                <TextBlock Text="场景 1: 按钮固定宽度居中" FontSize="12" PaddingBottom="5" />
-                <Button Text="Width=180, Center" Width="180" 
-                        HorizontalAlignment="HorizontalAlignment.Center" 
-                        MinHeight="50" 
-                        Background="#FF9800" />
-            </StackPanel>
-        </GridItem>
-        <GridItem Row="0" Column="1" Background="#C5CAE9">
-            <StackPanel Padding="15">
-                <TextBlock Text="场景 2: 文本块最大宽度换行" FontSize="12" PaddingBottom="5" />
-                <TextBlock Text="这是一个设置了 MaxWidth=180 和 HorizontalAlignment=Center 的文本块，当内容超过最大宽度时会自动换行，并且整体居中对齐。这是第二行文字。" 
-                        MaxWidth="180" 
-                        HorizontalAlignment="HorizontalAlignment.Center"
-                        Background="#9FA8DA" 
-                        PaddingLeft="10" PaddingTop="10" PaddingRight="10" PaddingBottom="10" />
-            </StackPanel>
-        </GridItem>
-        <GridItem Row="1" Column="0" Background="#B2DFDB">
-            <StackPanel Padding="15">
-                <TextBlock Text="场景 3: 弹性宽度 + 右对齐" FontSize="12" PaddingBottom="5" />
-                <Button Text="Min100 Max250 Right" 
-                        MinWidth="100" MaxWidth="250" 
-                        HorizontalAlignment="HorizontalAlignment.Right" 
-                        Background="#009688" />
-            </StackPanel>
-        </GridItem>
-        <GridItem Row="1" Column="1" Background="#F48FB1">
-            <StackPanel Padding="15">
-                <TextBlock Text="场景 4: 固定尺寸 + 右下对齐" FontSize="12" PaddingBottom="5" />
-                <Grid RowDefinitions="80" ColumnDefinitions="*">
-                    <GridItem Row="0" Column="0">
-                        <Button Text="↘" Width="80" Height="80" 
-                                HorizontalAlignment="HorizontalAlignment.Right" 
-                                VerticalAlignment="VerticalAlignment.Bottom" 
-                                Background="#E91E63" FontSize="32" />
-                    </GridItem>
-                </Grid>
-            </StackPanel>
-        </GridItem>
+        <GridItem Row="0" Column="0" Background="#FFEBEE"><Button Text="Top" VerticalAlignment="VerticalAlignment.Top" Background="#F44336" /></GridItem>
+        <GridItem Row="0" Column="1" Background="#E8F5E9"><Button Text="Center" VerticalAlignment="VerticalAlignment.Center" Background="#4CAF50" /></GridItem>
+        <GridItem Row="0" Column="2" Background="#FFF8E1"><Button Text="Bottom" VerticalAlignment="VerticalAlignment.Bottom" Background="#FFC107" /></GridItem>
+        <GridItem Row="0" Column="3" Background="#E3F2FD"><Button Text="Stretch" VerticalAlignment="VerticalAlignment.Stretch" Background="#2196F3" /></GridItem>
     </Grid>
     
     <!-- 状态栏 -->
-    <TextBlock Text="✅ 已完整支持：Width/Height | MinWidth/MinHeight | MaxWidth/MaxHeight | HorizontalAlignment (Left/Center/Right/Stretch) | VerticalAlignment (Top/Center/Bottom/Stretch) | 文本自动换行" 
-               FontSize="13" 
-               PaddingTop="20" 
-               HorizontalAlignment="HorizontalAlignment.Center" />
+    <TextBlock Text="All layout features working!" FontSize="14" PaddingTop="10" />
 </StackPanel>

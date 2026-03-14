@@ -22,6 +22,11 @@ public class TextBlock : ComponentBase, IElementHandler, IDisposable
     [Parameter] public float? MaxHeight { get; set; }
     [Parameter] public HorizontalAlignment HorizontalAlignment { get; set; } = HorizontalAlignment.Stretch;
     [Parameter] public VerticalAlignment VerticalAlignment { get; set; } = VerticalAlignment.Stretch;
+    
+    [Parameter] public float PaddingLeft { get; set; }
+    [Parameter] public float PaddingTop { get; set; }
+    [Parameter] public float PaddingRight { get; set; }
+    [Parameter] public float PaddingBottom { get; set; }
 
     [Parameter] public EventCallback<MouseEventArgs> OnClick { get; set; }
     
@@ -73,6 +78,10 @@ public class TextBlock : ComponentBase, IElementHandler, IDisposable
         _element.HorizontalAlignment = HorizontalAlignment;
         _element.VerticalAlignment = VerticalAlignment;
         _element.RequestedHeight = Height;
+        _element.PaddingLeft = PaddingLeft;
+        _element.PaddingTop = PaddingTop;
+        _element.PaddingRight = PaddingRight;
+        _element.PaddingBottom = PaddingBottom;
         
         _element.OnClick = OnClick.HasDelegate ? async (e, p) => 
         {
