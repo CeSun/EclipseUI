@@ -287,7 +287,7 @@ public class GridElement : EclipseElement
             currentY += rowHeights[i];
         }
         
-        // 排列子元素
+        // 排列子元素（应用对齐）
         foreach (var child in gridChildren)
         {
             int row = GetRow(child);
@@ -295,19 +295,62 @@ public class GridElement : EclipseElement
             int rowSpan = GetRowSpan(child);
             int colSpan = GetColumnSpan(child);
             
-            // 计算子元素的位置和尺寸
-            float childX = x + PaddingLeft + colOffsets[col];
-            float childY = y + PaddingTop + rowOffsets[row];
+            // 计算单元格的位置和尺寸
+            float cellX = x + PaddingLeft + colOffsets[col];
+            float cellY = y + PaddingTop + rowOffsets[row];
             
-            float childWidth = 0;
+            float cellWidth = 0;
             for (int i = col; i < Math.Min(col + colSpan, colCount); i++)
-                childWidth += colWidths[i];
+                cellWidth += colWidths[i];
             
-            float childHeight = 0;
+            float cellHeight = 0;
             for (int i = row; i < Math.Min(row + rowSpan, rowCount); i++)
-                childHeight += rowHeights[i];
+                cellHeight += rowHeights[i];
             
-            child.Arrange(canvas, childX, childY, childWidth, childHeight);
+            // 测量子元素
+            var childSize = child.Measure(canvas, cellWidth, cellHeight);
+            
+            // 应用水平对齐
+            float childX = cellX;
+            float childW = cellWidth;
+            
+            if (child.HorizontalAlignment == HorizontalAlignment.Left)
+            {
+                childW = childSize.Width;
+            }
+            else if (child.HorizontalAlignment == HorizontalAlignment.Center)
+            {
+                childX = cellX + (cellWidth - childSize.Width) / 2;
+                childW = childSize.Width;
+            }
+            else if (child.HorizontalAlignment == HorizontalAlignment.Right)
+            {
+                childX = cellX + cellWidth - childSize.Width;
+                childW = childSize.Width;
+            }
+            // Stretch: 使用 cellWidth
+            
+            // 应用垂直对齐
+            float childY = cellY;
+            float childH = cellHeight;
+            
+            if (child.VerticalAlignment == VerticalAlignment.Top)
+            {
+                childH = childSize.Height;
+            }
+            else if (child.VerticalAlignment == VerticalAlignment.Center)
+            {
+                childY = cellY + (cellHeight - childSize.Height) / 2;
+                childH = childSize.Height;
+            }
+            else if (child.VerticalAlignment == VerticalAlignment.Bottom)
+            {
+                childY = cellY + cellHeight - childSize.Height;
+                childH = childSize.Height;
+            }
+            // Stretch: 使用 cellHeight
+            
+            child.Arrange(canvas, childX, childY, childW, childH);
         }
     }
     

@@ -101,14 +101,55 @@ public class StackPanelElement : EclipseElement
         foreach (var child in Children)
         {
             var size = child.Measure(canvas, contentWidth, contentHeight);
+            
             if (Orientation == StackOrientation.Vertical)
             {
-                child.Arrange(canvas, currentX, currentY, contentWidth, size.Height);
+                // 应用水平对齐
+                float childX = currentX;
+                float childWidth = contentWidth;
+                
+                if (child.HorizontalAlignment == HorizontalAlignment.Left)
+                {
+                    childWidth = size.Width;
+                }
+                else if (child.HorizontalAlignment == HorizontalAlignment.Center)
+                {
+                    childX = currentX + (contentWidth - size.Width) / 2;
+                    childWidth = size.Width;
+                }
+                else if (child.HorizontalAlignment == HorizontalAlignment.Right)
+                {
+                    childX = currentX + contentWidth - size.Width;
+                    childWidth = size.Width;
+                }
+                // Stretch: 使用 contentWidth
+                
+                child.Arrange(canvas, childX, currentY, childWidth, size.Height);
                 currentY += size.Height + Spacing;
             }
             else
             {
-                child.Arrange(canvas, currentX, currentY, size.Width, contentHeight);
+                // 应用垂直对齐
+                float childY = currentY;
+                float childHeight = contentHeight;
+                
+                if (child.VerticalAlignment == VerticalAlignment.Top)
+                {
+                    childHeight = size.Height;
+                }
+                else if (child.VerticalAlignment == VerticalAlignment.Center)
+                {
+                    childY = currentY + (contentHeight - size.Height) / 2;
+                    childHeight = size.Height;
+                }
+                else if (child.VerticalAlignment == VerticalAlignment.Bottom)
+                {
+                    childY = currentY + contentHeight - size.Height;
+                    childHeight = size.Height;
+                }
+                // Stretch: 使用 contentHeight
+                
+                child.Arrange(canvas, currentX, childY, size.Width, childHeight);
                 currentX += size.Width + Spacing;
             }
         }

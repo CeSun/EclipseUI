@@ -100,6 +100,106 @@ public static class TextRenderer
         return paint.MeasureText(character);
     }
     
+    /// <summary>
+    /// 测量带换行的文本
+    /// </summary>
+    public static (float Width, float Height) MeasureTextWithWrap(string text, float fontSize, float maxWidth)
+    {
+        if (string.IsNullOrEmpty(text))
+            return (0, 0);
+        
+        float lineHeight = fontSize * 1.2f;
+        float totalWidth = 0;
+        float currentLineWidth = 0;
+        int lineCount = 1;
+        
+        // 按空格和标点符号分割
+        var words = text.Split(new[] { ' ', '\u3000' }, StringSplitOptions.None);
+        
+        foreach (var word in words)
+        {
+            if (string.IsNullOrEmpty(word))
+                continue;
+            
+            float wordWidth = MeasureText(word, fontSize);
+            
+            // 如果单词本身就超过最大宽度，强制换行
+            if (wordWidth > maxWidth && currentLineWidth > 0)
+            {
+                totalWidth = Math.Max(totalWidth, currentLineWidth);
+                currentLineWidth = wordWidth;
+                lineCount++;
+            }
+            // 如果加上单词后超过最大宽度，换行
+            else if (currentLineWidth + wordWidth > maxWidth && currentLineWidth > 0)
+            {
+                totalWidth = Math.Max(totalWidth, currentLineWidth);
+                currentLineWidth = wordWidth;
+                lineCount++;
+            }
+            else
+            {
+                // 添加到当前行
+                if (currentLineWidth > 0)
+                    currentLineWidth += MeasureText(" ", fontSize); // 空格宽度
+                currentLineWidth += wordWidth;
+            }
+        }
+        
+        totalWidth = Math.Max(totalWidth, currentLineWidth);
+        float totalHeight = lineCount * lineHeight;
+        
+        return (totalWidth, totalHeight);
+    }
+    
+    /// <summary>
+    /// 绘制带换行的文本
+    /// </summary>
+    public static void DrawTextWithWrap(IRenderContext context, string text, float x, float y, float fontSize, Color color, float maxWidth)
+    {
+        if (string.IsNullOrEmpty(text))
+            return;
+        
+        float lineHeight = fontSize * 1.2f;
+        float currentY = y;
+        
+        // 按空格和标点符号分割
+        var words = text.Split(new[] { ' ', '\u3000' }, StringSplitOptions.None);
+        
+        float currentX = x;
+        float currentLineWidth = 0;
+        
+        foreach (var word in words)
+        {
+            if (string.IsNullOrEmpty(word))
+                continue;
+            
+            float wordWidth = MeasureText(word, fontSize);
+            float spaceWidth = MeasureText(" ", fontSize);
+            
+            // 如果加上单词后超过最大宽度，换行
+            if (currentLineWidth + wordWidth > maxWidth && currentLineWidth > 0)
+            {
+                currentX = x;
+                currentY += lineHeight;
+                currentLineWidth = 0;
+            }
+            
+            // 绘制单词
+            DrawMixedText(context, word, currentX, currentY, fontSize, color);
+            currentX += wordWidth;
+            currentLineWidth += wordWidth;
+            
+            // 添加空格（如果不是最后一个单词）
+            if (currentLineWidth + spaceWidth <= maxWidth)
+            {
+                DrawMixedText(context, " ", currentX, currentY, fontSize, color);
+                currentX += spaceWidth;
+                currentLineWidth += spaceWidth;
+            }
+        }
+    }
+    
     private static void DrawMixedText(IRenderContext context, string text, float x, float y, float fontSize, Color color)
     {
         float currentX = x;

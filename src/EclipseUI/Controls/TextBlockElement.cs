@@ -16,13 +16,21 @@ public class TextBlockElement : EclipseElement
     
     public override SKSize Measure(SKCanvas canvas, float availableWidth, float availableHeight)
     {
-        var width = TextRenderer.MeasureText(Text, FontSize);
-        var height = FontSize * 1.2f; // 估算行高
+        // 计算可用宽度（减去 Padding）
+        float contentWidth = availableWidth - PaddingLeft - PaddingRight;
         
-        return new SKSize(
-            width + PaddingLeft + PaddingRight, 
-            height + PaddingTop + PaddingBottom
-        );
+        // 应用 MaxWidth 限制
+        if (MaxWidth.HasValue)
+        {
+            contentWidth = Math.Min(contentWidth, MaxWidth.Value - PaddingLeft - PaddingRight);
+        }
+        
+        // 测量文本（考虑换行）
+        var lines = TextRenderer.MeasureTextWithWrap(Text, FontSize, contentWidth);
+        var totalHeight = lines.Height + PaddingTop + PaddingBottom;
+        var maxWidth = lines.Width + PaddingLeft + PaddingRight;
+        
+        return new SKSize(maxWidth, totalHeight);
     }
     
     public override void Render(SKCanvas canvas)
@@ -57,11 +65,14 @@ public class TextBlockElement : EclipseElement
         // 创建 SkiaRenderContext
         using var renderContext = new SkiaRenderContext(canvas);
         
+        // 计算可用宽度
+        float contentWidth = Width - PaddingLeft - PaddingRight;
+        
         // 计算基线
         var baselineY = Y + PaddingTop + FontSize;
         
-        // 使用 TextRenderer 绘制（自动处理 Emoji）
-        TextRenderer.DrawText(renderContext, Text, X + PaddingLeft, baselineY, FontSize, 
-            new Color(TextColor.Red, TextColor.Green, TextColor.Blue, TextColor.Alpha));
+        // 使用 TextRenderer 绘制（自动处理 Emoji 和换行）
+        TextRenderer.DrawTextWithWrap(renderContext, Text, X + PaddingLeft, baselineY, FontSize, 
+            new Color(TextColor.Red, TextColor.Green, TextColor.Blue, TextColor.Alpha), contentWidth);
     }
 }
