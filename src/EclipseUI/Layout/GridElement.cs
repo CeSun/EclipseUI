@@ -70,6 +70,7 @@ public class GridElement : EclipseElement
 {
     public List<RowDefinitionInternal> RowDefinitions { get; } = new();
     public List<ColumnDefinitionInternal> ColumnDefinitions { get; } = new();
+    public float Spacing { get; set; }
     
     public override SKSize Measure(SKCanvas canvas, float availableWidth, float availableHeight)
     {
@@ -227,7 +228,7 @@ public class GridElement : EclipseElement
             {
                 colWidths[i] = (float)col.Width.Value * starUnitWidth2;
             }
-            currentX += colWidths[i];
+            currentX += colWidths[i] + Spacing;
         }
         
         // 分配行高
@@ -284,7 +285,7 @@ public class GridElement : EclipseElement
                 rowHeights[i] = (float)row.Height.Value * starUnitHeight2;
             }
             // Auto 和 Pixel 类型的 rowHeights[i] 已经在前面计算过
-            currentY += rowHeights[i];
+            currentY += rowHeights[i] + Spacing;
         }
         
         // 排列子元素（应用对齐）

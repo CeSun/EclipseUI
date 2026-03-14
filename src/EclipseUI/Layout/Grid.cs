@@ -34,6 +34,8 @@ public class Grid : ComponentBase, IElementHandler, IDisposable
     /// </summary>
     [Parameter] public string? ColumnDefinitions { get; set; }
     
+    [Parameter] public float Spacing { get; set; }
+    
     [Parameter] public RenderFragment? ChildContent { get; set; }
     
     [Parameter] public float? Width { get; set; }
@@ -95,6 +97,7 @@ public class Grid : ComponentBase, IElementHandler, IDisposable
         _element.PaddingTop = PaddingTop;
         _element.PaddingRight = PaddingRight;
         _element.PaddingBottom = PaddingBottom;
+        _element.Spacing = Spacing;
         _element.RequestedWidth = Width;
         _element.RequestedHeight = Height;
         _element.MinWidth = MinWidth;
