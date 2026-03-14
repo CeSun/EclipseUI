@@ -13,6 +13,9 @@ public class StackPanelElement : EclipseElement
     public StackOrientation Orientation { get; set; } = StackOrientation.Vertical;
     public float Spacing { get; set; }
     
+    // 缓存 Measure 阶段每个子元素的尺寸，避免 Arrange 时重新 Measure 导致不一致
+    private readonly Dictionary<EclipseElement, SKSize> _childSizes = new();
+    
     public override void Render(SKCanvas canvas)
     {
         if (!IsVisible) return;
@@ -49,6 +52,8 @@ public class StackPanelElement : EclipseElement
     
     public override SKSize Measure(SKCanvas canvas, float availableWidth, float availableHeight)
     {
+        _childSizes.Clear();
+        
         float totalWidth = 0, totalHeight = 0, maxWidth = 0, maxHeight = 0;
         
         foreach (var child in Children)
@@ -64,15 +69,22 @@ public class StackPanelElement : EclipseElement
             
             var size = child.Measure(canvas, childWidth, childHeight);
             
+            // 缓存子元素尺寸
+            _childSizes[child] = size;
+            
+            // 加上 Margin
+            float childTotalWidth = size.Width + child.MarginLeft + child.MarginRight;
+            float childTotalHeight = size.Height + child.MarginTop + child.MarginBottom;
+            
             if (Orientation == StackOrientation.Vertical)
             {
-                totalHeight += size.Height + Spacing;
-                maxWidth = Math.Max(maxWidth, size.Width);
+                totalHeight += childTotalHeight + Spacing;
+                maxWidth = Math.Max(maxWidth, childTotalWidth);
             }
             else
             {
-                totalWidth += size.Width + Spacing;
-                maxHeight = Math.Max(maxHeight, size.Height);
+                totalWidth += childTotalWidth + Spacing;
+                maxHeight = Math.Max(maxHeight, childTotalHeight);
             }
         }
         
@@ -104,13 +116,19 @@ public class StackPanelElement : EclipseElement
         
         foreach (var child in Children)
         {
-            var size = child.Measure(canvas, contentWidth, contentHeight);
+            // 使用 Measure 阶段缓存的尺寸，不再重新 Measure
+            if (!_childSizes.TryGetValue(child, out var size))
+            {
+                // 回退：如果没有缓存，重新测量（理论上不应该发生）
+                size = child.Measure(canvas, contentWidth, contentHeight);
+            }
             
             if (Orientation == StackOrientation.Vertical)
             {
                 // 应用水平对齐
-                float childX = currentX;
+                float childX = currentX + child.MarginLeft;
                 float childWidth = size.Width;
+                float childY = currentY + child.MarginTop;
                 
                 // 如果子元素有 RequestedWidth 或 MaxWidth，不使用 Stretch
                 bool hasRequestedWidth = child.RequestedWidth.HasValue;
@@ -122,7 +140,7 @@ public class StackPanelElement : EclipseElement
                 }
                 else if (child.HorizontalAlignment == HorizontalAlignment.Right)
                 {
-                    childX = currentX + contentWidth - size.Width;
+                    childX = currentX + contentWidth - size.Width - child.MarginRight;
                 }
                 else if (hasRequestedWidth || hasMaxWidth || child.HorizontalAlignment == HorizontalAlignment.Left)
                 {
@@ -132,16 +150,16 @@ public class StackPanelElement : EclipseElement
                 else
                 {
                     // Stretch 且没有 RequestedWidth/MaxWidth: 使用 contentWidth
-                    childWidth = contentWidth;
+                    childWidth = contentWidth - child.MarginLeft - child.MarginRight;
                 }
                 
-                child.Arrange(canvas, childX, currentY, childWidth, size.Height);
-                currentY += size.Height + Spacing;
+                child.Arrange(canvas, childX, childY, childWidth, size.Height);
+                currentY += size.Height + child.MarginTop + child.MarginBottom + Spacing;
             }
             else
             {
                 // 应用垂直对齐
-                float childY = currentY;
+                float childY = currentY + child.MarginTop;
                 float childHeight = contentHeight;
                 
                 if (child.VerticalAlignment == VerticalAlignment.Top)
@@ -155,13 +173,13 @@ public class StackPanelElement : EclipseElement
                 }
                 else if (child.VerticalAlignment == VerticalAlignment.Bottom)
                 {
-                    childY = currentY + contentHeight - size.Height;
+                    childY = currentY + contentHeight - size.Height - child.MarginBottom;
                     childHeight = size.Height;
                 }
                 // Stretch: 使用 contentHeight
                 
-                child.Arrange(canvas, currentX, childY, size.Width, childHeight);
-                currentX += size.Width + Spacing;
+                child.Arrange(canvas, currentX + child.MarginLeft, childY, size.Width, childHeight);
+                currentX += size.Width + child.MarginLeft + child.MarginRight + Spacing;
             }
         }
     }

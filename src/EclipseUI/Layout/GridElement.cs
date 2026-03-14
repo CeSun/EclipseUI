@@ -72,6 +72,14 @@ public class GridElement : EclipseElement
     public List<ColumnDefinitionInternal> ColumnDefinitions { get; } = new();
     public float Spacing { get; set; }
     
+    // 缓存 Measure 阶段计算的行列尺寸，避免 Arrange 时重新计算导致不一致
+    private float[]? _cachedRowHeights;
+    private float[]? _cachedColWidths;
+    private float[]? _cachedRowOffsets;
+    private float[]? _cachedColOffsets;
+    private int _cachedRowCount;
+    private int _cachedColCount;
+    
     public override SKSize Measure(SKCanvas canvas, float availableWidth, float availableHeight)
     {
         var gridChildren = GetGridChildren();
@@ -135,6 +143,34 @@ public class GridElement : EclipseElement
         if (rowCount > 1) totalHeight += Spacing * (rowCount - 1);
         if (colCount > 1) totalWidth += Spacing * (colCount - 1);
         
+        // 缓存行列尺寸供 Arrange 使用
+        _cachedRowHeights = rowHeights;
+        _cachedColWidths = colWidths;
+        _cachedRowCount = rowCount;
+        _cachedColCount = colCount;
+        
+        // 计算偏移量（包含 Spacing）
+        _cachedRowOffsets = new float[rowCount];
+        _cachedColOffsets = new float[colCount];
+        
+        float currentRowOffset = 0;
+        for (int i = 0; i < rowCount; i++)
+        {
+            _cachedRowOffsets[i] = currentRowOffset;
+            currentRowOffset += rowHeights[i];
+            if (i < rowCount - 1)
+                currentRowOffset += Spacing;
+        }
+        
+        float currentColOffset = 0;
+        for (int i = 0; i < colCount; i++)
+        {
+            _cachedColOffsets[i] = currentColOffset;
+            currentColOffset += colWidths[i];
+            if (i < colCount - 1)
+                currentColOffset += Spacing;
+        }
+        
         return new SKSize(
             totalWidth + PaddingLeft + PaddingRight,
             totalHeight + PaddingTop + PaddingBottom
@@ -143,158 +179,29 @@ public class GridElement : EclipseElement
     
     public override void Arrange(SKCanvas canvas, float x, float y, float width, float height)
     {
-        // 设置自身位置和尺寸，但不调用 ArrangeChildren（我们会手动排列子元素）
+        // 设置自身位置和尺寸
         X = x;
         Y = y;
         Width = width;
         Height = height;
         
         var gridChildren = GetGridChildren();
-        EnsureRowColumnDefinitions(gridChildren);
         
-        int rowCount = RowDefinitions.Count;
-        int colCount = ColumnDefinitions.Count;
-        
-        // 计算每行每列的尺寸和起始位置
-        var rowHeights = new float[rowCount];
-        var colWidths = new float[colCount];
-        var rowOffsets = new float[rowCount];
-        var colOffsets = new float[colCount];
-        
-        // 测量获取行列尺寸
-        Measure(canvas, width, height);
-        
-        // 重新计算行列尺寸（基于实际可用空间）
-        float contentWidth = width - PaddingLeft - PaddingRight;
-        float contentHeight = height - PaddingTop - PaddingBottom;
-        
-        // 分配列宽
-        float totalStarColumns = 0;
-        float usedWidth = 0;
-        foreach (var col in ColumnDefinitions)
+        // 使用 Measure 阶段缓存的行列尺寸，确保与 Measure 结果一致
+        if (_cachedRowHeights == null || _cachedColWidths == null)
         {
-            if (col.Width.GridUnitType == GridUnitType.Pixel)
-                usedWidth += (float)col.Width.Value;
-            else if (col.Width.GridUnitType == GridUnitType.Auto)
-                usedWidth += 0; // Auto 会在子元素测量时确定
-            else
-                totalStarColumns += (float)col.Width.Value;
+            // 如果没有缓存（理论上不应该发生），回退到旧逻辑
+            EnsureRowColumnDefinitions(gridChildren);
+            // 简单处理：直接调用 Measure 获取尺寸
+            Measure(canvas, width, height);
         }
         
-        float remainingWidth = Math.Max(0, contentWidth - usedWidth);
-        float starUnitWidth = totalStarColumns > 0 ? remainingWidth / totalStarColumns : 0;
-        
-        // 第一次：计算 Pixel 和 Star 类型的列宽
-        float totalStarColumns2 = 0;
-        float usedWidth2 = 0;
-        for (int i = 0; i < colCount; i++)
-        {
-            var col = ColumnDefinitions[i];
-            if (col.Width.GridUnitType == GridUnitType.Pixel)
-            {
-                colWidths[i] = (float)col.Width.Value;
-                usedWidth2 += colWidths[i];
-            }
-            else if (col.Width.GridUnitType == GridUnitType.Star)
-            {
-                totalStarColumns2 += (float)col.Width.Value;
-            }
-        }
-        
-        // 测量 Auto 类型的列宽
-        foreach (var child in gridChildren)
-        {
-            int col = GetColumn(child);
-            if (ColumnDefinitions[col].Width.GridUnitType == GridUnitType.Auto)
-            {
-                var childSize = child.Measure(canvas, contentWidth, contentHeight);
-                colWidths[col] = Math.Max(colWidths[col], childSize.Width);
-            }
-        }
-        
-        // 重新计算 usedWidth2
-        usedWidth2 = 0;
-        for (int i = 0; i < colCount; i++)
-        {
-            if (ColumnDefinitions[i].Width.GridUnitType == GridUnitType.Auto || 
-                ColumnDefinitions[i].Width.GridUnitType == GridUnitType.Pixel)
-            {
-                usedWidth2 += colWidths[i];
-            }
-        }
-        
-        // 计算 Star 列宽
-        float remainingWidth2 = Math.Max(0, contentWidth - usedWidth2);
-        float starUnitWidth2 = totalStarColumns2 > 0 ? remainingWidth2 / totalStarColumns2 : 0;
-        
-        float currentX = 0;
-        for (int i = 0; i < colCount; i++)
-        {
-            colOffsets[i] = currentX;
-            var col = ColumnDefinitions[i];
-            if (col.Width.GridUnitType == GridUnitType.Star)
-            {
-                colWidths[i] = (float)col.Width.Value * starUnitWidth2;
-            }
-            currentX += colWidths[i] + Spacing;
-        }
-        
-        // 分配行高
-        float totalStarRows2 = 0;
-        float usedHeight2 = 0;
-        for (int i = 0; i < rowCount; i++)
-        {
-            var row = RowDefinitions[i];
-            if (row.Height.GridUnitType == GridUnitType.Pixel)
-            {
-                rowHeights[i] = (float)row.Height.Value;
-                usedHeight2 += rowHeights[i];
-            }
-            else if (row.Height.GridUnitType == GridUnitType.Star)
-            {
-                totalStarRows2 += (float)row.Height.Value;
-            }
-        }
-        
-        // 测量 Auto 类型的行高
-        foreach (var child in gridChildren)
-        {
-            int row = GetRow(child);
-            
-            if (RowDefinitions[row].Height.GridUnitType == GridUnitType.Auto)
-            {
-                var childSize = child.Measure(canvas, colWidths[GetColumn(child)], contentHeight);
-                rowHeights[row] = Math.Max(rowHeights[row], childSize.Height);
-            }
-        }
-        
-        // 重新计算 usedHeight2（累加所有 Auto 和 Pixel 行高）
-        usedHeight2 = 0;
-        for (int i = 0; i < rowCount; i++)
-        {
-            if (RowDefinitions[i].Height.GridUnitType == GridUnitType.Auto || 
-                RowDefinitions[i].Height.GridUnitType == GridUnitType.Pixel)
-            {
-                usedHeight2 += rowHeights[i];
-            }
-        }
-        
-        // 计算 Star 高度
-        float remainingHeight2 = Math.Max(0, contentHeight - usedHeight2);
-        float starUnitHeight2 = totalStarRows2 > 0 ? remainingHeight2 / totalStarRows2 : 0;
-        
-        float currentY = 0;
-        for (int i = 0; i < rowCount; i++)
-        {
-            rowOffsets[i] = currentY;
-            var row = RowDefinitions[i];
-            if (row.Height.GridUnitType == GridUnitType.Star)
-            {
-                rowHeights[i] = (float)row.Height.Value * starUnitHeight2;
-            }
-            // Auto 和 Pixel 类型的 rowHeights[i] 已经在前面计算过
-            currentY += rowHeights[i] + Spacing;
-        }
+        int rowCount = _cachedRowCount;
+        int colCount = _cachedColCount;
+        var rowHeights = _cachedRowHeights!;
+        var colWidths = _cachedColWidths!;
+        var rowOffsets = _cachedRowOffsets!;
+        var colOffsets = _cachedColOffsets!;
         
         // 排列子元素（应用对齐）
         foreach (var child in gridChildren)
@@ -304,7 +211,7 @@ public class GridElement : EclipseElement
             int rowSpan = GetRowSpan(child);
             int colSpan = GetColumnSpan(child);
             
-            // 计算单元格的位置和尺寸
+            // 计算单元格的位置和尺寸（使用缓存的偏移量）
             float cellX = x + PaddingLeft + colOffsets[col];
             float cellY = y + PaddingTop + rowOffsets[row];
             
@@ -590,10 +497,22 @@ public class GridElement : EclipseElement
     /// </summary>
     private void EnsureRowColumnDefinitions(List<GridItemElement> children)
     {
+        // 如果行列定义发生变化，清除缓存
+        bool shouldClearCache = false;
+        
         if (children.Count == 0)
         {
-            if (RowDefinitions.Count == 0) RowDefinitions.Add(new RowDefinitionInternal { Height = GridLength.Auto });
-            if (ColumnDefinitions.Count == 0) ColumnDefinitions.Add(new ColumnDefinitionInternal { Width = GridLength.Auto });
+            if (RowDefinitions.Count == 0)
+            {
+                RowDefinitions.Add(new RowDefinitionInternal { Height = GridLength.Auto });
+                shouldClearCache = true;
+            }
+            if (ColumnDefinitions.Count == 0)
+            {
+                ColumnDefinitions.Add(new ColumnDefinitionInternal { Width = GridLength.Auto });
+                shouldClearCache = true;
+            }
+            if (shouldClearCache) ClearCache();
             return;
         }
         
@@ -606,10 +525,33 @@ public class GridElement : EclipseElement
         }
         
         // 确保行列定义数量足够（默认为 Auto）
-        while (RowDefinitions.Count < maxRow)
-            RowDefinitions.Add(new RowDefinitionInternal { Height = GridLength.Auto });
-        while (ColumnDefinitions.Count < maxCol)
-            ColumnDefinitions.Add(new ColumnDefinitionInternal { Width = GridLength.Auto });
+        if (RowDefinitions.Count < maxRow)
+        {
+            while (RowDefinitions.Count < maxRow)
+                RowDefinitions.Add(new RowDefinitionInternal { Height = GridLength.Auto });
+            shouldClearCache = true;
+        }
+        if (ColumnDefinitions.Count < maxCol)
+        {
+            while (ColumnDefinitions.Count < maxCol)
+                ColumnDefinitions.Add(new ColumnDefinitionInternal { Width = GridLength.Auto });
+            shouldClearCache = true;
+        }
+        
+        if (shouldClearCache) ClearCache();
+    }
+    
+    /// <summary>
+    /// 清除缓存的行列尺寸
+    /// </summary>
+    private void ClearCache()
+    {
+        _cachedRowHeights = null;
+        _cachedColWidths = null;
+        _cachedRowOffsets = null;
+        _cachedColOffsets = null;
+        _cachedRowCount = 0;
+        _cachedColCount = 0;
     }
     
     #region 附加属性
