@@ -174,7 +174,7 @@ public class ScrollViewElement : EclipseElement
         if (ContentHeight <= Height)
             return false;
         
-        float scrollAmount = deltaY * 20; // 滚动速度
+        float scrollAmount = -deltaY * 20; // 滚动速度（反向，符合直觉）
         ScrollOffset += scrollAmount;
         ScrollOffset = Math.Clamp(ScrollOffset, 0, ContentHeight - Height);
         return true;
