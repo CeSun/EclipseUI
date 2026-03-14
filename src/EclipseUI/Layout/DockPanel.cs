@@ -6,13 +6,17 @@ using EclipseUI.Core;
 namespace EclipseUI.Layout;
 
 /// <summary>
-/// 堆叠面板组件 - 纯 C# 实现
+/// DockPanel 面板组件 - 按停靠位置排列子元素
 /// </summary>
-public class StackPanel : ComponentBase, IElementHandler, IDisposable
+public class DockPanel : ComponentBase, IElementHandler, IDisposable
 {
-    [Parameter] public StackOrientation Orientation { get; set; } = StackOrientation.Vertical;
-    [Parameter] public float Spacing { get; set; }
+    /// <summary>
+    /// 最后一个子元素是否填充剩余空间
+    /// </summary>
+    [Parameter] public bool LastChildFill { get; set; } = true;
+    
     [Parameter] public string? Background { get; set; }
+    
     [Parameter] public EventCallback OnClick { get; set; }
     
     [Parameter] public float MarginLeft { get; set; }
@@ -27,7 +31,7 @@ public class StackPanel : ComponentBase, IElementHandler, IDisposable
     
     [Parameter] public RenderFragment? ChildContent { get; set; }
     
-    private StackPanelElement? _element;
+    private DockPanelElement? _element;
     private bool _disposed;
     
     EclipseElement IElementHandler.Element
@@ -36,10 +40,9 @@ public class StackPanel : ComponentBase, IElementHandler, IDisposable
         {
             if (_element == null)
             {
-                _element = new StackPanelElement
+                _element = new DockPanelElement
                 {
-                    Orientation = Orientation,
-                    Spacing = Spacing,
+                    LastChildFill = LastChildFill,
                     MarginLeft = MarginLeft,
                     MarginTop = MarginTop,
                     MarginRight = MarginRight,
@@ -71,8 +74,7 @@ public class StackPanel : ComponentBase, IElementHandler, IDisposable
     {
         if (_element == null) return;
         
-        _element.Orientation = Orientation;
-        _element.Spacing = Spacing;
+        _element.LastChildFill = LastChildFill;
         _element.MarginLeft = MarginLeft;
         _element.MarginTop = MarginTop;
         _element.MarginRight = MarginRight;

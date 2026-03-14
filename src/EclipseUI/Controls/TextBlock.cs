@@ -13,6 +13,7 @@ public class TextBlock : ComponentBase, IElementHandler, IDisposable
     [Parameter] public float FontSize { get; set; } = 14;
     [Parameter] public string? Foreground { get; set; }
     [Parameter] public bool FontWeight { get; set; }
+    [Parameter] public string? Background { get; set; }
     [Parameter] public EventCallback<MouseEventArgs> OnClick { get; set; }
     
     private TextBlockElement? _element;
@@ -53,6 +54,7 @@ public class TextBlock : ComponentBase, IElementHandler, IDisposable
         _element.FontSize = FontSize;
         _element.TextColor = ParseColor(Foreground);
         _element.IsBold = FontWeight;
+        _element.BackgroundColor = ParseBackground(Background);
         
         _element.OnClick = OnClick.HasDelegate ? async (e, p) => 
         {
@@ -68,6 +70,13 @@ public class TextBlock : ComponentBase, IElementHandler, IDisposable
                 await OnClick.InvokeAsync(new MouseEventArgs { ClientX = p.X, ClientY = p.Y });
             }
         } : null;
+    }
+    
+    private static SKColor? ParseBackground(string? color)
+    {
+        if (!string.IsNullOrEmpty(color) && color.StartsWith('#') && color.Length == 7)
+            return SKColor.Parse(color);
+        return null;
     }
     
     private static SKColor ParseColor(string? color)
