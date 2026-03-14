@@ -169,8 +169,16 @@ public class ScrollViewElement : EclipseElement
     /// <summary>
     /// 处理鼠标滚轮事件
     /// </summary>
-    public bool HandleMouseWheel(float deltaY)
+    public override bool HandleMouseWheel(float deltaY)
     {
+        // 首先尝试让子元素处理
+        for (int i = Children.Count - 1; i >= 0; i--)
+        {
+            if (Children[i].HandleMouseWheel(deltaY))
+                return true;
+        }
+        
+        // 子元素没有处理，自己处理滚动
         if (ContentHeight <= Height)
             return false;
         
@@ -195,8 +203,16 @@ public class ScrollViewElement : EclipseElement
     /// <summary>
     /// 处理鼠标按下事件
     /// </summary>
-    public bool HandleMouseDown(float x, float y)
+    public override bool HandleMouseDown(float x, float y)
     {
+        // 首先检查子元素（从后往前，优先处理上层的元素）
+        for (int i = Children.Count - 1; i >= 0; i--)
+        {
+            if (Children[i].HandleMouseDown(x, y))
+                return true;
+        }
+        
+        // 然后检查滚动条
         if (ContentHeight <= Height || !ShowScrollbar)
             return false;
         
@@ -220,6 +236,7 @@ public class ScrollViewElement : EclipseElement
                 _isDraggingScrollbar = true;
                 _dragStartY = y;
                 _dragStartOffset = ScrollOffset;
+                return true;
             }
             else
             {
@@ -235,8 +252,8 @@ public class ScrollViewElement : EclipseElement
                     // 点击在滑块下方，向下滚动
                     ScrollOffset = Math.Min(ContentHeight - Height, ScrollOffset + pageScrollAmount);
                 }
+                return true;
             }
-            return true;
         }
         
         return false;
@@ -245,8 +262,17 @@ public class ScrollViewElement : EclipseElement
     /// <summary>
     /// 处理鼠标移动事件
     /// </summary>
-    public bool HandleMouseMove(float x, float y)
+    public override bool HandleMouseMove(float x, float y)
     {
+        // 首先处理子元素
+        bool childHandled = false;
+        for (int i = Children.Count - 1; i >= 0; i--)
+        {
+            if (Children[i].HandleMouseMove(x, y))
+                childHandled = true;
+        }
+        
+        // 处理拖动
         if (_isDraggingScrollbar)
         {
             float deltaY = y - _dragStartY;
@@ -259,7 +285,7 @@ public class ScrollViewElement : EclipseElement
         
         // 检测是否悬停在滚动条上
         if (ContentHeight <= Height || !ShowScrollbar)
-            return false;
+            return childHandled;
         
         float scrollbarWidth = 6;
         float paddingRight = 4;
@@ -269,22 +295,24 @@ public class ScrollViewElement : EclipseElement
         _isHoveringScrollbar = (x >= scrollbarX && x <= scrollbarX + scrollbarWidth &&
                                 y >= Y + PaddingTop && y <= Y + Height - PaddingBottom);
         
-        return _isHoveringScrollbar != wasHovering;
+        return childHandled || _isHoveringScrollbar != wasHovering;
     }
     
     /// <summary>
     /// 处理鼠标释放事件
     /// </summary>
-    public void HandleMouseUp()
+    public override void HandleMouseUp()
     {
+        base.HandleMouseUp();
         _isDraggingScrollbar = false;
     }
     
     /// <summary>
     /// 处理鼠标离开事件
     /// </summary>
-    public void HandleMouseLeave()
+    public override void HandleMouseLeave()
     {
+        base.HandleMouseLeave();
         _isHoveringScrollbar = false;
     }
     
