@@ -1,67 +1,58 @@
 @using EclipseUI.Controls
 @using EclipseUI.Layout
 
-<StackPanel PaddingLeft="30" PaddingTop="30" PaddingRight="30" PaddingBottom="30">
-    <!-- Grid 布局演示 -->
-    <TextBlock Text="🌑 EclipseUI - Grid 网格布局演示" FontSize="24" PaddingBottom="20" />
+<StackPanel PaddingLeft="30" PaddingTop="30" PaddingRight="30" PaddingBottom="30" Spacing="20">
+    <!-- 标题 -->
+    <TextBlock Text="🌑 EclipseUI - 尺寸属性测试" FontSize="24" />
     
-    <Grid RowDefinitions="Auto, *, Auto" ColumnDefinitions="150, *, 150">
-        
-        <!-- 顶部标题 - 跨 3 列 -->
-        <GridItem Row="0" Column="0" ColumnSpan="3" Background="#2196F3">
+    <!-- 固定尺寸测试 -->
+    <TextBlock Text="📏 固定尺寸 (Width/Height)" FontSize="18" FontWeight="true" />
+    <StackPanel Orientation="StackOrientation.Horizontal" Spacing="15">
+        <Button Text="200x50" Width="200" Height="50" Background="#2196F3" />
+        <Button Text="150x40" Width="150" Height="40" Background="#4CAF50" />
+        <Button Text="100x30" Width="100" Height="30" Background="#FF9800" />
+    </StackPanel>
+    
+    <!-- 最小尺寸测试 -->
+    <TextBlock Text="📐 最小尺寸 (MinWidth)" FontSize="18" FontWeight="true" />
+    <StackPanel Orientation="StackOrientation.Horizontal" Spacing="15">
+        <Button Text="MinWidth=150" MinWidth="150" Background="#9C27B0" />
+        <Button Text="MinWidth=200" MinWidth="200" Background="#673AB7" />
+    </StackPanel>
+    
+    <!-- 最大尺寸测试 -->
+    <TextBlock Text="📏 最大尺寸 (MaxWidth)" FontSize="18" FontWeight="true" />
+    <StackPanel Spacing="10">
+        <Button Text="MaxWidth=200" MaxWidth="200" Background="#FF5722" />
+        <TextBlock Text="这个文本块设置了 MaxWidth=200，超过会自动换行显示更多内容！这是一个很长的文本用来测试换行效果。" MaxWidth="200" Background="#FFCCBC" PaddingLeft="10" PaddingTop="10" PaddingRight="10" PaddingBottom="10" />
+    </StackPanel>
+    
+    <!-- 组合使用测试 -->
+    <TextBlock Text="🔧 组合使用 (Min + Max)" FontSize="18" FontWeight="true" />
+    <StackPanel Orientation="StackOrientation.Horizontal" Spacing="15">
+        <Button Text="Min100 Max300" MinWidth="100" MaxWidth="300" Background="#009688" />
+        <Button Text="固定宽 200" Width="200" MinHeight="40" MaxHeight="60" Background="#00796B" />
+    </StackPanel>
+    
+    <!-- 对比测试 -->
+    <TextBlock Text="📊 对比测试" FontSize="18" FontWeight="true" />
+    <Grid RowDefinitions="Auto, Auto" ColumnDefinitions="*, *">
+        <GridItem Row="0" Column="0" Background="#607D8B">
             <StackPanel PaddingLeft="20" PaddingTop="15" PaddingRight="20" PaddingBottom="15">
-                <TextBlock Text="📐 Grid 网格布局" FontSize="20" />
+                <TextBlock Text="❌ 无限制" FontSize="16" FontWeight="true" PaddingBottom="10" />
+                <Button Text="这个按钮没有设置宽度限制" Background="#546E7A" />
+                <TextBlock Text="这个文本块也没有设置宽度限制" Background="#90A4AE" PaddingLeft="10" PaddingTop="10" PaddingRight="10" PaddingBottom="10" />
             </StackPanel>
         </GridItem>
-        
-        <!-- 左侧导航 - 只在第 2 行 -->
-        <GridItem Row="1" Column="0" Background="#4CAF50">
-            <StackPanel Orientation="StackOrientation.Vertical" Spacing="10" 
-                        PaddingLeft="15" PaddingTop="20" PaddingRight="15" PaddingBottom="20">
-                <TextBlock Text="🧭 导航" FontSize="16" />
-                <Button Text="🏠 首页" />
-                <Button Text="⚙️ 设置" />
-                <Button Text="ℹ️ 关于" />
-            </StackPanel>
-        </GridItem>
-        
-        <!-- 中间内容区 -->
-        <GridItem Row="1" Column="1" Background="#9C27B0">
-            <StackPanel Orientation="StackOrientation.Vertical" Spacing="15"
-                        PaddingLeft="30" PaddingTop="30" PaddingRight="30" PaddingBottom="30">
-                <TextBlock Text="欢迎使用 Grid 布局！" FontSize="20" />
-                <TextBlock Text="这是一个 3 行 3 列的网格：&#10;• 第 1 行：Auto 高度（标题）&#10;• 第 2 行：* 比例高度（内容区）&#10;• 第 3 行：Auto 高度（状态栏）&#10;• 第 1 列：150px 固定宽度&#10;• 第 2 列：* 比例宽度&#10;• 第 3 列：150px 固定宽度" FontSize="14" />
-                <Button Text="点我 +1" Background="#FF5722" FontSize="16" OnClick="HandleButtonClick" />
-                <TextBlock Text="@($"点击计数：{_count}")" FontSize="18" FontWeight="true" Foreground="#FFFFFF" />
-            </StackPanel>
-        </GridItem>
-        
-        <!-- 右侧工具栏 - 只在第 2 行 -->
-        <GridItem Row="1" Column="2" Background="#FF9800">
-            <StackPanel Orientation="StackOrientation.Vertical" Spacing="10" 
-                        PaddingLeft="15" PaddingTop="20" PaddingRight="15" PaddingBottom="20">
-                <TextBlock Text="🛠️ 工具" FontSize="16" />
-                <Button Text="📝 编辑" />
-                <Button Text="🗑️ 删除" />
-                <Button Text="💾 保存" />
-            </StackPanel>
-        </GridItem>
-        
-        <!-- 底部状态栏 - 跨 3 列 -->
-        <GridItem Row="2" Column="0" ColumnSpan="3" Background="#9E9E9E">
-            <StackPanel PaddingLeft="20" PaddingTop="10" PaddingRight="20" PaddingBottom="10">
-                <TextBlock Text="@($"状态：点击了 {_count} 次 | Grid: 3 行 3 列")" FontSize="14" />
+        <GridItem Row="0" Column="1" Background="#37474F">
+            <StackPanel PaddingLeft="20" PaddingTop="15" PaddingRight="20" PaddingBottom="15">
+                <TextBlock Text="✅ MaxWidth=200" FontSize="16" FontWeight="true" PaddingBottom="10" />
+                <Button Text="这个按钮设置了 MaxWidth=200" MaxWidth="200" Background="#263238" />
+                <TextBlock Text="这个文本块设置了 MaxWidth=200，所以会换行显示！" MaxWidth="200" Background="#546E7A" PaddingLeft="10" PaddingTop="10" PaddingRight="10" PaddingBottom="10" />
             </StackPanel>
         </GridItem>
     </Grid>
+    
+    <!-- 状态栏 -->
+    <TextBlock Text="✅ 已支持：Width/Height | MinWidth/MinHeight | MaxWidth/MaxHeight" FontSize="14" PaddingTop="20" />
 </StackPanel>
-
-@code {
-    private int _count = 0;
-
-    private async Task HandleButtonClick()
-    {
-        _count++;
-        await InvokeAsync(StateHasChanged);
-    }
-}
