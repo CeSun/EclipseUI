@@ -126,10 +126,14 @@ public class GridElement : EclipseElement
             DistributeStar(remainingWidth, remainingHeightAfter, rowHeights, colWidths);
         }
         
-        // 计算总尺寸
+        // 计算总尺寸（包含 Spacing）
         float totalWidth = 0, totalHeight = 0;
         for (int i = 0; i < colCount; i++) totalWidth += colWidths[i];
         for (int i = 0; i < rowCount; i++) totalHeight += rowHeights[i];
+        
+        // 添加 Spacing（行数 -1 个间距）
+        if (rowCount > 1) totalHeight += Spacing * (rowCount - 1);
+        if (colCount > 1) totalWidth += Spacing * (colCount - 1);
         
         return new SKSize(
             totalWidth + PaddingLeft + PaddingRight,
