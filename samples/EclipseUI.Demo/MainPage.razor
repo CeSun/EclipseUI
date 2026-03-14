@@ -2,33 +2,42 @@
 @using EclipseUI.Layout
 
 <StackPanel PaddingLeft="30" PaddingTop="30" PaddingRight="30" PaddingBottom="30">
-    <DockPanel>
-        <!-- 顶部标题栏 - 蓝色背景 -->
-        <DockPanelItem Dock="Dock.Top" Background="#2196F3">
+    <!-- Grid 布局演示 -->
+    <TextBlock Text="🌑 EclipseUI - Grid 网格布局演示" FontSize="24" PaddingBottom="20" />
+    
+    <Grid RowDefinitions="Auto, *, Auto" ColumnDefinitions="150, *, 150">
+        
+        <!-- 顶部标题 - 跨 3 列 -->
+        <GridItem Row="0" Column="0" ColumnSpan="3" Background="#2196F3">
             <StackPanel PaddingLeft="20" PaddingTop="15" PaddingRight="20" PaddingBottom="15">
-                <TextBlock Text="🌑 EclipseUI - DockPanel 演示" FontSize="24" />
+                <TextBlock Text="📐 Grid 网格布局" FontSize="20" />
             </StackPanel>
-        </DockPanelItem>
+        </GridItem>
         
-        <!-- 底部状态栏 - 灰色背景 -->
-        <DockPanelItem Dock="Dock.Bottom" Background="#9E9E9E">
-            <StackPanel PaddingLeft="20" PaddingTop="10" PaddingRight="20" PaddingBottom="10">
-                <TextBlock Text="@($"状态：点击了 {_count} 次")" FontSize="14" />
-            </StackPanel>
-        </DockPanelItem>
-        
-        <!-- 左侧导航栏 - 绿色背景 -->
-        <DockPanelItem Dock="Dock.Left" Background="#4CAF50">
+        <!-- 左侧导航 - 只在第 2 行 -->
+        <GridItem Row="1" Column="0" Background="#4CAF50">
             <StackPanel Orientation="StackOrientation.Vertical" Spacing="10" 
                         PaddingLeft="15" PaddingTop="20" PaddingRight="15" PaddingBottom="20">
-                <Button Text="🏠 首页" OnClick="HandleHomeClick" />
-                <Button Text="⚙️ 设置" OnClick="HandleSettingsClick" />
-                <Button Text="ℹ️ 关于" OnClick="HandleAboutClick" />
+                <TextBlock Text="🧭 导航" FontSize="16" />
+                <Button Text="🏠 首页" />
+                <Button Text="⚙️ 设置" />
+                <Button Text="ℹ️ 关于" />
             </StackPanel>
-        </DockPanelItem>
+        </GridItem>
         
-        <!-- 右侧工具栏 - 橙色背景 -->
-        <DockPanelItem Dock="Dock.Right" Background="#FF9800">
+        <!-- 中间内容区 -->
+        <GridItem Row="1" Column="1" Background="#9C27B0">
+            <StackPanel Orientation="StackOrientation.Vertical" Spacing="15"
+                        PaddingLeft="30" PaddingTop="30" PaddingRight="30" PaddingBottom="30">
+                <TextBlock Text="欢迎使用 Grid 布局！" FontSize="20" />
+                <TextBlock Text="这是一个 3 行 3 列的网格：&#10;• 第 1 行：Auto 高度（标题）&#10;• 第 2 行：* 比例高度（内容区）&#10;• 第 3 行：Auto 高度（状态栏）&#10;• 第 1 列：150px 固定宽度&#10;• 第 2 列：* 比例宽度&#10;• 第 3 列：150px 固定宽度" FontSize="14" />
+                <Button Text="点我 +1" Background="#FF5722" FontSize="16" OnClick="HandleButtonClick" />
+                <TextBlock Text="@($"点击计数：{_count}")" FontSize="18" FontWeight="true" Foreground="#FFFFFF" />
+            </StackPanel>
+        </GridItem>
+        
+        <!-- 右侧工具栏 - 只在第 2 行 -->
+        <GridItem Row="1" Column="2" Background="#FF9800">
             <StackPanel Orientation="StackOrientation.Vertical" Spacing="10" 
                         PaddingLeft="15" PaddingTop="20" PaddingRight="15" PaddingBottom="20">
                 <TextBlock Text="🛠️ 工具" FontSize="16" />
@@ -36,46 +45,23 @@
                 <Button Text="🗑️ 删除" />
                 <Button Text="💾 保存" />
             </StackPanel>
-        </DockPanelItem>
+        </GridItem>
         
-        <!-- 中间主内容区 - 紫色背景（自动填充） -->
-        <DockPanelItem Background="#9C27B0">
-            <StackPanel Orientation="StackOrientation.Vertical" Spacing="15"
-                        PaddingLeft="30" PaddingTop="30" PaddingRight="30" PaddingBottom="30">
-                <TextBlock Text="欢迎使用 DockPanel 布局！" FontSize="28" />
-                <TextBlock Text="这是一个五区域布局示例：&#10;• 顶部 - 标题栏（蓝色）&#10;• 底部 - 状态栏（灰色）&#10;• 左侧 - 导航栏（绿色）&#10;• 右侧 - 工具栏（橙色）&#10;• 中间 - 主内容区（紫色，自动填充）" FontSize="16" />
-                <Button Text="点我 +1" Background="#4CAF50" FontSize="18" OnClick="HandleButtonClick" />
-                <TextBlock Text="@($"当前计数：{_count}")" FontSize="20" FontWeight="true" Foreground="#FFFFFF" />
+        <!-- 底部状态栏 - 跨 3 列 -->
+        <GridItem Row="2" Column="0" ColumnSpan="3" Background="#9E9E9E">
+            <StackPanel PaddingLeft="20" PaddingTop="10" PaddingRight="20" PaddingBottom="10">
+                <TextBlock Text="@($"状态：点击了 {_count} 次 | Grid: 3 行 3 列")" FontSize="14" />
             </StackPanel>
-        </DockPanelItem>
-    </DockPanel>
+        </GridItem>
+    </Grid>
 </StackPanel>
 
 @code {
     private int _count = 0;
-    private string _currentPage = "首页";
 
     private async Task HandleButtonClick()
     {
         _count++;
-        await InvokeAsync(StateHasChanged);
-    }
-
-    private async Task HandleHomeClick()
-    {
-        _currentPage = "首页";
-        await InvokeAsync(StateHasChanged);
-    }
-
-    private async Task HandleSettingsClick()
-    {
-        _currentPage = "设置";
-        await InvokeAsync(StateHasChanged);
-    }
-
-    private async Task HandleAboutClick()
-    {
-        _currentPage = "关于";
         await InvokeAsync(StateHasChanged);
     }
 }

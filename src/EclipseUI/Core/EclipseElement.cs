@@ -238,6 +238,29 @@ public class EclipseElement
         foreach (var child in Children) child.Parent = null;
         Children.Clear();
     }
+    
+    /// <summary>
+    /// 附加属性值存储
+    /// </summary>
+    private readonly Dictionary<int, object?> _attachedProperties = new();
+    
+    /// <summary>
+    /// 设置附加属性值
+    /// </summary>
+    public void SetValue(int propertyKey, object? value)
+    {
+        _attachedProperties[propertyKey] = value;
+    }
+    
+    /// <summary>
+    /// 获取附加属性值
+    /// </summary>
+    public T GetValue<T>(int propertyKey, T defaultValue)
+    {
+        if (_attachedProperties.TryGetValue(propertyKey, out var value))
+            return (T?)(value ?? defaultValue);
+        return defaultValue;
+    }
 }
 
 /// <summary>
