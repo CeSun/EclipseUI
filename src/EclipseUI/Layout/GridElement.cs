@@ -576,8 +576,8 @@ public class GridElement : EclipseElement
     {
         if (children.Count == 0)
         {
-            if (RowDefinitions.Count == 0) RowDefinitions.Add(new RowDefinitionInternal());
-            if (ColumnDefinitions.Count == 0) ColumnDefinitions.Add(new ColumnDefinitionInternal());
+            if (RowDefinitions.Count == 0) RowDefinitions.Add(new RowDefinitionInternal { Height = GridLength.Auto });
+            if (ColumnDefinitions.Count == 0) ColumnDefinitions.Add(new ColumnDefinitionInternal { Width = GridLength.Auto });
             return;
         }
         
@@ -589,11 +589,11 @@ public class GridElement : EclipseElement
             maxCol = Math.Max(maxCol, GetColumn(child) + GetColumnSpan(child));
         }
         
-        // 确保行列定义数量足够
+        // 确保行列定义数量足够（默认为 Auto）
         while (RowDefinitions.Count < maxRow)
-            RowDefinitions.Add(new RowDefinitionInternal());
+            RowDefinitions.Add(new RowDefinitionInternal { Height = GridLength.Auto });
         while (ColumnDefinitions.Count < maxCol)
-            ColumnDefinitions.Add(new ColumnDefinitionInternal());
+            ColumnDefinitions.Add(new ColumnDefinitionInternal { Width = GridLength.Auto });
     }
     
     #region 附加属性
