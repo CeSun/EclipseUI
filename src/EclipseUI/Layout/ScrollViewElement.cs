@@ -59,8 +59,8 @@ public class ScrollViewElement : EclipseElement
         if (MaxWidth.HasValue) finalWidth = Math.Min(finalWidth, MaxWidth.Value);
         if (MaxHeight.HasValue) finalHeight = Math.Min(finalHeight, MaxHeight.Value);
         
-        // 保存内容总高度用于滚动
-        ContentHeight = measuredContentHeight + PaddingTop + PaddingBottom;
+        // 保存内容总高度用于滚动（不包含 Padding，Padding 是 ScrollView 自身的装饰）
+        ContentHeight = measuredContentHeight;
         
         return new SKSize(finalWidth, finalHeight);
     }
@@ -69,8 +69,9 @@ public class ScrollViewElement : EclipseElement
     {
         base.Arrange(canvas, x, y, width, height);
         
-        // 限制滚动偏移量
-        float maxScroll = Math.Max(0, ContentHeight - height);
+        // 限制滚动偏移量（使用内容区域高度）
+        float contentAreaHeight = height - PaddingTop - PaddingBottom;
+        float maxScroll = Math.Max(0, ContentHeight - contentAreaHeight);
         ScrollOffset = Math.Clamp(ScrollOffset, 0, maxScroll);
         
         // 排列子元素（应用滚动偏移）
@@ -112,16 +113,17 @@ public class ScrollViewElement : EclipseElement
             
             // 渲染子元素
             RenderChildren(canvas);
-            
-            // 绘制滚动条
-            if (ShowScrollbar && ContentHeight > Height)
-            {
-                RenderScrollbar(canvas);
-            }
         }
         finally
         {
+            // 恢复裁剪状态，确保滚动条不受裁剪影响
             canvas.Restore();
+        }
+        
+        // 在裁剪区域外绘制滚动条（这样滚动条才会显示在内容上方）
+        if (ShowScrollbar && ContentHeight > Height)
+        {
+            RenderScrollbar(canvas);
         }
     }
     
@@ -130,16 +132,19 @@ public class ScrollViewElement : EclipseElement
         float scrollbarWidth = 6;
         float paddingRight = 4;
         
-        // 计算滚动条位置和大小
-        float contentVisibleRatio = Height / ContentHeight;
-        float scrollRatio = ScrollOffset / (ContentHeight - Height);
+        // 内容区域高度（不包括 Padding）
+        float contentAreaHeight = Height - PaddingTop - PaddingBottom;
         
-        float scrollbarHeight = Math.Max(30, Height * contentVisibleRatio);
-        float scrollbarY = Y + PaddingTop + scrollRatio * (Height - scrollbarHeight);
+        // 计算滚动条位置和大小
+        float contentVisibleRatio = contentAreaHeight / ContentHeight;
+        float scrollRatio = ScrollOffset / (ContentHeight - contentAreaHeight);
+        
+        float scrollbarHeight = Math.Max(30, contentAreaHeight * contentVisibleRatio);
+        float scrollbarY = Y + PaddingTop + scrollRatio * (contentAreaHeight - scrollbarHeight);
         float scrollbarX = X + Width - PaddingRight - scrollbarWidth - paddingRight;
         
-        // 绘制滚动条背景
-        var bgRect = new SKRect(scrollbarX, Y + PaddingTop, scrollbarX + scrollbarWidth, Y + Height - PaddingBottom);
+        // 绘制滚动条背景（轨道）
+        var bgRect = new SKRect(scrollbarX, Y + PaddingTop, scrollbarX + scrollbarWidth, Y + PaddingTop + contentAreaHeight);
         using var bgPaint = new SKPaint 
         { 
             Color = new SKColor(0, 0, 0, 30), 
@@ -179,12 +184,13 @@ public class ScrollViewElement : EclipseElement
         }
         
         // 子元素没有处理，自己处理滚动
-        if (ContentHeight <= Height)
+        float contentAreaHeight = Height - PaddingTop - PaddingBottom;
+        if (ContentHeight <= contentAreaHeight)
             return false;
         
         float scrollAmount = -deltaY * 20; // 滚动速度（反向，符合直觉）
         ScrollOffset += scrollAmount;
-        ScrollOffset = Math.Clamp(ScrollOffset, 0, ContentHeight - Height);
+        ScrollOffset = Math.Clamp(ScrollOffset, 0, ContentHeight - contentAreaHeight);
         return true;
     }
     
@@ -216,19 +222,22 @@ public class ScrollViewElement : EclipseElement
         if (ContentHeight <= Height || !ShowScrollbar)
             return false;
         
+        // 内容区域高度
+        float contentAreaHeight = Height - PaddingTop - PaddingBottom;
+        
         // 检查是否点击在滚动条区域
         float scrollbarWidth = 6;
         float paddingRight = 4;
         float scrollbarX = X + Width - PaddingRight - scrollbarWidth - paddingRight;
         
         if (x >= scrollbarX && x <= scrollbarX + scrollbarWidth &&
-            y >= Y + PaddingTop && y <= Y + Height - PaddingBottom)
+            y >= Y + PaddingTop && y <= Y + PaddingTop + contentAreaHeight)
         {
             // 检查是否点击在滑块上
             float scrollbarHeight = GetScrollbarHeight();
-            float contentVisibleRatio = Height / ContentHeight;
-            float scrollRatio = ScrollOffset / (ContentHeight - Height);
-            float scrollbarY = Y + PaddingTop + scrollRatio * (Height - scrollbarHeight);
+            float contentVisibleRatio = contentAreaHeight / ContentHeight;
+            float scrollRatio = ScrollOffset / (ContentHeight - contentAreaHeight);
+            float scrollbarY = Y + PaddingTop + scrollRatio * (contentAreaHeight - scrollbarHeight);
             
             if (y >= scrollbarY && y <= scrollbarY + scrollbarHeight)
             {
@@ -241,7 +250,7 @@ public class ScrollViewElement : EclipseElement
             else
             {
                 // 点击在空白区域，滚动一页
-                float pageScrollAmount = Height * 0.8f; // 滚动 80% 的可视区域
+                float pageScrollAmount = contentAreaHeight * 0.8f; // 滚动 80% 的可视区域
                 if (y < scrollbarY)
                 {
                     // 点击在滑块上方，向上滚动
@@ -250,7 +259,7 @@ public class ScrollViewElement : EclipseElement
                 else
                 {
                     // 点击在滑块下方，向下滚动
-                    ScrollOffset = Math.Min(ContentHeight - Height, ScrollOffset + pageScrollAmount);
+                    ScrollOffset = Math.Min(ContentHeight - contentAreaHeight, ScrollOffset + pageScrollAmount);
                 }
                 return true;
             }
@@ -272,19 +281,22 @@ public class ScrollViewElement : EclipseElement
                 childHandled = true;
         }
         
+        // 内容区域高度
+        float contentAreaHeight = Height - PaddingTop - PaddingBottom;
+        
         // 处理拖动
         if (_isDraggingScrollbar)
         {
             float deltaY = y - _dragStartY;
-            float scrollRatio = deltaY / (Height - GetScrollbarHeight());
-            float newOffset = _dragStartOffset + scrollRatio * (ContentHeight - Height);
+            float scrollRatio = deltaY / (contentAreaHeight - GetScrollbarHeight());
+            float newOffset = _dragStartOffset + scrollRatio * (ContentHeight - contentAreaHeight);
             
-            ScrollOffset = Math.Clamp(newOffset, 0, ContentHeight - Height);
+            ScrollOffset = Math.Clamp(newOffset, 0, ContentHeight - contentAreaHeight);
             return true;
         }
         
         // 检测是否悬停在滚动条上
-        if (ContentHeight <= Height || !ShowScrollbar)
+        if (ContentHeight <= contentAreaHeight || !ShowScrollbar)
             return childHandled;
         
         float scrollbarWidth = 6;
@@ -293,7 +305,7 @@ public class ScrollViewElement : EclipseElement
         
         bool wasHovering = _isHoveringScrollbar;
         _isHoveringScrollbar = (x >= scrollbarX && x <= scrollbarX + scrollbarWidth &&
-                                y >= Y + PaddingTop && y <= Y + Height - PaddingBottom);
+                                y >= Y + PaddingTop && y <= Y + PaddingTop + contentAreaHeight);
         
         return childHandled || _isHoveringScrollbar != wasHovering;
     }
@@ -318,7 +330,8 @@ public class ScrollViewElement : EclipseElement
     
     private float GetScrollbarHeight()
     {
-        float contentVisibleRatio = Height / ContentHeight;
-        return Math.Max(30, Height * contentVisibleRatio);
+        float contentAreaHeight = Height - PaddingTop - PaddingBottom;
+        float contentVisibleRatio = contentAreaHeight / ContentHeight;
+        return Math.Max(30, contentAreaHeight * contentVisibleRatio);
     }
 }
