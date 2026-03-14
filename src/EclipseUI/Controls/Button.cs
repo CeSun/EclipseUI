@@ -14,6 +14,8 @@ public class Button : ComponentBase, IElementHandler, IDisposable
     [Parameter] public string? Background { get; set; }
     [Parameter] public string? Foreground { get; set; }
     [Parameter] public float CornerRadius { get; set; } = 4;
+    [Parameter] public float? Width { get; set; }
+    [Parameter] public float? Height { get; set; }
     [Parameter] public EventCallback<MouseEventArgs> OnClick { get; set; }
     
     private ButtonElement? _element;
@@ -55,6 +57,8 @@ public class Button : ComponentBase, IElementHandler, IDisposable
         _element.ButtonColor = ParseBackground(Background);
         _element.TextColor = ParseColor(Foreground);
         _element.CornerRadius = CornerRadius;
+        _element.RequestedWidth = Width;
+        _element.RequestedHeight = Height;
         
         _element.OnClick = OnClick.HasDelegate ? async (e, p) => 
         {

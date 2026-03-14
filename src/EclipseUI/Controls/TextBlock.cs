@@ -14,6 +14,8 @@ public class TextBlock : ComponentBase, IElementHandler, IDisposable
     [Parameter] public string? Foreground { get; set; }
     [Parameter] public bool FontWeight { get; set; }
     [Parameter] public string? Background { get; set; }
+    [Parameter] public float? Width { get; set; }
+    [Parameter] public float? Height { get; set; }
     [Parameter] public EventCallback<MouseEventArgs> OnClick { get; set; }
     
     private TextBlockElement? _element;
@@ -55,6 +57,8 @@ public class TextBlock : ComponentBase, IElementHandler, IDisposable
         _element.TextColor = ParseColor(Foreground);
         _element.IsBold = FontWeight;
         _element.BackgroundColor = ParseBackground(Background);
+        _element.RequestedWidth = Width;
+        _element.RequestedHeight = Height;
         
         _element.OnClick = OnClick.HasDelegate ? async (e, p) => 
         {

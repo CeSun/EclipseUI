@@ -25,6 +25,9 @@ public class StackPanel : ComponentBase, IElementHandler, IDisposable
     [Parameter] public float PaddingRight { get; set; }
     [Parameter] public float PaddingBottom { get; set; }
     
+    [Parameter] public float? Width { get; set; }
+    [Parameter] public float? Height { get; set; }
+    
     [Parameter] public RenderFragment? ChildContent { get; set; }
     
     private StackPanelElement? _element;
@@ -82,6 +85,8 @@ public class StackPanel : ComponentBase, IElementHandler, IDisposable
         _element.PaddingRight = PaddingRight;
         _element.PaddingBottom = PaddingBottom;
         _element.BackgroundColor = ParseBackground(Background);
+        _element.RequestedWidth = Width;
+        _element.RequestedHeight = Height;
         
         _element.OnClick = OnClick.HasDelegate ? async (e, p) => await OnClick.InvokeAsync() : null;
     }
