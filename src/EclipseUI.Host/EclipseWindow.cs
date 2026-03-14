@@ -113,26 +113,65 @@ public class EclipseWindow : IDisposable
     
     private void OnClosing()
     {
-        // 在窗口关闭时先释放 SkiaSharp 资源
-        _surface?.Dispose();
-        _surface = null;
-        _grContext?.Dispose();
-        _grContext = null;
+        try
+        {
+            // 在窗口关闭时先释放 SkiaSharp 资源
+            _surface?.Dispose();
+            _surface = null;
+            _grContext?.Dispose();
+            _grContext = null;
+        }
+        catch
+        {
+            // 忽略关闭时的任何异常
+        }
     }
     
     public void Dispose()
     {
         if (!_disposed)
         {
-            // 先释放输入
-            _input?.Dispose();
-            _input = null;
+            // 注意：Silk.NET 的 Input 上下文在 Dispose 时可能会抛出内部 CLR 错误
+            // 这是 Silk.NET 的已知问题，我们尽量安全地清理资源
             
-            // 窗口已经由 OnClosing 清理了 SkiaSharp 资源
-            _window = null;
-            _renderer = null;
-            _context = null;
-            _gl = null;
+            try
+            {
+                // 先释放渲染器（可能有待处理的工作）
+                _renderer?.Dispose();
+                _renderer = null;
+            }
+            catch { }
+            
+            try
+            {
+                // 释放应用上下文
+                _context = null;
+            }
+            catch { }
+            
+            try
+            {
+                // 释放 OpenGL
+                _gl?.Dispose();
+                _gl = null;
+            }
+            catch { }
+            
+            try
+            {
+                // 输入上下文可能会导致 CLR 错误，跳过显式 Dispose
+                // _input?.Dispose();
+                _input = null;
+            }
+            catch { }
+            
+            try
+            {
+                // 最后释放窗口
+                _window?.Dispose();
+                _window = null;
+            }
+            catch { }
             
             _disposed = true;
             GC.SuppressFinalize(this);
