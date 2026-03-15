@@ -19,6 +19,9 @@ public class EclipseWindow : IDisposable
     private EclipseApplicationContext? _context;
     private bool _disposed;
     
+    // 用于累积 surrogate pair（emoji）
+    private char? _pendingHighSurrogate;
+    
     public string Title { get; set; } = "EclipseUI";
     public int Width { get; set; } = 800;
     public int Height { get; set; } = 600;
@@ -118,6 +121,103 @@ public class EclipseWindow : IDisposable
                 }
             };
         }
+        
+        // 键盘事件
+        foreach (var keyboard in _input.Keyboards)
+        {
+            keyboard.KeyDown += async (k, key, _) =>
+            {
+                if (_renderer != null)
+                {
+                    var keyName = GetKeyName(key);
+                    await SafeHandleKeyDown(keyName);
+                }
+            };
+            
+            keyboard.KeyChar += async (k, c) =>
+            {
+                if (_renderer == null || char.IsControl(c)) return;
+                
+                string text;
+                
+                // 处理 surrogate pair（emoji 等）
+                if (char.IsHighSurrogate(c))
+                {
+                    // 保存 high surrogate，等待 low surrogate
+                    _pendingHighSurrogate = c;
+                    return;
+                }
+                else if (char.IsLowSurrogate(c) && _pendingHighSurrogate.HasValue)
+                {
+                    // 组合 surrogate pair
+                    text = new string(new char[] { _pendingHighSurrogate.Value, c });
+                    _pendingHighSurrogate = null;
+                }
+                else
+                {
+                    // 普通字符
+                    _pendingHighSurrogate = null;
+                    text = c.ToString();
+                }
+                
+                await SafeHandleTextInput(text);
+            };
+        }
+    }
+    
+    private async Task SafeHandleKeyDown(string keyName)
+    {
+        try
+        {
+            var renderer = _renderer;
+            if (renderer != null)
+            {
+                await renderer.HandleKeyDown(keyName);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[KeyDown Error] {keyName}: {ex.Message}");
+        }
+    }
+    
+    private async Task SafeHandleTextInput(string text)
+    {
+        try
+        {
+            var renderer = _renderer;
+            if (renderer != null)
+            {
+                await renderer.HandleTextInput(text);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[TextInput Error] '{text}': {ex.Message}");
+        }
+    }
+    
+    /// <summary>
+    /// 将 Silk.NET 的 Key 枚举转换为字符串名称
+    /// </summary>
+    private static string GetKeyName(Silk.NET.Input.Key key)
+    {
+        return key switch
+        {
+            Silk.NET.Input.Key.Backspace => "Backspace",
+            Silk.NET.Input.Key.Delete => "Delete",
+            Silk.NET.Input.Key.Left => "ArrowLeft",
+            Silk.NET.Input.Key.Right => "ArrowRight",
+            Silk.NET.Input.Key.Up => "ArrowUp",
+            Silk.NET.Input.Key.Down => "ArrowDown",
+            Silk.NET.Input.Key.Home => "Home",
+            Silk.NET.Input.Key.End => "End",
+            Silk.NET.Input.Key.Enter => "Enter",
+            Silk.NET.Input.Key.Tab => "Tab",
+            Silk.NET.Input.Key.Escape => "Escape",
+            Silk.NET.Input.Key.Space => "Space",
+            _ => key.ToString()
+        };
     }
     
     private unsafe void OnResize(Silk.NET.Maths.Vector2D<int> newSize)

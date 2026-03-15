@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components.RenderTree;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
 using EclipseUI.Layout;
+using EclipseUI.Controls;
 
 namespace EclipseUI.Core;
 
@@ -177,6 +178,11 @@ public class EclipseRenderer : Renderer
         
         var point = new SKPoint(x, y);
         var handled = RootElement.HandleClick(point);
+        
+        // 检查是否点击了 TextBox
+        var textBox = FindTextBox(RootElement, x, y);
+        SetFocus(textBox);
+        
         return handled;
     }
     
@@ -242,6 +248,78 @@ public class EclipseRenderer : Renderer
         foreach (var child in element.Children)
         {
             var result = FindScrollView(child);
+            if (result != null)
+                return result;
+        }
+        
+        return null;
+    }
+    
+    /// <summary>
+    /// 当前获得焦点的元素
+    /// </summary>
+    public TextBoxElement? FocusedElement { get; private set; }
+    
+    /// <summary>
+    /// 处理文本输入事件
+    /// </summary>
+    public async Task HandleTextInput(string text)
+    {
+        if (FocusedElement != null)
+        {
+            await FocusedElement.HandleTextInput(text);
+            OnRenderRequested?.Invoke();
+        }
+    }
+    
+    /// <summary>
+    /// 处理按键按下事件
+    /// </summary>
+    public async Task HandleKeyDown(string key)
+    {
+        if (FocusedElement != null)
+        {
+            await FocusedElement.HandleKeyDown(key);
+            OnRenderRequested?.Invoke();
+        }
+    }
+    
+    /// <summary>
+    /// 设置焦点元素
+    /// </summary>
+    public void SetFocus(TextBoxElement? element)
+    {
+        // 清除之前的焦点
+        if (FocusedElement != null && FocusedElement != element)
+        {
+            FocusedElement.Blur();
+        }
+        
+        FocusedElement = element;
+        
+        if (FocusedElement != null)
+        {
+            FocusedElement.ResetCaretBlink();
+        }
+        
+        OnRenderRequested?.Invoke();
+    }
+    
+    /// <summary>
+    /// 查找 TextBox 元素
+    /// </summary>
+    private TextBoxElement? FindTextBox(EclipseElement element, float x, float y)
+    {
+        if (element is TextBoxElement textBox)
+        {
+            var rect = new SKRect(textBox.X, textBox.Y, textBox.X + textBox.Width, textBox.Y + textBox.Height);
+            if (rect.Contains(new SKPoint(x, y)))
+                return textBox;
+        }
+        
+        foreach (var child in element.Children)
+        {
+            var result = FindTextBox(child, x, y);
             if (result != null)
                 return result;
         }

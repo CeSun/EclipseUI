@@ -7,6 +7,16 @@
         <!-- 标题 -->
         <TextBlock Text="🌑 EclipseUI 完整控件测试" FontSize="28" FontWeight="true" PaddingBottom="10" />
         
+        <!-- TextBox 测试页面链接 -->
+        <Grid ColumnDefinitions="Auto, *" Spacing="10" Background="#E3F2FD" PaddingLeft="15" PaddingTop="12" PaddingRight="15" PaddingBottom="12">
+            <GridItem Column="0" VerticalAlignment="VerticalAlignment.Center">
+                <TextBlock Text="📝 TextBox 控件已实现！" FontSize="16" FontWeight="true" />
+            </GridItem>
+            <GridItem Column="1" HorizontalAlignment="HorizontalAlignment.Right">
+                <Button Text="查看 TextBox 测试页面" Background="#2196F3" OnClick="NavigateToTextBoxTest" />
+            </GridItem>
+        </Grid>
+        
         <!-- ==================== 1. 固定尺寸测试 ==================== -->
         <TextBlock Text="📏 1. 固定尺寸 (Width/Height)" FontSize="18" FontWeight="true" Background="#E3F2FD" PaddingLeft="10" PaddingTop="8" PaddingRight="10" PaddingBottom="8" HorizontalAlignment="HorizontalAlignment.Stretch" />
         <StackPanel Orientation="StackOrientation.Horizontal" Spacing="15">
@@ -114,3 +124,11 @@
         <TextBlock Text="✅ 已完整支持：Width/Height | MinWidth/MinHeight | MaxWidth/MaxHeight | HorizontalAlignment | VerticalAlignment | Padding | Grid Spacing | 文本自动换行 | ScrollView 滚动" FontSize="13" Background="#ECEFF1" PaddingLeft="15" PaddingTop="15" PaddingRight="15" PaddingBottom="12" />
     </StackPanel>
 </ScrollView>
+
+@code {
+    private void NavigateToTextBoxTest(MouseEventArgs e)
+    {
+        // TODO: 实现页面导航逻辑
+        // 目前需要手动运行 TextBoxTestPage.razor
+    }
+}
