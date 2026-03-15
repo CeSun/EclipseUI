@@ -41,30 +41,30 @@
         
         <!-- ==================== 5. 垂直对齐测试 ==================== -->
         <TextBlock Text="⬆️ 5. 垂直对齐 (VerticalAlignment)" FontSize="18" FontWeight="true" Background="#FFEBEE" PaddingLeft="10" PaddingTop="8" PaddingRight="10" PaddingBottom="8" HorizontalAlignment="HorizontalAlignment.Stretch" />
-        <Grid RowDefinitions="60, 60" ColumnDefinitions="*, *, *, *" Spacing="5">
-            <GridItem Row="0" Column="0" Background="#FFEBEE"><Button Text="Top" VerticalAlignment="VerticalAlignment.Top" Background="#F44336" /></GridItem>
-            <GridItem Row="0" Column="1" Background="#E8F5E9"><Button Text="Center" VerticalAlignment="VerticalAlignment.Center" Background="#4CAF50" /></GridItem>
-            <GridItem Row="0" Column="2" Background="#FFF8E1"><Button Text="Bottom" VerticalAlignment="VerticalAlignment.Bottom" Background="#FFC107" /></GridItem>
-            <GridItem Row="0" Column="3" Background="#E3F2FD"><Button Text="Stretch" VerticalAlignment="VerticalAlignment.Stretch" Background="#2196F3" /></GridItem>
-            <GridItem Row="1" Column="0" Background="#F3E5F5"><TextBlock Text="↖" VerticalAlignment="VerticalAlignment.Top" HorizontalAlignment="HorizontalAlignment.Left" Background="#9C27B0" PaddingLeft="15" PaddingTop="15" PaddingRight="15" PaddingBottom="15" /></GridItem>
-            <GridItem Row="1" Column="1" Background="#E0F7FA"><TextBlock Text="↘" VerticalAlignment="VerticalAlignment.Bottom" HorizontalAlignment="HorizontalAlignment.Right" Background="#00BCD4" PaddingLeft="15" PaddingTop="15" PaddingRight="15" PaddingBottom="15" /></GridItem>
-            <GridItem Row="1" Column="2" Background="#FFFDE7"><TextBlock Text="↖" VerticalAlignment="VerticalAlignment.Top" HorizontalAlignment="HorizontalAlignment.Left" Background="#FFEB3B" PaddingLeft="15" PaddingTop="15" PaddingRight="15" PaddingBottom="15" /></GridItem>
-            <GridItem Row="1" Column="3" Background="#EFEBE9"><TextBlock Text="居中" VerticalAlignment="VerticalAlignment.Center" HorizontalAlignment="HorizontalAlignment.Center" Background="#795548" PaddingLeft="15" PaddingTop="15" PaddingRight="15" PaddingBottom="15" /></GridItem>
+        <Grid RowDefinitions="60, 60" ColumnDefinitions="*, *, *, *" Spacing="5" Background="#FFF0F0">
+            <GridItem Row="0" Column="0" Background="#FFEBEE" VerticalAlignment="VerticalAlignment.Top"><Button Text="Top" Background="#F44336" /></GridItem>
+            <GridItem Row="0" Column="1" Background="#E8F5E9" VerticalAlignment="VerticalAlignment.Center"><Button Text="Center" Background="#4CAF50" /></GridItem>
+            <GridItem Row="0" Column="2" Background="#FFF8E1" VerticalAlignment="VerticalAlignment.Bottom"><Button Text="Bottom" Background="#FFC107" /></GridItem>
+            <GridItem Row="0" Column="3" Background="#E3F2FD" VerticalAlignment="VerticalAlignment.Stretch"><Button Text="Stretch" Background="#2196F3" /></GridItem>
+            <GridItem Row="1" Column="0" Background="#F3E5F5" VerticalAlignment="VerticalAlignment.Top" HorizontalAlignment="HorizontalAlignment.Left"><TextBlock Text="↖" Background="#9C27B0" PaddingLeft="15" PaddingTop="15" PaddingRight="15" PaddingBottom="15" /></GridItem>
+            <GridItem Row="1" Column="1" Background="#E0F7FA" VerticalAlignment="VerticalAlignment.Bottom" HorizontalAlignment="HorizontalAlignment.Right"><TextBlock Text="↘" Background="#00BCD4" PaddingLeft="15" PaddingTop="15" PaddingRight="15" PaddingBottom="15" /></GridItem>
+            <GridItem Row="1" Column="2" Background="#FFFDE7" VerticalAlignment="VerticalAlignment.Top" HorizontalAlignment="HorizontalAlignment.Left"><TextBlock Text="↖" Background="#FFEB3B" PaddingLeft="15" PaddingTop="15" PaddingRight="15" PaddingBottom="15" /></GridItem>
+            <GridItem Row="1" Column="3" Background="#EFEBE9" VerticalAlignment="VerticalAlignment.Center" HorizontalAlignment="HorizontalAlignment.Center"><TextBlock Text="居中" Background="#795548" PaddingLeft="15" PaddingTop="15" PaddingRight="15" PaddingBottom="15" /></GridItem>
         </Grid>
         
         <!-- ==================== 6. 组合使用测试 ==================== -->
         <TextBlock Text="🔧 6. 组合使用 (Width + Alignment + Min/Max)" FontSize="18" FontWeight="true" Background="#E8EAF6" PaddingLeft="10" PaddingTop="8" PaddingRight="10" PaddingBottom="8" HorizontalAlignment="HorizontalAlignment.Stretch" />
-        <Grid ColumnDefinitions="*, *" Spacing="15">
-            <GridItem Column="0" Background="#E8EAF6">
+        <Grid ColumnDefinitions="*, *" Spacing="15" Background="#F0F0FF">
+            <GridItem Column="0" Background="#E8EAF6" HorizontalAlignment="HorizontalAlignment.Center">
                 <StackPanel PaddingLeft="15" PaddingTop="15" PaddingRight="15" PaddingBottom="15" Spacing="10">
                     <TextBlock Text="Width + Center" FontSize="14" />
-                    <Button Text="Width=180 + Center" Width="180" HorizontalAlignment="HorizontalAlignment.Center" MinHeight="50" Background="#3F51B5" />
+                    <Button Text="Width=180 + Center" Width="180" MinHeight="50" Background="#3F51B5" />
                 </StackPanel>
             </GridItem>
-            <GridItem Column="1" Background="#E8F5E9">
+            <GridItem Column="1" Background="#E8F5E9" HorizontalAlignment="HorizontalAlignment.Right">
                 <StackPanel PaddingLeft="15" PaddingTop="15" PaddingRight="15" PaddingBottom="15" Spacing="10">
                     <TextBlock Text="Min/Max + Right" FontSize="14" />
-                    <Button Text="Min100 Max250 + Right" MinWidth="100" MaxWidth="250" HorizontalAlignment="HorizontalAlignment.Right" Background="#4CAF50" />
+                    <Button Text="Min100 Max250 + Right" MinWidth="100" MaxWidth="250" Background="#4CAF50" />
                 </StackPanel>
             </GridItem>
         </Grid>

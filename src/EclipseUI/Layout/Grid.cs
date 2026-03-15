@@ -47,6 +47,8 @@ public class Grid : ComponentBase, IElementHandler, IDisposable
     [Parameter] public HorizontalAlignment HorizontalAlignment { get; set; } = HorizontalAlignment.Stretch;
     [Parameter] public VerticalAlignment VerticalAlignment { get; set; } = VerticalAlignment.Stretch;
     
+    [Parameter] public string? Background { get; set; }
+    
     private GridElement? _element;
     private bool _disposed;
     
@@ -106,6 +108,7 @@ public class Grid : ComponentBase, IElementHandler, IDisposable
         _element.MaxHeight = MaxHeight;
         _element.HorizontalAlignment = HorizontalAlignment;
         _element.VerticalAlignment = VerticalAlignment;
+        _element.BackgroundColor = ParseBackground(Background);
         
         // 解析行定义
         _element.RowDefinitions.Clear();
@@ -150,6 +153,13 @@ public class Grid : ComponentBase, IElementHandler, IDisposable
             return GridLength.Pixel(pixelValue);
         
         return GridLength.Star;
+    }
+    
+    private static SKColor? ParseBackground(string? color)
+    {
+        if (!string.IsNullOrEmpty(color) && color.StartsWith('#') && color.Length == 7)
+            return SKColor.Parse(color);
+        return null;
     }
     
     protected override void BuildRenderTree(RenderTreeBuilder builder)
