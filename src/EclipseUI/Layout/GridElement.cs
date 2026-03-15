@@ -106,7 +106,7 @@ public class GridElement : EclipseElement
         if (isWidthInfinite)
         {
             // 宽度无限：Star 列退化成 Auto，测量子元素实际需要的宽度
-            MeasureChildrenForInfiniteWidth(canvas, gridChildren, colWidths, rowHeights);
+            MeasureChildrenForInfiniteWidth(canvas, gridChildren, colWidths);
         }
         else
         {
@@ -122,7 +122,7 @@ public class GridElement : EclipseElement
         if (isHeightInfinite)
         {
             // 高度无限：Star 行退化成 Auto，测量子元素实际需要的高度
-            MeasureChildrenForInfiniteHeight(canvas, gridChildren, rowHeights, colWidths);
+            MeasureChildrenForInfiniteHeight(canvas, gridChildren, rowHeights);
         }
         else
         {
@@ -396,28 +396,19 @@ public class GridElement : EclipseElement
     
     /// <summary>
     /// 宽度无限时测量子元素（Star 列表现得像 Auto）
+    /// 只更新列宽，不更新行高
     /// </summary>
-    private void MeasureChildrenForInfiniteWidth(SKCanvas canvas, List<GridItemElement> children, float[] colWidths, float[] rowHeights)
+    private void MeasureChildrenForInfiniteWidth(SKCanvas canvas, List<GridItemElement> children, float[] colWidths)
     {
         int colCount = ColumnDefinitions.Count;
-        int rowCount = RowDefinitions.Count;
         
         foreach (var child in children)
         {
             int col = GetColumn(child);
             int colSpan = GetColumnSpan(child);
-            int row = GetRow(child);
-            int rowSpan = GetRowSpan(child);
-            
-            // 计算子元素可用的高度（使用行高之和）
-            float availableHeight = 0;
-            for (int i = row; i < Math.Min(row + rowSpan, rowCount); i++)
-            {
-                availableHeight += rowHeights[i];
-            }
             
             // 测量子元素（宽度无限，让子元素决定需要的宽度）
-            var childSize = child.Measure(canvas, float.PositiveInfinity, availableHeight);
+            var childSize = child.Measure(canvas, float.PositiveInfinity, float.PositiveInfinity);
             
             // 只更新 Auto 和 Star 类型的列宽，Pixel 类型保持固定值
             for (int i = col; i < Math.Min(col + colSpan, colCount); i++)
@@ -430,28 +421,19 @@ public class GridElement : EclipseElement
     
     /// <summary>
     /// 高度无限时测量子元素（Star 行表现得像 Auto）
+    /// 只更新行高，不更新列宽
     /// </summary>
-    private void MeasureChildrenForInfiniteHeight(SKCanvas canvas, List<GridItemElement> children, float[] rowHeights, float[] colWidths)
+    private void MeasureChildrenForInfiniteHeight(SKCanvas canvas, List<GridItemElement> children, float[] rowHeights)
     {
         int rowCount = RowDefinitions.Count;
-        int colCount = ColumnDefinitions.Count;
         
         foreach (var child in children)
         {
             int row = GetRow(child);
             int rowSpan = GetRowSpan(child);
-            int col = GetColumn(child);
-            int colSpan = GetColumnSpan(child);
-            
-            // 计算子元素可用的宽度（使用列宽之和）
-            float availableWidth = 0;
-            for (int i = col; i < Math.Min(col + colSpan, colCount); i++)
-            {
-                availableWidth += colWidths[i];
-            }
             
             // 测量子元素（高度无限，让子元素决定需要的高度）
-            var childSize = child.Measure(canvas, availableWidth, float.PositiveInfinity);
+            var childSize = child.Measure(canvas, float.PositiveInfinity, float.PositiveInfinity);
             
             // 只更新 Auto 和 Star 类型的行高，Pixel 类型保持固定值
             for (int i = row; i < Math.Min(row + rowSpan, rowCount); i++)

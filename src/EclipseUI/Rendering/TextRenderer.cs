@@ -62,7 +62,7 @@ public static class TextRenderer
     }
 
     /// <summary>
-    /// 测量文本宽度（自动检测 Emoji）
+    /// 测量文本宽度（自动检测 Emoji，支持 surrogate pair 和变体选择器）
     /// </summary>
     public static float MeasureText(string text, float fontSize)
     {
@@ -75,11 +75,19 @@ public static class TextRenderer
             var c = text[i];
             string character;
 
+            // 处理 surrogate pair (如 🌑 U+1F311)
             if (char.IsHighSurrogate(c) && i + 1 < text.Length && char.IsLowSurrogate(text[i + 1]))
             {
                 character = text.Substring(i, 2);
                 totalWidth += MeasureCharacter(character, fontSize, true);
                 i++;
+            }
+            // 处理带变体选择器的字符 (如 ⬆️ = U+2B06 + U+FE0F)
+            else if (i + 1 < text.Length && text[i + 1] >= 0xFE00 && text[i + 1] <= 0xFE0F)
+            {
+                character = text.Substring(i, 2);
+                totalWidth += MeasureCharacter(character, fontSize, true);
+                i++; // 跳过变体选择器
             }
             else
             {
@@ -164,7 +172,7 @@ public static class TextRenderer
     }
 
     /// <summary>
-    /// 绘制带换行的文本
+    /// 绘制带换行的文本（支持 surrogate pair 和变体选择器）
     /// </summary>
     public static void DrawTextWithWrap(IRenderContext context, string text, float x, float y, float fontSize, Color color, float maxWidth)
     {
@@ -176,7 +184,6 @@ public static class TextRenderer
         float currentX = x;
         float currentLineWidth = 0;
 
-        // 按字符遍历（正确处理 emoji surrogate pair）
         for (int i = 0; i < text.Length; i++)
         {
             var c = text[i];
@@ -192,12 +199,19 @@ public static class TextRenderer
                 continue;
             }
 
-            // 处理 emoji surrogate pair
+            // 处理 surrogate pair
             if (char.IsHighSurrogate(c) && i + 1 < text.Length && char.IsLowSurrogate(text[i + 1]))
             {
                 character = text.Substring(i, 2);
                 charWidth = MeasureText(character, fontSize);
-                i++; // 跳过下一个 low surrogate
+                i++;
+            }
+            // 处理带变体选择器的字符
+            else if (i + 1 < text.Length && text[i + 1] >= 0xFE00 && text[i + 1] <= 0xFE0F)
+            {
+                character = text.Substring(i, 2);
+                charWidth = MeasureText(character, fontSize);
+                i++; // 跳过变体选择器
             }
             else
             {
@@ -213,7 +227,7 @@ public static class TextRenderer
                 currentLineWidth = 0;
             }
 
-            // 绘制字符（包括空格）
+            // 绘制字符
             DrawMixedText(context, character, currentX, currentY, fontSize, color);
             currentX += charWidth;
             currentLineWidth += charWidth;
@@ -233,7 +247,15 @@ public static class TextRenderer
             string character;
             bool isEmoji;
 
+            // 处理 surrogate pair
             if (char.IsHighSurrogate(c) && i + 1 < text.Length && char.IsLowSurrogate(text[i + 1]))
+            {
+                character = text.Substring(i, 2);
+                isEmoji = true;
+                i += 2;
+            }
+            // 处理带变体选择器的字符
+            else if (i + 1 < text.Length && text[i + 1] >= 0xFE00 && text[i + 1] <= 0xFE0F)
             {
                 character = text.Substring(i, 2);
                 isEmoji = true;
