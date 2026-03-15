@@ -10,7 +10,7 @@
         <!-- ==================== 1. 基础 TextBox ==================== -->
         <TextBlock Text="🔤 1. 基础 TextBox" FontSize="18" FontWeight="true" Background="#E3F2FD" PaddingLeft="10" PaddingTop="8" PaddingRight="10" PaddingBottom="8" HorizontalAlignment="HorizontalAlignment.Stretch" />
         <StackPanel Spacing="10">
-            <TextBox Text="@_basicText" TextChanged="OnBasicTextChanged" Placeholder="请输入文本..." Width="300" />
+            <TextBox @bind-Text="@_basicText"  Placeholder="请输入文本..." Width="300" />
             <TextBlock Text="@($"当前值：{_basicText}")" FontSize="14" />
         </StackPanel>
         
