@@ -1,134 +1,191 @@
-﻿@using EclipseUI.Controls
+@using EclipseUI.Controls
 @using EclipseUI.Layout
 @using EclipseUI.Core
 
-<ScrollView PaddingLeft="20" PaddingTop="20" PaddingRight="20" PaddingBottom="20">
-    <StackPanel Spacing="15">
-        <!-- 标题 -->
-        <TextBlock Text="🌑 EclipseUI 完整控件测试" FontSize="28" FontWeight="true" PaddingBottom="10" />
-        
-        <!-- TextBox 测试页面链接 -->
-        <Grid ColumnDefinitions="Auto, *" Spacing="10" Background="#E3F2FD" PaddingLeft="15" PaddingTop="12" PaddingRight="15" PaddingBottom="12">
-            <GridItem Column="0" VerticalAlignment="VerticalAlignment.Center">
-                <TextBlock Text="📝 TextBox 控件已实现！" FontSize="16" FontWeight="true" />
+<Grid RowDefinitions="Auto, *" Spacing="0">
+    <!-- 顶部标题栏 -->
+    <GridItem Row="0" Background="#1976D2">
+        <Grid RowDefinitions="Auto, Auto" PaddingLeft="15" PaddingTop="10" PaddingRight="15" PaddingBottom="10">
+            <GridItem Row="0">
+                <TextBlock Text="🌑 EclipseUI Demo" FontSize="24" FontWeight="true" Foreground="#FFFFFF" />
             </GridItem>
-            <GridItem Column="1" HorizontalAlignment="HorizontalAlignment.Right">
-                <Button Text="查看 TextBox 测试页面" Background="#2196F3" OnClick="NavigateToTextBoxTest" />
+            <GridItem Row="1" PaddingTop="5">
+                <TextBlock Text="@_pageTitle" FontSize="14" Foreground="#B3E5FC" />
             </GridItem>
         </Grid>
-        
-        <!-- ==================== 1. 固定尺寸测试 ==================== -->
-        <TextBlock Text="📏 1. 固定尺寸 (Width/Height)" FontSize="18" FontWeight="true" Background="#E3F2FD" PaddingLeft="10" PaddingTop="8" PaddingRight="10" PaddingBottom="8" HorizontalAlignment="HorizontalAlignment.Stretch" />
-        <StackPanel Orientation="StackOrientation.Horizontal" Spacing="15">
-            <Button Text="100×40" Width="100" Height="40" Background="#2196F3" />
-            <Button Text="150×50" Width="150" Height="50" Background="#4CAF50" />
-            <Button Text="200×60" Width="200" Height="60" Background="#FF9800" />
-        </StackPanel>
-        
-        <!-- ==================== 2. 最小尺寸测试 ==================== -->
-        <TextBlock Text="📐 2. 最小尺寸 (MinWidth/MinHeight)" FontSize="18" FontWeight="true" Background="#E8F5E9" PaddingLeft="10" PaddingTop="8" PaddingRight="10" PaddingBottom="8" HorizontalAlignment="HorizontalAlignment.Stretch" />
-        <StackPanel Orientation="StackOrientation.Horizontal" Spacing="15">
-            <Button Text="MinW=120" MinWidth="120" Background="#9C27B0" />
-            <Button Text="MinW=150" MinWidth="150" Background="#E91E63" />
-            <Button Text="MinH=60" MinHeight="60" Background="#00BCD4" />
-        </StackPanel>
-        
-        <!-- ==================== 3. 最大尺寸测试 ==================== -->
-        <TextBlock Text="📏 3. 最大尺寸 (MaxWidth/MaxHeight)" FontSize="18" FontWeight="true" Background="#FFF3E0" PaddingLeft="10" PaddingTop="8" PaddingRight="10" PaddingBottom="8" HorizontalAlignment="HorizontalAlignment.Stretch" />
-        <StackPanel Spacing="10">
-            <Button Text="MaxWidth=200" MaxWidth="200" Background="#FFC107" HorizontalAlignment="HorizontalAlignment.Left" />
-            <TextBlock Text="这是一个设置了 MaxWidth=250 的文本块，当文本内容超过最大宽度时会自动换行。这是第二行文字，继续测试换行功能是否正常工作。如果看到多行文本说明换行功能正常！" MaxWidth="250" Background="#FFCCBC" PaddingLeft="10" PaddingTop="10" PaddingRight="10" PaddingBottom="10" />
-        </StackPanel>
-        
-        <!-- ==================== 4. 水平对齐测试 ==================== -->
-        <TextBlock Text="📍 4. 水平对齐 (HorizontalAlignment)" FontSize="18" FontWeight="true" Background="#F3E5F5" PaddingLeft="10" PaddingTop="8" PaddingRight="10" PaddingBottom="8" HorizontalAlignment="HorizontalAlignment.Stretch" />
-        <StackPanel Spacing="10">
-            <Button Text="Left (左对齐)" Width="200" HorizontalAlignment="HorizontalAlignment.Left" Background="#3F51B5" />
-            <Button Text="Center (居中对齐)" Width="200" HorizontalAlignment="HorizontalAlignment.Center" Background="#673AB7" />
-            <Button Text="Right (右对齐)" Width="200" HorizontalAlignment="HorizontalAlignment.Right" Background="#9C27B0" />
-            <Button Text="Stretch (拉伸填满)" HorizontalAlignment="HorizontalAlignment.Stretch" Background="#E91E63" />
-        </StackPanel>
-        
-        <!-- ==================== 5. 垂直对齐测试 ==================== -->
-        <TextBlock Text="⬆️ 5. 垂直对齐 (VerticalAlignment)" FontSize="18" FontWeight="true" Background="#FFEBEE" PaddingLeft="10" PaddingTop="8" PaddingRight="10" PaddingBottom="8" HorizontalAlignment="HorizontalAlignment.Stretch" />
-        <Grid RowDefinitions="60, 60" ColumnDefinitions="*, *, *, *" Spacing="5" Background="#FFF0F0">
-            <GridItem Row="0" Column="0" Background="#FFEBEE" VerticalAlignment="VerticalAlignment.Top"><Button Text="Top" Background="#F44336" /></GridItem>
-            <GridItem Row="0" Column="1" Background="#E8F5E9" VerticalAlignment="VerticalAlignment.Center"><Button Text="Center" Background="#4CAF50" /></GridItem>
-            <GridItem Row="0" Column="2" Background="#FFF8E1" VerticalAlignment="VerticalAlignment.Bottom"><Button Text="Bottom" Background="#FFC107" /></GridItem>
-            <GridItem Row="0" Column="3" Background="#E3F2FD" VerticalAlignment="VerticalAlignment.Stretch"><Button Text="Stretch" Background="#2196F3" /></GridItem>
-            <GridItem Row="1" Column="0" Background="#F3E5F5" VerticalAlignment="VerticalAlignment.Top" HorizontalAlignment="HorizontalAlignment.Left"><TextBlock Text="↖" Background="#9C27B0" PaddingLeft="15" PaddingTop="15" PaddingRight="15" PaddingBottom="15" /></GridItem>
-            <GridItem Row="1" Column="1" Background="#E0F7FA" VerticalAlignment="VerticalAlignment.Bottom" HorizontalAlignment="HorizontalAlignment.Right"><TextBlock Text="↘" Background="#00BCD4" PaddingLeft="15" PaddingTop="15" PaddingRight="15" PaddingBottom="15" /></GridItem>
-            <GridItem Row="1" Column="2" Background="#FFFDE7" VerticalAlignment="VerticalAlignment.Top" HorizontalAlignment="HorizontalAlignment.Left"><TextBlock Text="↖" Background="#FFEB3B" PaddingLeft="15" PaddingTop="15" PaddingRight="15" PaddingBottom="15" /></GridItem>
-            <GridItem Row="1" Column="3" Background="#EFEBE9" VerticalAlignment="VerticalAlignment.Center" HorizontalAlignment="HorizontalAlignment.Center"><TextBlock Text="居中" Background="#795548" PaddingLeft="15" PaddingTop="15" PaddingRight="15" PaddingBottom="15" /></GridItem>
+    </GridItem>
+    
+    <!-- 主内容区 -->
+    <GridItem Row="1">
+        <Grid RowDefinitions="*, Auto" Spacing="0">
+            <!-- 页面内容 -->
+            <GridItem Row="0">
+                <ScrollView PaddingLeft="20" PaddingTop="20" PaddingRight="20" PaddingBottom="20">
+                    @if (_currentPage == 0)
+                    {
+                        <StackPanel Spacing="15">
+                            <TextBlock Text="👋 欢迎使用 EclipseUI Demo！" FontSize="20" FontWeight="true" />
+                            <TextBlock Text="使用底部导航栏切换不同的控件测试页面。" FontSize="14" PaddingBottom="10" />
+                            <TextBlock Text="📦 已实现控件：" FontSize="16" FontWeight="true" PaddingBottom="10" />
+                            <TextBlock Text="✅ TextBox - 文本输入框" FontSize="14" />
+                            <TextBlock Text="✅ ComboBox - 下拉选择框" FontSize="14" />
+                            <TextBlock Text="✅ CheckBox - 复选框（支持三态）" FontSize="14" />
+                            <TextBlock Text="✅ RadioButton - 单选框（分组互斥）" FontSize="14" />
+                            <TextBlock Text="✅ ToggleSwitch - 开关控件" FontSize="14" />
+                            <TextBlock Text="✅ Slider - 滑块（水平/垂直/刻度）" FontSize="14" />
+                        </StackPanel>
+                    }
+                    else if (_currentPage == 1)
+                    {
+                        <StackPanel Spacing="15">
+                            <TextBlock Text="📝 TextBox 文本输入" FontSize="18" FontWeight="true" />
+                            <TextBlock Text="基础输入：" FontSize="14" />
+                            <TextBox Text="@_textBoxValue" TextChanged="OnTextBoxChanged" Placeholder="请输入文本..." Width="300" />
+                            <TextBlock Text="@_textBoxDisplay" FontSize="12" PaddingBottom="10" />
+                            <TextBlock Text="带占位符：" FontSize="14" />
+                            <TextBox Placeholder="请输入用户名..." Width="300" PaddingBottom="10" />
+                            <TextBlock Text="不同尺寸：" FontSize="14" />
+                            <TextBox Text="宽度 200" Width="200" />
+                            <TextBox Text="宽度 350" Width="350" />
+                        </StackPanel>
+                    }
+                    else if (_currentPage == 2)
+                    {
+                        <StackPanel Spacing="15">
+                            <TextBlock Text="🔽 ComboBox 下拉选择" FontSize="18" FontWeight="true" />
+                            <TextBlock Text="选择一个选项：" FontSize="14" />
+                            <ComboBox ItemsSource="@_comboBoxItems" SelectedItem="_comboBoxSelected" SelectedItemChanged="OnComboBoxChanged" Placeholder="请选择..." Width="250" />
+                            <TextBlock Text="@_comboBoxDisplay" FontSize="12" PaddingBottom="10" />
+                        </StackPanel>
+                    }
+                    else if (_currentPage == 3)
+                    {
+                        <StackPanel Spacing="15">
+                            <TextBlock Text="☑️ CheckBox 复选框" FontSize="18" FontWeight="true" />
+                            <CheckBox Content="同意服务条款" IsChecked="_checkBox1" IsCheckedChanged="OnCheckBox1Changed" PaddingBottom="10" />
+                            <CheckBox Content="订阅新闻邮件" IsChecked="_checkBox2" IsCheckedChanged="OnCheckBox2Changed" PaddingBottom="10" />
+                            <CheckBox Content="不确定状态（三态）" IsChecked="_checkBox3" IsThreeState="true" IsCheckedChanged="OnCheckBox3Changed" />
+                            <TextBlock Text="@_checkBoxDisplay" FontSize="12" PaddingTop="15" />
+                        </StackPanel>
+                    }
+                    else if (_currentPage == 4)
+                    {
+                        <StackPanel Spacing="15">
+                            <TextBlock Text="🔘 RadioButton 单选框" FontSize="18" FontWeight="true" />
+                            <TextBlock Text="选择支付方式：" FontSize="14" PaddingBottom="5" />
+                            <RadioButton Content="💳 信用卡" GroupName="Payment" IsChecked="_radio1" IsCheckedChanged="OnRadioChanged" PaddingBottom="10" />
+                            <RadioButton Content="🏦 银行转账" GroupName="Payment" IsChecked="_radio2" IsCheckedChanged="OnRadioChanged" PaddingBottom="10" />
+                            <RadioButton Content="💰 支付宝" GroupName="Payment" IsChecked="_radio3" IsCheckedChanged="OnRadioChanged" />
+                        </StackPanel>
+                    }
+                    else if (_currentPage == 5)
+                    {
+                        <StackPanel Spacing="15">
+                            <TextBlock Text="🔛 ToggleSwitch 开关" FontSize="18" FontWeight="true" />
+                            <StackPanel Orientation="StackOrientation.Horizontal" Spacing="10" PaddingBottom="10">
+                                <ToggleSwitch IsOn="_toggle1" IsOnChanged="OnToggle1Changed" />
+                                <TextBlock Text="Wi-Fi" FontSize="14" />
+                            </StackPanel>
+                            <StackPanel Orientation="StackOrientation.Horizontal" Spacing="10" PaddingBottom="10">
+                                <ToggleSwitch IsOn="_toggle2" IsOnChanged="OnToggle2Changed" />
+                                <TextBlock Text="蓝牙" FontSize="14" />
+                            </StackPanel>
+                            <StackPanel Orientation="StackOrientation.Horizontal" Spacing="10">
+                                <ToggleSwitch IsOn="_toggle3" IsOnChanged="OnToggle3Changed" OnColor="#F44336" />
+                                <TextBlock Text="飞行模式" FontSize="14" />
+                            </StackPanel>
+                        </StackPanel>
+                    }
+                    else if (_currentPage == 6)
+                    {
+                        <StackPanel Spacing="15">
+                            <TextBlock Text="📊 Slider 滑块" FontSize="18" FontWeight="true" />
+                            <StackPanel PaddingBottom="15">
+                                <TextBlock Text="音量控制" FontSize="14" PaddingBottom="5" />
+                                <Slider Value="_slider1" ValueChanged="OnSlider1Changed" Minimum="0" Maximum="100" Width="300" />
+                                <TextBlock Text="@_slider1Display" FontSize="12" />
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Text="亮度（带刻度）" FontSize="14" PaddingBottom="5" />
+                                <Slider Value="_slider2" ValueChanged="OnSlider2Changed" Minimum="0" Maximum="100" Width="300" ShowTicks="true" TickFrequency="10" IsSnapToTick="true" />
+                                <TextBlock Text="@_slider2Display" FontSize="12" />
+                            </StackPanel>
+                        </StackPanel>
+                    }
+                </ScrollView>
+            </GridItem>
+            
+            <!-- 底部导航栏 -->
+            <GridItem Row="1" Background="#F5F5F5">
+                <StackPanel Orientation="StackOrientation.Horizontal" Spacing="5" PaddingLeft="10" PaddingTop="8" PaddingRight="10" PaddingBottom="8">
+                    <Button Text="🏠 主页" Width="90" Height="36" Background="#E0E0E0" OnClick="GoToMain" />
+                    <Button Text="📝 TextBox" Width="90" Height="36" Background="#E0E0E0" OnClick="GoToTextBox" />
+                    <Button Text="🔽 ComboBox" Width="90" Height="36" Background="#E0E0E0" OnClick="GoToComboBox" />
+                    <Button Text="☑️ CheckBox" Width="90" Height="36" Background="#E0E0E0" OnClick="GoToCheckBox" />
+                    <Button Text="🔘 Radio" Width="90" Height="36" Background="#E0E0E0" OnClick="GoToRadioButton" />
+                    <Button Text="🔛 Toggle" Width="90" Height="36" Background="#E0E0E0" OnClick="GoToToggleSwitch" />
+                    <Button Text="📊 Slider" Width="90" Height="36" Background="#E0E0E0" OnClick="GoToSlider" />
+                </StackPanel>
+            </GridItem>
         </Grid>
-        
-        <!-- ==================== 6. 组合使用测试 ==================== -->
-        <TextBlock Text="🔧 6. 组合使用 (Width + Alignment + Min/Max)" FontSize="18" FontWeight="true" Background="#E8EAF6" PaddingLeft="10" PaddingTop="8" PaddingRight="10" PaddingBottom="8" HorizontalAlignment="HorizontalAlignment.Stretch" />
-        <Grid ColumnDefinitions="*, *" Spacing="15" Background="#F0F0FF">
-            <GridItem Column="0" Background="#E8EAF6" HorizontalAlignment="HorizontalAlignment.Center">
-                <StackPanel PaddingLeft="15" PaddingTop="15" PaddingRight="15" PaddingBottom="15" Spacing="10">
-                    <TextBlock Text="Width + Center" FontSize="14" />
-                    <Button Text="Width=180 + Center" Width="180" MinHeight="50" Background="#3F51B5" />
-                </StackPanel>
-            </GridItem>
-            <GridItem Column="1" Background="#E8F5E9" HorizontalAlignment="HorizontalAlignment.Right">
-                <StackPanel PaddingLeft="15" PaddingTop="15" PaddingRight="15" PaddingBottom="15" Spacing="10">
-                    <TextBlock Text="Min/Max + Right" FontSize="14" />
-                    <Button Text="Min100 Max250 + Right" MinWidth="100" MaxWidth="250" Background="#4CAF50" />
-                </StackPanel>
-            </GridItem>
-        </Grid>
-        
-        <!-- ==================== 7. Grid 布局测试 ==================== -->
-        <TextBlock Text="📐 7. Grid 网格布局" FontSize="18" FontWeight="true" Background="#E0F2F1" PaddingLeft="10" PaddingTop="8" PaddingRight="10" PaddingBottom="8" HorizontalAlignment="HorizontalAlignment.Stretch" />
-        <Grid RowDefinitions="Auto, Auto" ColumnDefinitions="150, *, 150" Spacing="10">
-            <!-- 顶部标题 -->
-            <GridItem Row="0" Column="0" ColumnSpan="3" Background="#2196F3">
-                <StackPanel PaddingLeft="20" PaddingTop="15" PaddingRight="20" PaddingBottom="15">
-                    <TextBlock Text="Grid 布局演示" FontSize="20" FontWeight="true" />
-                </StackPanel>
-            </GridItem>
-            <!-- 左侧导航 -->
-            <GridItem Row="1" Column="0" Background="#4CAF50">
-                <StackPanel Orientation="StackOrientation.Vertical" Spacing="10" PaddingLeft="15" PaddingTop="20" PaddingRight="15" PaddingBottom="20">
-                    <TextBlock Text="🧭 导航" FontSize="16" FontWeight="true" />
-                    <Button Text="🏠 首页" />
-                    <Button Text="⚙️ 设置" />
-                    <Button Text="ℹ️ 关于" />
-                </StackPanel>
-            </GridItem>
-            <!-- 中间内容 -->
-            <GridItem Row="1" Column="1" Background="#9C27B0">
-                <StackPanel Orientation="StackOrientation.Vertical" Spacing="15" PaddingLeft="30" PaddingTop="30" PaddingRight="30" PaddingBottom="30">
-                    <TextBlock Text="欢迎使用 Grid 布局！" FontSize="20" FontWeight="true" />
-                    <TextBlock Text="这是一个 3 行 3 列的网格：\n• 第 1 行：Auto 高度（标题）\n• 第 2 行：* 比例高度（内容区）\n• 第 3 行：Auto 高度（状态栏）\n• 第 1 列：150px 固定宽度\n• 第 2 列：* 比例宽度\n• 第 3 列：150px 固定宽度" FontSize="14" />
-                    <Button Text="点击测试" Background="#FF5722" FontSize="16" />
-                </StackPanel>
-            </GridItem>
-            <!-- 右侧工具 -->
-            <GridItem Row="1" Column="2" Background="#FF9800">
-                <StackPanel Orientation="StackOrientation.Vertical" Spacing="10" PaddingLeft="15" PaddingTop="20" PaddingRight="15" PaddingBottom="20">
-                    <TextBlock Text="🛠️ 工具" FontSize="16" FontWeight="true" />
-                    <Button Text="📝 编辑" />
-                    <Button Text="🗑️ 删除" />
-                    <Button Text="💾 保存" />
-                </StackPanel>
-            </GridItem>
-        </Grid>
-        
-        <!-- ==================== 8. ScrollView 滚动测试 ==================== -->
-        <TextBlock Text="📜 8. ScrollView 滚动测试" FontSize="18" FontWeight="true" Background="#FFF8E1" PaddingLeft="10" PaddingTop="8" PaddingRight="10" PaddingBottom="8" HorizontalAlignment="HorizontalAlignment.Stretch" />
-        <TextBlock Text="提示：使用鼠标滚轮滚动，或拖动右侧滚动条，或点击滚动条空白区域快速滚动" Background="#FFF3E0" PaddingLeft="10" PaddingTop="10" PaddingRight="10" PaddingBottom="10" />
-        
-        <!-- ==================== 状态栏 ==================== -->
-        <TextBlock Text="✅ 已完整支持：Width/Height | MinWidth/MinHeight | MaxWidth/MaxHeight | HorizontalAlignment | VerticalAlignment | Padding | Grid Spacing | 文本自动换行 | ScrollView 滚动" FontSize="13" Background="#ECEFF1" PaddingLeft="15" PaddingTop="15" PaddingRight="15" PaddingBottom="12" />
-    </StackPanel>
-</ScrollView>
+    </GridItem>
+</Grid>
 
 @code {
-    private void NavigateToTextBoxTest(MouseEventArgs e)
-    {
-        // TODO: 实现页面导航逻辑
-        // 目前需要手动运行 TextBoxTestPage.razor
-    }
+    private int _currentPage = 0;
+    private string _pageTitle = "主页面";
+    
+    // TextBox 状态
+    private string _textBoxValue = "";
+    private string _textBoxDisplay = "当前值：";
+    
+    // ComboBox 状态
+    private List<string> _comboBoxItems = new() { "选项一", "选项二", "选项三", "选项四", "选项五" };
+    private string? _comboBoxSelected;
+    private string _comboBoxDisplay = "当前选择：无";
+    
+    // CheckBox 状态
+    private bool? _checkBox1 = false;
+    private bool? _checkBox2 = false;
+    private bool? _checkBox3 = null;
+    private string _checkBoxDisplay = "状态：";
+    
+    // RadioButton 状态
+    private bool? _radio1 = true;
+    private bool? _radio2 = false;
+    private bool? _radio3 = false;
+    
+    // ToggleSwitch 状态
+    private bool _toggle1 = true;
+    private bool _toggle2 = false;
+    private bool _toggle3 = false;
+    
+    // Slider 状态
+    private double _slider1 = 50;
+    private double _slider2 = 75;
+    private string _slider1Display = "音量：50";
+    private string _slider2Display = "亮度：75";
+    
+    // 导航方法
+    private void GoToMain(MouseEventArgs e) { _currentPage = 0; _pageTitle = "主页面"; StateHasChanged(); }
+    private void GoToTextBox(MouseEventArgs e) { _currentPage = 1; _pageTitle = "TextBox 测试"; StateHasChanged(); }
+    private void GoToComboBox(MouseEventArgs e) { _currentPage = 2; _pageTitle = "ComboBox 测试"; StateHasChanged(); }
+    private void GoToCheckBox(MouseEventArgs e) { _currentPage = 3; _pageTitle = "CheckBox 测试"; StateHasChanged(); }
+    private void GoToRadioButton(MouseEventArgs e) { _currentPage = 4; _pageTitle = "RadioButton 测试"; StateHasChanged(); }
+    private void GoToToggleSwitch(MouseEventArgs e) { _currentPage = 5; _pageTitle = "ToggleSwitch 测试"; StateHasChanged(); }
+    private void GoToSlider(MouseEventArgs e) { _currentPage = 6; _pageTitle = "Slider 测试"; StateHasChanged(); }
+    
+    // 事件处理
+    private void OnTextBoxChanged(string v) { _textBoxValue = v; _textBoxDisplay = $"当前值：{v}"; }
+    private void OnComboBoxChanged(string? v) { _comboBoxSelected = v; _comboBoxDisplay = $"当前选择：{v ?? "无"}"; }
+    private void OnCheckBox1Changed(bool? v) { _checkBox1 = v; UpdateCheckBoxDisplay(); }
+    private void OnCheckBox2Changed(bool? v) { _checkBox2 = v; UpdateCheckBoxDisplay(); }
+    private void OnCheckBox3Changed(bool? v) { _checkBox3 = v; UpdateCheckBoxDisplay(); }
+    private void UpdateCheckBoxDisplay() { _checkBoxDisplay = $"状态：条款={_checkBox1}, 邮件={_checkBox2}, 三态={_checkBox3}"; }
+    private void OnRadioChanged(bool? v) { }
+    private void OnToggle1Changed(bool v) => _toggle1 = v;
+    private void OnToggle2Changed(bool v) => _toggle2 = v;
+    private void OnToggle3Changed(bool v) => _toggle3 = v;
+    private void OnSlider1Changed(double v) { _slider1 = v; _slider1Display = $"音量：{(int)v}"; }
+    private void OnSlider2Changed(double v) { _slider2 = v; _slider2Display = $"亮度：{(int)v}"; }
 }

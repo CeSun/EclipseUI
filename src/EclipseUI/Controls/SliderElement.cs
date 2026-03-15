@@ -56,11 +56,11 @@ public class SliderElement : EclipseElement
         if (Orientation == Orientation.Horizontal)
         {
             contentWidth = RequestedWidth ?? 200;
-            contentHeight = Math.Max(ThumbRadius * 2 + 4, FontSize + 20);
+            contentHeight = ThumbRadius * 2 + 24; // 固定高度：滑块 + 文本空间
         }
         else
         {
-            contentWidth = Math.Max(ThumbRadius * 2 + 4, FontSize + 20);
+            contentWidth = ThumbRadius * 2 + 24; // 固定宽度：滑块宽度
             contentHeight = RequestedHeight ?? 200;
         }
         
@@ -145,22 +145,6 @@ public class SliderElement : EclipseElement
         // 绘制滑块
         using var thumbPaint = new SKPaint { Color = IsDragging || IsHovered ? SKColors.LightBlue : ThumbColor, IsAntialias = true };
         canvas.DrawCircle(thumbX, trackY, ThumbRadius, thumbPaint);
-        
-        // 绘制值文本
-        string valueText = Value.ToString("F0");
-        float textX = X + Width / 2;
-        float textY = Y + Height - 4;
-        
-        using var renderContext = new SkiaRenderContext(canvas);
-        TextRenderer.DrawText(
-            renderContext,
-            valueText,
-            textX,
-            textY,
-            FontSize,
-            new Color(TextColor.Red, TextColor.Green, TextColor.Blue, TextColor.Alpha),
-            SKTextAlign.Center
-        );
     }
     
     /// <summary>
@@ -217,22 +201,6 @@ public class SliderElement : EclipseElement
         // 绘制滑块
         using var thumbPaint = new SKPaint { Color = IsDragging || IsHovered ? SKColors.LightBlue : ThumbColor, IsAntialias = true };
         canvas.DrawCircle(trackX, thumbY, ThumbRadius, thumbPaint);
-        
-        // 绘制值文本
-        string valueText = Value.ToString("F0");
-        float textX = X + Width / 2;
-        float textY = Y - 8;
-        
-        using var renderContext = new SkiaRenderContext(canvas);
-        TextRenderer.DrawText(
-            renderContext,
-            valueText,
-            textX,
-            textY,
-            FontSize,
-            new Color(TextColor.Red, TextColor.Green, TextColor.Blue, TextColor.Alpha),
-            SKTextAlign.Center
-        );
     }
     
     /// <summary>
@@ -276,16 +244,21 @@ public class SliderElement : EclipseElement
     
     public override bool HandleMouseDown(float x, float y)
     {
-        // 检查是否点击在滑块上
+        // 检查是否点击在滑块上（扩大点击区域以便更容易抓取）
+        float clickRadius = ThumbRadius + 5;
+        
         if (Orientation == Orientation.Horizontal)
         {
             float trackY = Y + Height / 2;
-            double normalizedValue = (Value - Minimum) / (Maximum - Minimum);
+            double range = Maximum - Minimum;
+            if (range == 0) return false;
+            
+            double normalizedValue = (Value - Minimum) / range;
             float trackLeft = X + ThumbRadius;
             float trackRight = X + Width - ThumbRadius;
             float thumbX = trackLeft + (float)normalizedValue * (trackRight - trackLeft);
             
-            var thumbRect = new SKRect(thumbX - ThumbRadius, trackY - ThumbRadius, thumbX + ThumbRadius, trackY + ThumbRadius);
+            var thumbRect = new SKRect(thumbX - clickRadius, trackY - clickRadius, thumbX + clickRadius, trackY + clickRadius);
             if (thumbRect.Contains(new SKPoint(x, y)))
             {
                 IsDragging = true;
@@ -296,12 +269,15 @@ public class SliderElement : EclipseElement
         else
         {
             float trackX = X + Width / 2;
-            double normalizedValue = (Value - Minimum) / (Maximum - Minimum);
+            double range = Maximum - Minimum;
+            if (range == 0) return false;
+            
+            double normalizedValue = (Value - Minimum) / range;
             float trackTop = Y + ThumbRadius;
             float trackBottom = Y + Height - ThumbRadius;
             float thumbY = trackBottom - (float)normalizedValue * (trackBottom - trackTop);
             
-            var thumbRect = new SKRect(trackX - ThumbRadius, thumbY - ThumbRadius, trackX + ThumbRadius, thumbY + ThumbRadius);
+            var thumbRect = new SKRect(trackX - clickRadius, thumbY - clickRadius, trackX + clickRadius, thumbY + clickRadius);
             if (thumbRect.Contains(new SKPoint(x, y)))
             {
                 IsDragging = true;
@@ -328,17 +304,6 @@ public class SliderElement : EclipseElement
         return IsHovered != wasHovered;
     }
     
-    public override void HandleMouseUp()
-    {
-        IsDragging = false;
-    }
-    
-    public override void HandleMouseLeave()
-    {
-        IsHovered = false;
-        IsDragging = false;
-    }
-    
     /// <summary>
     /// 更新值
     /// </summary>
@@ -350,5 +315,16 @@ public class SliderElement : EclipseElement
             Value = newValue;
             OnValueChanged?.Invoke(Value);
         }
+    }
+    
+    public override void HandleMouseUp()
+    {
+        IsDragging = false;
+    }
+    
+    public override void HandleMouseLeave()
+    {
+        IsHovered = false;
+        IsDragging = false;
     }
 }

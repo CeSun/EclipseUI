@@ -136,14 +136,23 @@ public class RadioButtonElement : EclipseElement
     {
         if (!IsVisible) return false;
         
+        // 检查点击是否在元素边界内
         var rect = new SKRect(X, Y, X + Width, Y + Height);
         if (!rect.Contains(point)) return false;
         
-        // 如果未选中，选中此单选框并取消同组其他
-        if (IsChecked != true)
+        // 注册到组
+        if (!Groups.ContainsKey(GroupName))
         {
-            SetChecked(true);
+            Groups[GroupName] = new List<RadioButtonElement>();
         }
+        
+        if (!Groups[GroupName].Contains(this))
+        {
+            Groups[GroupName].Add(this);
+        }
+        
+        // 选中此单选框（自动取消同组其他）
+        SetChecked(true);
         
         OnClick?.Invoke(this, point);
         
