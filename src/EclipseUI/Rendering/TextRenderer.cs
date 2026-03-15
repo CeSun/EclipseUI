@@ -255,9 +255,11 @@ public static class TextRenderer
 
     private static bool IsEmojiChar(char c)
     {
-        return (c >= 0x2600 && c <= 0x26FF) ||
-               (c >= 0x2700 && c <= 0x27BF) ||
-               (c >= 0xFE00 && c <= 0xFE0F);
+        return (c >= 0x2190 && c <= 0x21FF) ||  // 箭头
+               (c >= 0x2600 && c <= 0x26FF) ||  // 杂项符号
+               (c >= 0x2700 && c <= 0x27BF) ||  // 丁巴特斯符号
+               (c >= 0x1F300 && c <= 0x1F9FF) || // 杂项符号和表情（需要 surrogate pair）
+               (c >= 0xFE00 && c <= 0xFE0F);    // 变体选择器
     }
 
     /// <summary>
