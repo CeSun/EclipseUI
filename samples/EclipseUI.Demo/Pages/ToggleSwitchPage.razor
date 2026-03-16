@@ -1,0 +1,64 @@
+@using EclipseUI.Controls
+@using EclipseUI.Layout
+@using EclipseUI.Core
+
+<StackPanel Spacing="20">
+    <TextBlock Text="🔛 ToggleSwitch 开关" FontSize="24" FontWeight="true" />
+    
+    <TextBlock Text="基础开关：" FontSize="16" PaddingBottom="5" />
+    <StackPanel Orientation="StackOrientation.Horizontal" Spacing="10" PaddingBottom="10">
+        <ToggleSwitch IsOn="_toggle1" IsOnChanged="OnToggle1Changed" />
+        <TextBlock Text="Wi-Fi" FontSize="14" />
+    </StackPanel>
+    
+    <StackPanel Orientation="StackOrientation.Horizontal" Spacing="10" PaddingBottom="10">
+        <ToggleSwitch IsOn="_toggle2" IsOnChanged="OnToggle2Changed" />
+        <TextBlock Text="蓝牙" FontSize="14" />
+    </StackPanel>
+    
+    <StackPanel Orientation="StackOrientation.Horizontal" Spacing="10" PaddingBottom="20">
+        <ToggleSwitch IsOn="_toggle3" IsOnChanged="OnToggle3Changed" />
+        <TextBlock Text="移动数据" FontSize="14" />
+    </StackPanel>
+    
+    <TextBlock Text="自定义颜色开关：" FontSize="16" PaddingBottom="5" />
+    <StackPanel Orientation="StackOrientation.Horizontal" Spacing="10" PaddingBottom="10">
+        <ToggleSwitch IsOn="_toggle4" IsOnChanged="OnToggle4Changed" OnColor="#F44336" />
+        <TextBlock Text="飞行模式（红色）" FontSize="14" />
+    </StackPanel>
+    
+    <StackPanel Orientation="StackOrientation.Horizontal" Spacing="10" PaddingBottom="10">
+        <ToggleSwitch IsOn="_toggle5" IsOnChanged="OnToggle5Changed" OnColor="#4CAF50" />
+        <TextBlock Text="省电模式（绿色）" FontSize="14" />
+    </StackPanel>
+    
+    <StackPanel Orientation="StackOrientation.Horizontal" Spacing="10">
+        <ToggleSwitch IsOn="_toggle6" IsOnChanged="OnToggle6Changed" OnColor="#2196F3" />
+        <TextBlock Text="夜间模式（蓝色）" FontSize="14" />
+    </StackPanel>
+    
+    <TextBlock Text="@_toggleDisplay" FontSize="14" PaddingTop="20" />
+</StackPanel>
+
+@code {
+    private bool _toggle1 = true;
+    private bool _toggle2 = false;
+    private bool _toggle3 = false;
+    private bool _toggle4 = false;
+    private bool _toggle5 = false;
+    private bool _toggle6 = false;
+    
+    private string _toggleDisplay = "状态：";
+    
+    private void OnToggle1Changed(bool v) { _toggle1 = v; UpdateToggleDisplay(); }
+    private void OnToggle2Changed(bool v) { _toggle2 = v; UpdateToggleDisplay(); }
+    private void OnToggle3Changed(bool v) { _toggle3 = v; UpdateToggleDisplay(); }
+    private void OnToggle4Changed(bool v) { _toggle4 = v; UpdateToggleDisplay(); }
+    private void OnToggle5Changed(bool v) { _toggle5 = v; UpdateToggleDisplay(); }
+    private void OnToggle6Changed(bool v) { _toggle6 = v; UpdateToggleDisplay(); }
+    
+    private void UpdateToggleDisplay()
+    {
+        _toggleDisplay = $"状态：Wi-Fi={(_toggle1 ? "开" : "关")}, 蓝牙={(_toggle2 ? "开" : "关")}, 移动数据={(_toggle3 ? "开" : "关")}, 飞行={(_toggle4 ? "开" : "关")}, 省电={(_toggle5 ? "开" : "关")}, 夜间={(_toggle6 ? "开" : "关")}";
+    }
+}

@@ -1,0 +1,32 @@
+@using EclipseUI.Controls
+@using EclipseUI.Layout
+@using EclipseUI.Core
+
+<StackPanel Spacing="20">
+    <TextBlock Text="📝 TextBox 文本输入" FontSize="24" FontWeight="true" />
+    
+    <TextBlock Text="基础输入：" FontSize="16" PaddingBottom="5" />
+    <TextBox Text="@_textBoxValue" TextChanged="OnTextBoxChanged" Placeholder="请输入文本..." Width="300" />
+    <TextBlock Text="@_textBoxDisplay" FontSize="12" PaddingBottom="15" />
+    
+    <TextBlock Text="带占位符：" FontSize="16" PaddingBottom="5" />
+    <TextBox Placeholder="请输入用户名..." Width="300" PaddingBottom="15" />
+    
+    <TextBlock Text="不同尺寸：" FontSize="16" PaddingBottom="5" />
+    <StackPanel Spacing="10">
+        <TextBox Text="宽度 200" Width="200" />
+        <TextBox Text="宽度 350" Width="350" />
+        <TextBox Text="宽度 400" Width="400" />
+    </StackPanel>
+</StackPanel>
+
+@code {
+    private string _textBoxValue = "";
+    private string _textBoxDisplay = "当前值：";
+    
+    private void OnTextBoxChanged(string v)
+    {
+        _textBoxValue = v;
+        _textBoxDisplay = $"当前值：{v}";
+    }
+}

@@ -1,0 +1,40 @@
+@using EclipseUI.Controls
+@using EclipseUI.Layout
+@using EclipseUI.Core
+
+<StackPanel Spacing="20">
+    <TextBlock Text="📊 Slider 滑块" FontSize="24" FontWeight="true" />
+    
+    <TextBlock Text="音量控制：" FontSize="16" PaddingBottom="5" />
+    <Slider Value="_slider1" ValueChanged="OnSlider1Changed" Minimum="0" Maximum="100" Width="300" />
+    <TextBlock Text="@_slider1Display" FontSize="12" PaddingBottom="20" />
+    
+    <TextBlock Text="亮度（带刻度）：" FontSize="16" PaddingBottom="5" />
+    <Slider Value="_slider2" ValueChanged="OnSlider2Changed" Minimum="0" Maximum="100" Width="300" ShowTicks="true" TickFrequency="10" IsSnapToTick="true" />
+    <TextBlock Text="@_slider2Display" FontSize="12" PaddingBottom="20" />
+    
+    <TextBlock Text="温度调节：" FontSize="16" PaddingBottom="5" />
+    <Slider Value="_slider3" ValueChanged="OnSlider3Changed" Minimum="16" Maximum="30" Width="300" ShowTicks="true" TickFrequency="2" />
+    <TextBlock Text="@_slider3Display" FontSize="12" PaddingBottom="20" />
+    
+    <TextBlock Text="进度滑块：" FontSize="16" PaddingBottom="5" />
+    <Slider Value="_slider4" ValueChanged="OnSlider4Changed" Minimum="0" Maximum="100" Width="300" />
+    <TextBlock Text="@_slider4Display" FontSize="12" />
+</StackPanel>
+
+@code {
+    private double _slider1 = 50;
+    private double _slider2 = 75;
+    private double _slider3 = 22;
+    private double _slider4 = 30;
+    
+    private string _slider1Display = "音量：50";
+    private string _slider2Display = "亮度：75";
+    private string _slider3Display = "温度：22°C";
+    private string _slider4Display = "进度：30%";
+    
+    private void OnSlider1Changed(double v) { _slider1 = v; _slider1Display = $"音量：{(int)v}"; }
+    private void OnSlider2Changed(double v) { _slider2 = v; _slider2Display = $"亮度：{(int)v}"; }
+    private void OnSlider3Changed(double v) { _slider3 = v; _slider3Display = $"温度：{v}°C"; }
+    private void OnSlider4Changed(double v) { _slider4 = v; _slider4Display = $"进度：{(int)v}%"; }
+}

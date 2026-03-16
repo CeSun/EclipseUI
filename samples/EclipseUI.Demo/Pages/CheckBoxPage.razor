@@ -1,0 +1,35 @@
+@using EclipseUI.Controls
+@using EclipseUI.Layout
+@using EclipseUI.Core
+
+<StackPanel Spacing="20">
+    <TextBlock Text="☑️ CheckBox 复选框" FontSize="24" FontWeight="true" />
+    
+    <TextBlock Text="基础复选框：" FontSize="16" PaddingBottom="5" />
+    <CheckBox Content="同意服务条款" IsChecked="_checkBox1" IsCheckedChanged="OnCheckBox1Changed" PaddingBottom="10" />
+    <CheckBox Content="订阅新闻邮件" IsChecked="_checkBox2" IsCheckedChanged="OnCheckBox2Changed" PaddingBottom="10" />
+    <CheckBox Content="记住登录状态" IsChecked="_checkBox3" IsCheckedChanged="OnCheckBox3Changed" PaddingBottom="20" />
+    
+    <TextBlock Text="三态复选框（不确定状态）：" FontSize="16" PaddingBottom="5" />
+    <CheckBox Content="不确定状态示例" IsChecked="_checkBoxIndeterminate" IsThreeState="true" IsCheckedChanged="OnCheckBoxIndeterminateChanged" PaddingBottom="20" />
+    
+    <TextBlock Text="@_checkBoxDisplay" FontSize="14" PaddingTop="10" />
+</StackPanel>
+
+@code {
+    private bool? _checkBox1 = false;
+    private bool? _checkBox2 = false;
+    private bool? _checkBox3 = false;
+    private bool? _checkBoxIndeterminate = null;
+    private string _checkBoxDisplay = "状态：";
+    
+    private void OnCheckBox1Changed(bool? v) { _checkBox1 = v; UpdateCheckBoxDisplay(); }
+    private void OnCheckBox2Changed(bool? v) { _checkBox2 = v; UpdateCheckBoxDisplay(); }
+    private void OnCheckBox3Changed(bool? v) { _checkBox3 = v; UpdateCheckBoxDisplay(); }
+    private void OnCheckBoxIndeterminateChanged(bool? v) { _checkBoxIndeterminate = v; UpdateCheckBoxDisplay(); }
+    
+    private void UpdateCheckBoxDisplay()
+    {
+        _checkBoxDisplay = $"状态：条款={(_checkBox1 == true ? "✓" : "✗")}, 邮件={(_checkBox2 == true ? "✓" : "✗")}, 登录={(_checkBox3 == true ? "✓" : "✗")}, 三态={(_checkBoxIndeterminate == null ? "?" : (_checkBoxIndeterminate == true ? "✓" : "✗"))}";
+    }
+}

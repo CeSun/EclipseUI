@@ -325,7 +325,8 @@ public class EclipseElement
     }
     
     /// <summary>
-    /// 添加子元�?    /// </summary>
+    /// 添加子元素
+    /// </summary>
     public void AddChild(EclipseElement child)
     {
         child.Parent = this;
@@ -333,7 +334,17 @@ public class EclipseElement
     }
     
     /// <summary>
-    /// 移除子元�?    /// </summary>
+    /// 在指定位置插入子元素
+    /// </summary>
+    public void InsertChild(int index, EclipseElement child)
+    {
+        child.Parent = this;
+        Children.Insert(index, child);
+    }
+    
+    /// <summary>
+    /// 移除子元素
+    /// </summary>
     public void RemoveChild(EclipseElement child)
     {
         child.Parent = null;

@@ -1,6 +1,7 @@
 @using EclipseUI.Controls
 @using EclipseUI.Layout
 @using EclipseUI.Core
+@using EclipseUI.Demo.Pages
 
 <Grid RowDefinitions="Auto, *" Spacing="0">
     <!-- 顶部标题栏 -->
@@ -23,94 +24,31 @@
                 <ScrollView PaddingLeft="20" PaddingTop="20" PaddingRight="20" PaddingBottom="20">
                     @if (_currentPage == 0)
                     {
-                        <StackPanel Spacing="15">
-                            <TextBlock Text="👋 欢迎使用 EclipseUI Demo！" FontSize="20" FontWeight="true" />
-                            <TextBlock Text="使用底部导航栏切换不同的控件测试页面。" FontSize="14" PaddingBottom="10" />
-                            <TextBlock Text="📦 已实现控件：" FontSize="16" FontWeight="true" PaddingBottom="10" />
-                            <TextBlock Text="✅ TextBox - 文本输入框" FontSize="14" />
-                            <TextBlock Text="✅ ComboBox - 下拉选择框" FontSize="14" />
-                            <TextBlock Text="✅ CheckBox - 复选框（支持三态）" FontSize="14" />
-                            <TextBlock Text="✅ RadioButton - 单选框（分组互斥）" FontSize="14" />
-                            <TextBlock Text="✅ ToggleSwitch - 开关控件" FontSize="14" />
-                            <TextBlock Text="✅ Slider - 滑块（水平/垂直/刻度）" FontSize="14" />
-                        </StackPanel>
+                        <HomePage />
                     }
                     else if (_currentPage == 1)
                     {
-                        <StackPanel Spacing="15">
-                            <TextBlock Text="📝 TextBox 文本输入" FontSize="18" FontWeight="true" />
-                            <TextBlock Text="基础输入：" FontSize="14" />
-                            <TextBox Text="@_textBoxValue" TextChanged="OnTextBoxChanged" Placeholder="请输入文本..." Width="300" />
-                            <TextBlock Text="@_textBoxDisplay" FontSize="12" PaddingBottom="10" />
-                            <TextBlock Text="带占位符：" FontSize="14" />
-                            <TextBox Placeholder="请输入用户名..." Width="300" PaddingBottom="10" />
-                            <TextBlock Text="不同尺寸：" FontSize="14" />
-                            <TextBox Text="宽度 200" Width="200" />
-                            <TextBox Text="宽度 350" Width="350" />
-                        </StackPanel>
+                        <TextBoxPage />
                     }
                     else if (_currentPage == 2)
                     {
-                        <StackPanel Spacing="15">
-                            <TextBlock Text="🔽 ComboBox 下拉选择" FontSize="18" FontWeight="true" />
-                            <TextBlock Text="选择一个选项：" FontSize="14" />
-                            <ComboBox ItemsSource="@_comboBoxItems" SelectedItem="_comboBoxSelected" SelectedItemChanged="OnComboBoxChanged" Placeholder="请选择..." Width="250" />
-                            <TextBlock Text="@_comboBoxDisplay" FontSize="12" PaddingBottom="10" />
-                        </StackPanel>
+                        <ComboBoxPage />
                     }
                     else if (_currentPage == 3)
                     {
-                        <StackPanel Spacing="15">
-                            <TextBlock Text="☑️ CheckBox 复选框" FontSize="18" FontWeight="true" />
-                            <CheckBox Content="同意服务条款" IsChecked="_checkBox1" IsCheckedChanged="OnCheckBox1Changed" PaddingBottom="10" />
-                            <CheckBox Content="订阅新闻邮件" IsChecked="_checkBox2" IsCheckedChanged="OnCheckBox2Changed" PaddingBottom="10" />
-                            <CheckBox Content="不确定状态（三态）" IsChecked="_checkBox3" IsThreeState="true" IsCheckedChanged="OnCheckBox3Changed" />
-                            <TextBlock Text="@_checkBoxDisplay" FontSize="12" PaddingTop="15" />
-                        </StackPanel>
+                        <CheckBoxPage />
                     }
                     else if (_currentPage == 4)
                     {
-                        <StackPanel Spacing="15">
-                            <TextBlock Text="🔘 RadioButton 单选框" FontSize="18" FontWeight="true" />
-                            <TextBlock Text="选择支付方式：" FontSize="14" PaddingBottom="5" />
-                            <RadioButton Content="💳 信用卡" GroupName="Payment" IsChecked="_radio1" IsCheckedChanged="OnRadioChanged" PaddingBottom="10" />
-                            <RadioButton Content="🏦 银行转账" GroupName="Payment" IsChecked="_radio2" IsCheckedChanged="OnRadioChanged" PaddingBottom="10" />
-                            <RadioButton Content="💰 支付宝" GroupName="Payment" IsChecked="_radio3" IsCheckedChanged="OnRadioChanged" />
-                        </StackPanel>
+                        <RadioButtonPage />
                     }
                     else if (_currentPage == 5)
                     {
-                        <StackPanel Spacing="15">
-                            <TextBlock Text="🔛 ToggleSwitch 开关" FontSize="18" FontWeight="true" />
-                            <StackPanel Orientation="StackOrientation.Horizontal" Spacing="10" PaddingBottom="10">
-                                <ToggleSwitch IsOn="_toggle1" IsOnChanged="OnToggle1Changed" />
-                                <TextBlock Text="Wi-Fi" FontSize="14" />
-                            </StackPanel>
-                            <StackPanel Orientation="StackOrientation.Horizontal" Spacing="10" PaddingBottom="10">
-                                <ToggleSwitch IsOn="_toggle2" IsOnChanged="OnToggle2Changed" />
-                                <TextBlock Text="蓝牙" FontSize="14" />
-                            </StackPanel>
-                            <StackPanel Orientation="StackOrientation.Horizontal" Spacing="10">
-                                <ToggleSwitch IsOn="_toggle3" IsOnChanged="OnToggle3Changed" OnColor="#F44336" />
-                                <TextBlock Text="飞行模式" FontSize="14" />
-                            </StackPanel>
-                        </StackPanel>
+                        <ToggleSwitchPage />
                     }
                     else if (_currentPage == 6)
                     {
-                        <StackPanel Spacing="15">
-                            <TextBlock Text="📊 Slider 滑块" FontSize="18" FontWeight="true" />
-                            <StackPanel PaddingBottom="15">
-                                <TextBlock Text="音量控制" FontSize="14" PaddingBottom="5" />
-                                <Slider Value="_slider1" ValueChanged="OnSlider1Changed" Minimum="0" Maximum="100" Width="300" />
-                                <TextBlock Text="@_slider1Display" FontSize="12" />
-                            </StackPanel>
-                            <StackPanel>
-                                <TextBlock Text="亮度（带刻度）" FontSize="14" PaddingBottom="5" />
-                                <Slider Value="_slider2" ValueChanged="OnSlider2Changed" Minimum="0" Maximum="100" Width="300" ShowTicks="true" TickFrequency="10" IsSnapToTick="true" />
-                                <TextBlock Text="@_slider2Display" FontSize="12" />
-                            </StackPanel>
-                        </StackPanel>
+                        <SliderPage />
                     }
                 </ScrollView>
             </GridItem>
@@ -135,37 +73,6 @@
     private int _currentPage = 0;
     private string _pageTitle = "主页面";
     
-    // TextBox 状态
-    private string _textBoxValue = "";
-    private string _textBoxDisplay = "当前值：";
-    
-    // ComboBox 状态
-    private List<string> _comboBoxItems = new() { "选项一", "选项二", "选项三", "选项四", "选项五" };
-    private string? _comboBoxSelected;
-    private string _comboBoxDisplay = "当前选择：无";
-    
-    // CheckBox 状态
-    private bool? _checkBox1 = false;
-    private bool? _checkBox2 = false;
-    private bool? _checkBox3 = null;
-    private string _checkBoxDisplay = "状态：";
-    
-    // RadioButton 状态
-    private bool? _radio1 = true;
-    private bool? _radio2 = false;
-    private bool? _radio3 = false;
-    
-    // ToggleSwitch 状态
-    private bool _toggle1 = true;
-    private bool _toggle2 = false;
-    private bool _toggle3 = false;
-    
-    // Slider 状态
-    private double _slider1 = 50;
-    private double _slider2 = 75;
-    private string _slider1Display = "音量：50";
-    private string _slider2Display = "亮度：75";
-    
     // 导航方法
     private void GoToMain(MouseEventArgs e) { _currentPage = 0; _pageTitle = "主页面"; StateHasChanged(); }
     private void GoToTextBox(MouseEventArgs e) { _currentPage = 1; _pageTitle = "TextBox 测试"; StateHasChanged(); }
@@ -174,18 +81,4 @@
     private void GoToRadioButton(MouseEventArgs e) { _currentPage = 4; _pageTitle = "RadioButton 测试"; StateHasChanged(); }
     private void GoToToggleSwitch(MouseEventArgs e) { _currentPage = 5; _pageTitle = "ToggleSwitch 测试"; StateHasChanged(); }
     private void GoToSlider(MouseEventArgs e) { _currentPage = 6; _pageTitle = "Slider 测试"; StateHasChanged(); }
-    
-    // 事件处理
-    private void OnTextBoxChanged(string v) { _textBoxValue = v; _textBoxDisplay = $"当前值：{v}"; }
-    private void OnComboBoxChanged(string? v) { _comboBoxSelected = v; _comboBoxDisplay = $"当前选择：{v ?? "无"}"; }
-    private void OnCheckBox1Changed(bool? v) { _checkBox1 = v; UpdateCheckBoxDisplay(); }
-    private void OnCheckBox2Changed(bool? v) { _checkBox2 = v; UpdateCheckBoxDisplay(); }
-    private void OnCheckBox3Changed(bool? v) { _checkBox3 = v; UpdateCheckBoxDisplay(); }
-    private void UpdateCheckBoxDisplay() { _checkBoxDisplay = $"状态：条款={_checkBox1}, 邮件={_checkBox2}, 三态={_checkBox3}"; }
-    private void OnRadioChanged(bool? v) { }
-    private void OnToggle1Changed(bool v) => _toggle1 = v;
-    private void OnToggle2Changed(bool v) => _toggle2 = v;
-    private void OnToggle3Changed(bool v) => _toggle3 = v;
-    private void OnSlider1Changed(double v) { _slider1 = v; _slider1Display = $"音量：{(int)v}"; }
-    private void OnSlider2Changed(double v) { _slider2 = v; _slider2Display = $"亮度：{(int)v}"; }
 }

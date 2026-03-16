@@ -70,40 +70,40 @@ internal sealed class EclipseComponentAdapter
         if (_pendingEdits == null)
             return;
 
+        // 注意：先处理所有 Remove，再处理所有 Add，避免索引混乱
+        // 第一步：收集所有需要移除和添加的元素
+        var removes = new List<PendingEdit>();
+        var adds = new List<PendingEdit>();
+        
         for (var i = 0; i < _pendingEdits.Count; i++)
         {
             var edit = _pendingEdits[i];
-            var nextEdit = _pendingEdits.ElementAtOrDefault(i + 1);
-
-            if (nextEdit.Index == edit.Index
-                && edit is { Type: EditType.Remove }
-                && nextEdit is { Type: EditType.Add })
-            {
-                // 替换操作
-                var parentElement = PhysicalTarget._targetElement.Element;
-                var oldChild = edit.Element._targetElement.Element;
-                var newChild = nextEdit.Element._targetElement.Element;
-                var index = PhysicalTarget.GetChildPhysicalIndex(edit.Element);
-                
-                parentElement.RemoveChild(oldChild);
-                parentElement.AddChild(newChild);
-                
-                i++;
-            }
-            else if (edit.Type == EditType.Remove)
-            {
-                var parentElement = PhysicalTarget._targetElement.Element;
-                var child = edit.Element._targetElement.Element;
-                var index = PhysicalTarget.GetChildPhysicalIndex(edit.Element);
-                parentElement.RemoveChild(child);
-            }
+            if (edit.Type == EditType.Remove)
+                removes.Add(edit);
             else if (edit.Type == EditType.Add)
-            {
-                var parentElement = PhysicalTarget._targetElement.Element;
-                var child = edit.Element._targetElement.Element;
-                var index = PhysicalTarget.GetChildPhysicalIndex(edit.Element);
+                adds.Add(edit);
+        }
+
+        // 第二步：先移除（从后往前，避免索引问题）
+        for (var i = removes.Count - 1; i >= 0; i--)
+        {
+            var edit = removes[i];
+            var parentElement = PhysicalTarget._targetElement.Element;
+            var child = edit.Element._targetElement.Element;
+            parentElement.RemoveChild(child);
+        }
+
+        // 第三步：再添加（从前往后，按索引插入）
+        foreach (var edit in adds)
+        {
+            var parentElement = PhysicalTarget._targetElement.Element;
+            var child = edit.Element._targetElement.Element;
+            var index = edit.Index;
+            
+            if (index >= 0 && index < parentElement.Children.Count)
+                parentElement.InsertChild(index, child);
+            else
                 parentElement.AddChild(child);
-            }
         }
 
         _pendingEdits.Clear();

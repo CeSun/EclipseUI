@@ -1,0 +1,50 @@
+@using EclipseUI.Controls
+@using EclipseUI.Layout
+@using EclipseUI.Core
+
+<StackPanel Spacing="20">
+    <TextBlock Text="🔘 RadioButton 单选框" FontSize="24" FontWeight="true" />
+    
+    <TextBlock Text="选择支付方式：" FontSize="16" PaddingBottom="5" />
+    <RadioButton Content="💳 信用卡" GroupName="Payment" IsChecked="_radio1" IsCheckedChanged="OnRadioChanged" PaddingBottom="10" />
+    <RadioButton Content="🏦 银行转账" GroupName="Payment" IsChecked="_radio2" IsCheckedChanged="OnRadioChanged" PaddingBottom="10" />
+    <RadioButton Content="💰 支付宝" GroupName="Payment" IsChecked="_radio3" IsCheckedChanged="OnRadioChanged" PaddingBottom="10" />
+    <RadioButton Content="💵 微信支付" GroupName="Payment" IsChecked="_radio4" IsCheckedChanged="OnRadioChanged" PaddingBottom="20" />
+    
+    <TextBlock Text="选择会员等级：" FontSize="16" PaddingBottom="5" />
+    <RadioButton Content="🥉 青铜会员" GroupName="VIP" IsChecked="_vip1" IsCheckedChanged="OnVipChanged" PaddingBottom="10" />
+    <RadioButton Content="🥈 白银会员" GroupName="VIP" IsChecked="_vip2" IsCheckedChanged="OnVipChanged" PaddingBottom="10" />
+    <RadioButton Content="🥇 黄金会员" GroupName="VIP" IsChecked="_vip3" IsCheckedChanged="OnVipChanged" PaddingBottom="10" />
+    <RadioButton Content="💎 钻石会员" GroupName="VIP" IsChecked="_vip4" IsCheckedChanged="OnVipChanged" />
+    
+    <TextBlock Text="@_radioDisplay" FontSize="14" PaddingTop="20" />
+</StackPanel>
+
+@code {
+    // 支付方式
+    private bool? _radio1 = true;
+    private bool? _radio2 = false;
+    private bool? _radio3 = false;
+    private bool? _radio4 = false;
+    
+    // VIP 等级
+    private bool? _vip1 = false;
+    private bool? _vip2 = false;
+    private bool? _vip3 = false;
+    private bool? _vip4 = false;
+    
+    private string _radioDisplay = "支付方式：信用卡";
+    
+    private void OnRadioChanged(bool? v)
+    {
+        if (_radio1 == true) _radioDisplay = "支付方式：信用卡";
+        else if (_radio2 == true) _radioDisplay = "支付方式：银行转账";
+        else if (_radio3 == true) _radioDisplay = "支付方式：支付宝";
+        else if (_radio4 == true) _radioDisplay = "支付方式：微信支付";
+    }
+    
+    private void OnVipChanged(bool? v)
+    {
+        // VIP 选择逻辑，可根据需要扩展
+    }
+}
