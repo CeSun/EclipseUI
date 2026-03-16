@@ -10,17 +10,23 @@ namespace EclipseUI.Layout;
 /// </summary>
 public class ScrollView : ComponentBase, IElementHandler, IDisposable
 {
+    [Parameter] public EventCallback OnClick { get; set; }
+    
+    [Parameter] public float PaddingLeft { get; set; }
+    [Parameter] public float PaddingTop { get; set; }
+    [Parameter] public float PaddingRight { get; set; }
+    [Parameter] public float PaddingBottom { get; set; }
+    
     [Parameter] public float? Width { get; set; }
     [Parameter] public float? Height { get; set; }
     [Parameter] public float? MinWidth { get; set; }
     [Parameter] public float? MinHeight { get; set; }
     [Parameter] public float? MaxWidth { get; set; }
     [Parameter] public float? MaxHeight { get; set; }
+    [Parameter] public HorizontalAlignment HorizontalAlignment { get; set; } = HorizontalAlignment.Stretch;
+    [Parameter] public VerticalAlignment VerticalAlignment { get; set; } = VerticalAlignment.Stretch;
     
-    [Parameter] public float PaddingLeft { get; set; }
-    [Parameter] public float PaddingTop { get; set; }
-    [Parameter] public float PaddingRight { get; set; }
-    [Parameter] public float PaddingBottom { get; set; }
+    [Parameter] public string? Background { get; set; }
     
     [Parameter] public RenderFragment? ChildContent { get; set; }
     
@@ -33,7 +39,13 @@ public class ScrollView : ComponentBase, IElementHandler, IDisposable
         {
             if (_element == null)
             {
-                _element = new ScrollViewElement();
+                _element = new ScrollViewElement
+                {
+                    PaddingLeft = PaddingLeft,
+                    PaddingTop = PaddingTop,
+                    PaddingRight = PaddingRight,
+                    PaddingBottom = PaddingBottom
+                };
                 UpdateElementFromParameters();
             }
             return _element;
@@ -66,6 +78,17 @@ public class ScrollView : ComponentBase, IElementHandler, IDisposable
         _element.MinHeight = MinHeight;
         _element.MaxWidth = MaxWidth;
         _element.MaxHeight = MaxHeight;
+        _element.HorizontalAlignment = HorizontalAlignment;
+        _element.VerticalAlignment = VerticalAlignment;
+        _element.BackgroundColor = ParseBackground(Background);
+        _element.OnClick = OnClick.HasDelegate ? async (e, p) => await OnClick.InvokeAsync() : null;
+    }
+    
+    private static SKColor? ParseBackground(string? color)
+    {
+        if (!string.IsNullOrEmpty(color) && color.StartsWith('#') && color.Length == 7)
+            return SKColor.Parse(color);
+        return null;
     }
     
     protected override void BuildRenderTree(RenderTreeBuilder builder)

@@ -98,6 +98,20 @@ public class GridElement : EclipseElement
         bool isWidthInfinite = float.IsPositiveInfinity(availableWidth);
         bool isHeightInfinite = float.IsPositiveInfinity(availableHeight);
         
+        // 如果没有列定义，默认创建一列 Star 类型
+        if (colCount == 0)
+        {
+            ColumnDefinitions.Add(new ColumnDefinitionInternal { Width = GridLength.Star });
+            colCount = 1;
+            colWidths = new float[1];
+        }
+        
+        // 确保所有列都有定义（如果没有足够的列定义，补充Star类型的列）
+        while (ColumnDefinitions.Count < colCount)
+        {
+            ColumnDefinitions.Add(new ColumnDefinitionInternal { Width = GridLength.Star });
+        }
+        
         // 第一次遍历：测量 Auto 和 Pixel 的行列
         MeasureAutoAndPixel(canvas, availableWidth, availableHeight, gridChildren, rowHeights, colWidths);
         
@@ -110,9 +124,15 @@ public class GridElement : EclipseElement
         }
         else
         {
-            // 宽度受限：Star 列按比例分配
+            // 先计算非星型列的宽度
             float usedWidth = 0;
-            for (int i = 0; i < colCount; i++) usedWidth += colWidths[i];
+            for (int i = 0; i < colCount; i++)
+            {
+                if (ColumnDefinitions[i].Width.GridUnitType != GridUnitType.Star)
+                    usedWidth += colWidths[i];
+            }
+            
+            // 计算剩余宽度并分配给星型列
             remainingWidth = Math.Max(0, availableWidth - PaddingLeft - PaddingRight - usedWidth);
             DistributeStarWidth(remainingWidth, colWidths);
         }
@@ -126,9 +146,15 @@ public class GridElement : EclipseElement
         }
         else
         {
-            // 高度受限：Star 行按比例分配
+            // 先计算非星型行的高度
             float usedHeight = 0;
-            for (int i = 0; i < rowCount; i++) usedHeight += rowHeights[i];
+            for (int i = 0; i < rowCount; i++)
+            {
+                if (RowDefinitions[i].Height.GridUnitType != GridUnitType.Star)
+                    usedHeight += rowHeights[i];
+            }
+            
+            // 计算剩余高度并分配给星型行
             remainingHeight = Math.Max(0, availableHeight - PaddingTop - PaddingBottom - usedHeight);
             DistributeStarHeight(remainingHeight, rowHeights);
             
@@ -136,13 +162,13 @@ public class GridElement : EclipseElement
             MeasureChildrenForAutoRows(canvas, gridChildren, rowHeights, colWidths);
             
             // 重新计算 Star 类型的行高（因为 Auto 类型可能改变了）
-            float usedHeightAfter = 0;
+            usedHeight = 0;
             for (int i = 0; i < rowCount; i++)
             {
                 if (RowDefinitions[i].Height.GridUnitType != GridUnitType.Star)
-                    usedHeightAfter += rowHeights[i];
+                    usedHeight += rowHeights[i];
             }
-            remainingHeight = Math.Max(0, availableHeight - PaddingTop - PaddingBottom - usedHeightAfter);
+            remainingHeight = Math.Max(0, availableHeight - PaddingTop - PaddingBottom - usedHeight);
             DistributeStarHeight(remainingHeight, rowHeights);
         }
         
@@ -152,13 +178,13 @@ public class GridElement : EclipseElement
             MeasureChildrenForAutoColumns(canvas, gridChildren, rowHeights, colWidths);
             
             // 重新计算 Star 类型的列宽（因为 Auto 类型可能改变了）
-            float usedWidthAfter = 0;
+            float usedWidth = 0;
             for (int i = 0; i < colCount; i++)
             {
                 if (ColumnDefinitions[i].Width.GridUnitType != GridUnitType.Star)
-                    usedWidthAfter += colWidths[i];
+                    usedWidth += colWidths[i];
             }
-            remainingWidth = Math.Max(0, availableWidth - PaddingLeft - PaddingRight - usedWidthAfter);
+            remainingWidth = Math.Max(0, availableWidth - PaddingLeft - PaddingRight - usedWidth);
             DistributeStarWidth(remainingWidth, colWidths);
         }
         
@@ -167,7 +193,7 @@ public class GridElement : EclipseElement
         for (int i = 0; i < colCount; i++) totalWidth += colWidths[i];
         for (int i = 0; i < rowCount; i++) totalHeight += rowHeights[i];
         
-        // 添加 Spacing（行数 -1 个间距）
+        // 添加 Spacing（行数 -1 个间距，列数 -1 个间距）
         if (rowCount > 1) totalHeight += Spacing * (rowCount - 1);
         if (colCount > 1) totalWidth += Spacing * (colCount - 1);
         

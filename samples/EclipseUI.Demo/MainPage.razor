@@ -50,6 +50,10 @@
                     {
                         <SliderPage />
                     }
+                    else if (_currentPage == 7)
+                    {
+                        <TestLayoutAdaptation />
+                    }
                 </ScrollView>
             </GridItem>
             
@@ -63,6 +67,7 @@
                     <Button Text="🔘 Radio" Width="90" Height="36" Background="#E0E0E0" OnClick="GoToRadioButton" />
                     <Button Text="🔛 Toggle" Width="90" Height="36" Background="#E0E0E0" OnClick="GoToToggleSwitch" />
                     <Button Text="📊 Slider" Width="90" Height="36" Background="#E0E0E0" OnClick="GoToSlider" />
+                    <Button Text="🔍 布局测试" Width="90" Height="36" Background="#E0E0E0" OnClick="GoToLayoutTest" />
                 </StackPanel>
             </GridItem>
         </Grid>
@@ -81,4 +86,5 @@
     private void GoToRadioButton(MouseEventArgs e) { _currentPage = 4; _pageTitle = "RadioButton 测试"; StateHasChanged(); }
     private void GoToToggleSwitch(MouseEventArgs e) { _currentPage = 5; _pageTitle = "ToggleSwitch 测试"; StateHasChanged(); }
     private void GoToSlider(MouseEventArgs e) { _currentPage = 6; _pageTitle = "Slider 测试"; StateHasChanged(); }
+    private void GoToLayoutTest(MouseEventArgs e) { _currentPage = 7; _pageTitle = "布局自适应测试"; StateHasChanged(); }
 }

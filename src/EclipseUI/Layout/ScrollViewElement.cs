@@ -25,7 +25,7 @@ public class ScrollViewElement : EclipseElement
     
     public override SKSize Measure(SKCanvas canvas, float availableWidth, float availableHeight)
     {
-        // 计算内容尺寸
+        // 计算内容区域尺寸
         float contentWidth = availableWidth - PaddingLeft - PaddingRight;
         float contentHeight = availableHeight - PaddingTop - PaddingBottom;
         

@@ -95,10 +95,42 @@ public class StackPanelElement : EclipseElement
             else totalWidth -= Spacing;
         }
         
-        return new SKSize(
-            (Orientation == StackOrientation.Vertical ? maxWidth : totalWidth) + PaddingLeft + PaddingRight,
-            (Orientation == StackOrientation.Vertical ? totalHeight : maxHeight) + PaddingTop + PaddingBottom
-        );
+        // 检查是否有需要拉伸的子元素
+        bool hasStretchChildren = false;
+        foreach (var child in Children)
+        {
+            if (Orientation == StackOrientation.Vertical)
+            {
+                hasStretchChildren |= (child.HorizontalAlignment == HorizontalAlignment.Stretch && 
+                                     !child.RequestedWidth.HasValue && 
+                                     !child.MaxWidth.HasValue);
+            }
+            else
+            {
+                hasStretchChildren |= (child.VerticalAlignment == VerticalAlignment.Stretch && 
+                                     !child.RequestedHeight.HasValue && 
+                                     !child.MaxHeight.HasValue);
+            }
+        }
+        
+        // 如果有需要拉伸的子元素，使用可用宽度/高度
+        float finalWidth, finalHeight;
+        if (Orientation == StackOrientation.Vertical)
+        {
+            finalWidth = hasStretchChildren && !float.IsPositiveInfinity(availableWidth) 
+                ? availableWidth 
+                : (maxWidth + PaddingLeft + PaddingRight);
+            finalHeight = totalHeight + PaddingTop + PaddingBottom;
+        }
+        else
+        {
+            finalWidth = totalWidth + PaddingLeft + PaddingRight;
+            finalHeight = hasStretchChildren && !float.IsPositiveInfinity(availableHeight)
+                ? availableHeight
+                : (maxHeight + PaddingTop + PaddingBottom);
+        }
+        
+        return new SKSize(finalWidth, finalHeight);
     }
     
     public override void Arrange(SKCanvas canvas, float x, float y, float width, float height)
