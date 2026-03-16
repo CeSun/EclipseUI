@@ -22,37 +22,36 @@
             <!-- 页面内容 -->
             <GridItem Row="0">
                 <ScrollView PaddingLeft="20" PaddingTop="20" PaddingRight="20" PaddingBottom="20">
-                    @if (_currentPage == 0)
-                    {
-                        <HomePage />
-                    }
-                    else if (_currentPage == 1)
-                    {
-                        <TextBoxPage />
-                    }
-                    else if (_currentPage == 2)
-                    {
-                        <ComboBoxPage />
-                    }
-                    else if (_currentPage == 3)
-                    {
-                        <CheckBoxPage />
-                    }
-                    else if (_currentPage == 4)
-                    {
-                        <RadioButtonPage />
-                    }
-                    else if (_currentPage == 5)
-                    {
-                        <ToggleSwitchPage />
-                    }
-                    else if (_currentPage == 6)
-                    {
-                        <SliderPage />
-                    }
-                    else if (_currentPage == 7)
-                    {
-                        <TestLayoutAdaptation />
+                    @{
+                        // 使用独立变量来确保页面切换的原子性
+                        var currentPage = _currentPage;
+                        switch (currentPage)
+                        {
+                            case 0:
+                                <HomePage />
+                                break;
+                            case 1:
+                                <TextBoxPage />
+                                break;
+                            case 2:
+                                <ComboBoxPage />
+                                break;
+                            case 3:
+                                <CheckBoxPage />
+                                break;
+                            case 4:
+                                <RadioButtonPage />
+                                break;
+                            case 5:
+                                <ToggleSwitchPage />
+                                break;
+                            case 6:
+                                <SliderPage />
+                                break;
+                            case 7:
+                                <TestLayoutAdaptation />
+                                break;
+                        }
                     }
                 </ScrollView>
             </GridItem>
@@ -79,12 +78,22 @@
     private string _pageTitle = "主页面";
     
     // 导航方法
-    private void GoToMain(MouseEventArgs e) { _currentPage = 0; _pageTitle = "主页面"; StateHasChanged(); }
-    private void GoToTextBox(MouseEventArgs e) { _currentPage = 1; _pageTitle = "TextBox 测试"; StateHasChanged(); }
-    private void GoToComboBox(MouseEventArgs e) { _currentPage = 2; _pageTitle = "ComboBox 测试"; StateHasChanged(); }
-    private void GoToCheckBox(MouseEventArgs e) { _currentPage = 3; _pageTitle = "CheckBox 测试"; StateHasChanged(); }
-    private void GoToRadioButton(MouseEventArgs e) { _currentPage = 4; _pageTitle = "RadioButton 测试"; StateHasChanged(); }
-    private void GoToToggleSwitch(MouseEventArgs e) { _currentPage = 5; _pageTitle = "ToggleSwitch 测试"; StateHasChanged(); }
-    private void GoToSlider(MouseEventArgs e) { _currentPage = 6; _pageTitle = "Slider 测试"; StateHasChanged(); }
-    private void GoToLayoutTest(MouseEventArgs e) { _currentPage = 7; _pageTitle = "布局自适应测试"; StateHasChanged(); }
+    private void GoToMain(MouseEventArgs e) { UpdatePage(0, "主页面"); }
+    private void GoToTextBox(MouseEventArgs e) { UpdatePage(1, "TextBox 测试"); }
+    private void GoToComboBox(MouseEventArgs e) { UpdatePage(2, "ComboBox 测试"); }
+    private void GoToCheckBox(MouseEventArgs e) { UpdatePage(3, "CheckBox 测试"); }
+    private void GoToRadioButton(MouseEventArgs e) { UpdatePage(4, "RadioButton 测试"); }
+    private void GoToToggleSwitch(MouseEventArgs e) { UpdatePage(5, "ToggleSwitch 测试"); }
+    private void GoToSlider(MouseEventArgs e) { UpdatePage(6, "Slider 测试"); }
+    private void GoToLayoutTest(MouseEventArgs e) { UpdatePage(7, "布局自适应测试"); }
+    
+    private void UpdatePage(int newPage, string title)
+    {
+        // 确保页面切换的原子性
+        _currentPage = newPage;
+        _pageTitle = title;
+        
+        // 强制重新渲染，确保旧页面完全清除
+        StateHasChanged();
+    }
 }
