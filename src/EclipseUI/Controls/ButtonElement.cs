@@ -71,4 +71,45 @@ public class ButtonElement : EclipseElement
         TextRenderer.DrawText(renderContext, Text, textX, textY, FontSize, 
             new Color(TextColor.Red, TextColor.Green, TextColor.Blue, TextColor.Alpha), SKTextAlign.Center);
     }
+    
+    public override bool HandleClick(SKPoint point)
+    {
+        if (!IsVisible) return false;
+        
+        var rect = new SKRect(X, Y, X + Width, Y + Height);
+        if (!rect.Contains(point)) return false;
+        
+        // 触发点击回调
+        Console.WriteLine($"[ButtonElement.HandleClick] '{Text}' clicked, OnClick: {OnClick != null}");
+        OnClick?.Invoke(this, point);
+        
+        return true;
+    }
+    
+    public override bool HandleMouseMove(float x, float y)
+    {
+        var rect = new SKRect(X, Y, X + Width, Y + Height);
+        var point = new SKPoint(x, y);
+        var wasHovered = IsHovered;
+        IsHovered = rect.Contains(point);
+        
+        return IsHovered != wasHovered;
+    }
+    
+    public override bool HandleMouseDown(float x, float y)
+    {
+        var rect = new SKRect(X, Y, X + Width, Y + Height);
+        if (rect.Contains(new SKPoint(x, y)))
+        {
+            IsPressed = true;
+            return true;
+        }
+        return false;
+    }
+    
+    public override void HandleMouseUp()
+    {
+        IsPressed = false;
+        base.HandleMouseUp();
+    }
 }
