@@ -41,7 +41,41 @@ public class RadioButtonElement : EclipseElement
     /// <summary>
     /// 单选框组管理器（用于同组互斥）
     /// </summary>
-    public static Dictionary<string, List<RadioButtonElement>> Groups { get; } = new();
+    private static Dictionary<string, List<RadioButtonElement>> Groups { get; } = new();
+    
+    /// <summary>
+    /// 注册到组（处理组名变更）
+    /// </summary>
+    public void RegisterToGroup(string? oldGroupName)
+    {
+        // 从旧组移除
+        if (!string.IsNullOrEmpty(oldGroupName) && oldGroupName != GroupName && Groups.TryGetValue(oldGroupName, out var oldGroup))
+        {
+            oldGroup.Remove(this);
+        }
+        
+        // 添加到新组
+        if (!Groups.ContainsKey(GroupName))
+        {
+            Groups[GroupName] = new List<RadioButtonElement>();
+        }
+        
+        if (!Groups[GroupName].Contains(this))
+        {
+            Groups[GroupName].Add(this);
+        }
+    }
+    
+    /// <summary>
+    /// 从组中移除
+    /// </summary>
+    public void UnregisterFromGroup()
+    {
+        if (Groups.TryGetValue(GroupName, out var group))
+        {
+            group.Remove(this);
+        }
+    }
     
     public override SKSize Measure(SKCanvas canvas, float availableWidth, float availableHeight)
     {
@@ -140,17 +174,6 @@ public class RadioButtonElement : EclipseElement
         var rect = new SKRect(X, Y, X + Width, Y + Height);
         if (!rect.Contains(point)) return false;
         
-        // 注册到组
-        if (!Groups.ContainsKey(GroupName))
-        {
-            Groups[GroupName] = new List<RadioButtonElement>();
-        }
-        
-        if (!Groups[GroupName].Contains(this))
-        {
-            Groups[GroupName].Add(this);
-        }
-        
         // 选中此单选框（自动取消同组其他）
         SetChecked(true);
         
@@ -188,18 +211,6 @@ public class RadioButtonElement : EclipseElement
         if (rect.Contains(new SKPoint(x, y)))
         {
             IsPressed = true;
-            
-            // 注册到组
-            if (!Groups.ContainsKey(GroupName))
-            {
-                Groups[GroupName] = new List<RadioButtonElement>();
-            }
-            
-            if (!Groups[GroupName].Contains(this))
-            {
-                Groups[GroupName].Add(this);
-            }
-            
             return true;
         }
         return false;

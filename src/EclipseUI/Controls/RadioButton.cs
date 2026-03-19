@@ -54,6 +54,8 @@ public class RadioButton : ComponentBase, IElementHandler, IDisposable
     {
         if (_element == null) return;
         
+        var oldGroupName = _element.GroupName;
+        
         _element.IsChecked = IsChecked;
         _element.Content = Content ?? "";
         _element.GroupName = GroupName ?? "Default";
@@ -61,6 +63,9 @@ public class RadioButton : ComponentBase, IElementHandler, IDisposable
         _element.TextColor = ParseColor(Foreground);
         _element.RequestedWidth = Width;
         _element.RequestedHeight = Height;
+        
+        // 注册到组（处理组名变更）
+        _element.RegisterToGroup(oldGroupName);
         
         _element.OnCheckedChanged = async (isChecked) =>
         {
@@ -109,6 +114,7 @@ public class RadioButton : ComponentBase, IElementHandler, IDisposable
     {
         if (!_disposed)
         {
+            _element?.UnregisterFromGroup();
             _element = null;
             _disposed = true;
         }
