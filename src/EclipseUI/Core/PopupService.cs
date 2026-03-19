@@ -117,13 +117,13 @@ public class PopupService
     /// <summary>
     /// 处理鼠标滚轮事件
     /// </summary>
-    public bool HandleMouseWheel(float deltaY)
+    public bool HandleMouseWheel(float x, float y, float deltaY)
     {
         // 从后往前遍历
         for (int i = _popups.Count - 1; i >= 0; i--)
         {
             var popup = _popups[i];
-            if (popup.HandleMouseWheel?.Invoke(deltaY) == true)
+            if (popup.HandleMouseWheel?.Invoke(x, y, deltaY) == true)
             {
                 return true;
             }
@@ -161,7 +161,7 @@ public class PopupInfo
     /// <summary>
     /// 鼠标滚轮处理
     /// </summary>
-    public Func<float, bool>? HandleMouseWheel { get; set; }
+    public Func<float, float, float, bool>? HandleMouseWheel { get; set; }
     
     /// <summary>
     /// 关闭回调

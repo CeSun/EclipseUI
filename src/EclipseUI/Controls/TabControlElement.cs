@@ -228,11 +228,11 @@ public class TabControlElement : EclipseElement
         base.HandleMouseLeave();
     }
     
-    public override bool HandleMouseWheel(float deltaY)
+    public override bool HandleMouseWheel(float x, float y, float deltaY)
     {
         if (SelectedIndex >= 0 && SelectedIndex < Children.Count)
         {
-            return Children[SelectedIndex].HandleMouseWheel(deltaY);
+            return Children[SelectedIndex].HandleMouseWheel(x, y, deltaY);
         }
         return false;
     }

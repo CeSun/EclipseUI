@@ -313,12 +313,12 @@ public class EclipseElement
     /// <summary>
     /// 处理鼠标滚轮事件
     /// </summary>
-    public virtual bool HandleMouseWheel(float deltaY)
+    public virtual bool HandleMouseWheel(float x, float y, float deltaY)
     {
         // 从后往前遍历子元素（优先处理上层的元素）
         for (int i = Children.Count - 1; i >= 0; i--)
         {
-            if (Children[i].HandleMouseWheel(deltaY))
+            if (Children[i].HandleMouseWheel(x, y, deltaY))
                 return true;
         }
         return false;

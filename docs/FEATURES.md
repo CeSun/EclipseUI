@@ -43,6 +43,8 @@ EclipseRenderer (Blazor Renderer 继承)
 | **Grid** | `Grid.cs` | 网格布局，支持 Auto/Star/Pixel |
 | **DockPanel** | `DockPanel.cs` | 停靠布局（Top/Bottom/Left/Right/Fill） |
 | **ScrollView** | `ScrollView.cs` | 滚动视图，支持垂直/水平滚动 |
+| **WrapPanel** | `WrapPanel.cs` | 流式布局，自动换行/换列 |
+| **Canvas** | `Canvas.cs` | 绝对定位容器 |
 
 #### StackPanel 功能
 - `Orientation` - 布局方向（Vertical/Horizontal）
@@ -64,6 +66,16 @@ EclipseRenderer (Blazor Renderer 继承)
 - 自动显示滚动条
 - 支持鼠标滚轮和拖动滚动条
 
+#### WrapPanel 功能
+- `Orientation` - 布局方向（Horizontal 水平换行 / Vertical 垂直换列）
+- `ItemSpacing` - 项目间距
+- `LineSpacing` - 行/列间距
+
+#### Canvas 功能
+- 子元素使用 `CanvasItem` 包装
+- `Left` / `Top` / `Right` / `Bottom` - 绝对定位
+- 同时设置 Left+Right 或 Top+Bottom 可拉伸元素
+
 ### 3. 基础控件
 
 | 控件 | 文件 | 功能 |
@@ -76,6 +88,11 @@ EclipseRenderer (Blazor Renderer 继承)
 | **ToggleSwitch** | `ToggleSwitch.cs` | 开关控件，iOS 风格 |
 | **Slider** | `Slider.cs` | 滑块控件 |
 | **ComboBox** | `ComboBox.cs` | 下拉选择框 |
+| **ListBox** | `ListBox.cs` | 列表框，支持滚动和选中 |
+| **TabControl** | `TabControl.cs` | 选项卡控件 |
+| **Border** | `Border.cs` | 边框容器 |
+| **Image** | `Image.cs` | 图片显示 |
+| **ProgressBar** | `ProgressBar.cs` | 进度条 |
 
 #### TextBlock 功能
 - `Text` - 显示文本
@@ -121,7 +138,36 @@ EclipseRenderer (Blazor Renderer 继承)
 - `ItemsSource` - 选项列表
 - `SelectedItem` / `@bind-SelectedItem` - 选中项（支持双向绑定）
 - `Placeholder` - 占位符文本
+- 支持 `ComboBoxItem` 子组件写法（Value/Text 分离）
 - 下拉菜单通过 PopupService 管理
+
+#### ListBox 功能
+- `ItemsSource` - 选项列表
+- `SelectedItem` / `@bind-SelectedItem` - 选中项（支持双向绑定）
+- `ItemHeight` - 项目高度
+- 支持 `ListBoxItem` 子组件写法（Value/Text 分离）
+- 支持鼠标滚轮滚动、选中高亮、悬停效果
+
+#### TabControl 功能
+- `SelectedIndex` / `@bind-SelectedIndex` - 选中的选项卡索引
+- `HeaderHeight` - 选项卡头部高度
+- 使用 `TabItem` 子组件定义选项卡（Header + 内容）
+
+#### Border 功能
+- `Background` - 背景颜色
+- `BorderBrush` - 边框颜色
+- `BorderThickness` - 边框粗细
+- `CornerRadius` - 圆角半径
+
+#### Image 功能
+- `Source` - 图片路径
+- `Stretch` - 拉伸模式（None/Fill/Uniform/UniformToFill）
+
+#### ProgressBar 功能
+- `Value` - 当前值
+- `Minimum` / `Maximum` - 范围
+- `IsIndeterminate` - 是否为不确定进度
+- `Foreground` / `Background` - 颜色自定义
 
 ### 4. 事件系统
 
@@ -258,4 +304,4 @@ EclipseUI/
 
 ---
 
-_最后更新：2026-03-19_
+_最后更新：2026-03-20_

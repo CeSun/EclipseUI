@@ -207,24 +207,18 @@ public class EclipseRenderer : Renderer
     /// <summary>
     /// 处理鼠标滚轮事件
     /// </summary>
-    public bool HandleMouseWheel(float deltaY)
+    public bool HandleMouseWheel(float x, float y, float deltaY)
     {
         if (RootElement == null) return false;
         
         // 优先处理 Popup 层的滚轮
-        if (PopupService.HandleMouseWheel(deltaY))
+        if (PopupService.HandleMouseWheel(x, y, deltaY))
         {
             return true;
         }
         
-        // 查找第一个支持滚轮的 ScrollView
-        var scrollView = FindScrollView(RootElement);
-        if (scrollView != null)
-        {
-            return scrollView.HandleMouseWheel(deltaY);
-        }
-        
-        return false;
+        // 从根元素开始分发滚轮事件，根据鼠标位置找到对应的可滚动元素
+        return RootElement.HandleMouseWheel(x, y, deltaY);
     }
     
     /// <summary>

@@ -132,7 +132,8 @@ EclipseUI/
 | `<Grid>` | 网格布局，支持 Auto/Star/Pixel 行列定义 |
 | `<DockPanel>` | 停靠布局 |
 | `<ScrollView>` | 滚动视图，支持垂直/水平滚动 |
-| `<WrapPanel>` | 自动换行布局（计划中） |
+| `<WrapPanel>` | 流式布局，自动换行/换列 |
+| `<Canvas>` | 绝对定位容器 |
 
 ### 基础控件
 
@@ -146,7 +147,11 @@ EclipseUI/
 | `<ToggleSwitch>` | 开关控件 |
 | `<Slider>` | 滑块控件 |
 | `<ComboBox>` | 下拉选择框 |
-| `<Image>` | 图片（计划中） |
+| `<ListBox>` | 列表框，支持滚动和选中 |
+| `<TabControl>` | 选项卡控件 |
+| `<Border>` | 边框容器 |
+| `<Image>` | 图片显示 |
+| `<ProgressBar>` | 进度条 |
 
 ---
 
@@ -188,6 +193,8 @@ EclipseUI/
 - [x] Grid 网格布局（Auto/Star/Pixel 行列）
 - [x] DockPanel 停靠布局
 - [x] ScrollView 滚动视图（垂直/水平）
+- [x] WrapPanel 流式布局
+- [x] Canvas 绝对定位
 - [x] TextBlock 控件
 - [x] TextBox 文本输入（双向绑定）
 - [x] Button 控件
@@ -196,6 +203,11 @@ EclipseUI/
 - [x] ToggleSwitch 开关
 - [x] Slider 滑块
 - [x] ComboBox 下拉选择
+- [x] ListBox 列表框
+- [x] TabControl 选项卡
+- [x] Border 边框容器
+- [x] Image 图片显示
+- [x] ProgressBar 进度条
 - [x] PopupService 弹出层管理
 - [x] 事件处理系统
 - [x] 窗口宿主（Silk.NET）
@@ -203,22 +215,18 @@ EclipseUI/
 
 ### 计划中 📋
 
-**Phase 1 - 布局完善**
-- [ ] WrapPanel 自动换行
-- [ ] Canvas 绝对定位
-
-**Phase 2 - 高级控件**
-- [ ] Image 图片显示
-- [ ] Border 边框容器
-- [ ] ProgressBar 进度条
-- [ ] ListBox 列表框
-- [ ] TabControl 选项卡
-
-**Phase 3 - 高级特性**
+**Phase 1 - 高级特性**
 - [ ] 样式系统
 - [ ] 数据绑定增强
 - [ ] 动画系统
 - [ ] 主题切换
+
+**Phase 2 - 更多控件**
+- [ ] TreeView 树形视图
+- [ ] DataGrid 数据表格
+- [ ] Menu 菜单
+- [ ] ContextMenu 右键菜单
+- [ ] Tooltip 提示框
 
 ---
 

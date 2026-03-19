@@ -234,11 +234,16 @@ public class ScrollViewElement : EclipseElement
         canvas.DrawRoundRect(thumbRect, ScrollbarWidth / 2, ScrollbarWidth / 2, thumbPaint);
     }
     
-    public override bool HandleMouseWheel(float deltaY)
+    public override bool HandleMouseWheel(float x, float y, float deltaY)
     {
+        // 只有鼠标在 ScrollView 区域内才处理滚轮
+        var rect = new SKRect(X, Y, X + Width, Y + Height);
+        if (!rect.Contains(x, y)) return false;
+        
+        // 先让子元素处理
         for (int i = Children.Count - 1; i >= 0; i--)
         {
-            if (Children[i].HandleMouseWheel(deltaY))
+            if (Children[i].HandleMouseWheel(x, y, deltaY))
                 return true;
         }
         

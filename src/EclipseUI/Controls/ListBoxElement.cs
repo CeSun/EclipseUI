@@ -179,8 +179,12 @@ public class ListBoxElement : EclipseElement
         base.HandleMouseLeave();
     }
     
-    public override bool HandleMouseWheel(float deltaY)
+    public override bool HandleMouseWheel(float x, float y, float deltaY)
     {
+        // 只有鼠标在 ListBox 区域内才处理滚轮
+        var rect = new SKRect(X, Y, X + Width, Y + Height);
+        if (!rect.Contains(x, y)) return false;
+        
         if (ItemsSource == null) return false;
         
         float totalHeight = ItemsSource.Count * ItemHeight;

@@ -315,7 +315,7 @@ public class ComboBoxElement : EclipseElement
         return false;
     }
     
-    private bool HandleDropDownMouseWheel(float deltaY)
+    private bool HandleDropDownMouseWheel(float x, float y, float deltaY)
     {
         float dropDownHeight = Math.Min(ItemsSource.Count * ItemHeight, MaxDropDownHeight);
         float maxScroll = Math.Max(0, (ItemsSource.Count * ItemHeight) - dropDownHeight);

@@ -100,7 +100,8 @@ public class EclipseWindow : IDisposable
             {
                 if (_renderer != null)
                 {
-                    _renderer.HandleMouseWheel(s.Y);
+                    var pos = m.Position;
+                    _renderer.HandleMouseWheel(pos.X, pos.Y, s.Y);
                 }
             };
             
