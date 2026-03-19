@@ -160,6 +160,15 @@ public class EclipseWindow : IDisposable
                     // 孤立的 low surrogate，跳过
                     return;
                 }
+                // 修复 GLFW 截断的 emoji（U+1Fxxx 被截断成 U+Fxxx）
+                else if (c >= 0xF000 && c <= 0xF8FF)
+                {
+                    int codePoint = 0x10000 + c;
+                    int highSurrogate = 0xD800 + ((codePoint - 0x10000) >> 10);
+                    int lowSurrogate = 0xDC00 + ((codePoint - 0x10000) & 0x3FF);
+                    text = new string(new char[] { (char)highSurrogate, (char)lowSurrogate });
+                    _pendingHighSurrogate = null;
+                }
                 else
                 {
                     _pendingHighSurrogate = null;

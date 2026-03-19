@@ -13,6 +13,25 @@ public enum ScrollOrientation
 }
 
 /// <summary>
+/// 滚动条可见性模式
+/// </summary>
+public enum ScrollbarVisibility
+{
+    /// <summary>
+    /// 始终显示
+    /// </summary>
+    Visible,
+    /// <summary>
+    /// 始终隐藏
+    /// </summary>
+    Hidden,
+    /// <summary>
+    /// 自动隐藏（滚动或悬停时显示）
+    /// </summary>
+    Auto
+}
+
+/// <summary>
 /// 滚动视图元素
 /// </summary>
 public class ScrollViewElement : EclipseElement
@@ -33,9 +52,18 @@ public class ScrollViewElement : EclipseElement
     public float ContentSize { get; private set; }
     
     /// <summary>
-    /// 是否显示滚动条
+    /// 是否显示滚动条（兼容旧属性）
     /// </summary>
     public bool ShowScrollbar { get; set; } = true;
+    
+    /// <summary>
+    /// 滚动条可见性模式
+    /// </summary>
+    public ScrollbarVisibility ScrollbarVisibility { get; set; } = ScrollbarVisibility.Visible;
+    
+    // 自动隐藏相关
+    private long _lastScrollTime;
+    private const int AutoHideDelayMs = 1500; // 1.5秒后自动隐藏
     
     // 滚动条常量
     private const float ScrollbarWidth = 8;
@@ -176,7 +204,28 @@ public class ScrollViewElement : EclipseElement
             ? Height - PaddingTop - PaddingBottom
             : Width - PaddingLeft - PaddingRight;
         
-        if (ShowScrollbar && ContentSize > viewportSize)
+        // 判断是否显示滚动条
+        bool shouldShowScrollbar = false;
+        if (ContentSize > viewportSize)
+        {
+            switch (ScrollbarVisibility)
+            {
+                case ScrollbarVisibility.Visible:
+                    shouldShowScrollbar = ShowScrollbar;
+                    break;
+                case ScrollbarVisibility.Hidden:
+                    shouldShowScrollbar = false;
+                    break;
+                case ScrollbarVisibility.Auto:
+                    // 自动模式：拖动中、悬停中、或最近滚动过
+                    var currentTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                    shouldShowScrollbar = _isDraggingScrollbar || _isHoveringScrollbar || 
+                                         (currentTime - _lastScrollTime < AutoHideDelayMs);
+                    break;
+            }
+        }
+        
+        if (shouldShowScrollbar)
         {
             RenderScrollbar(canvas);
         }
@@ -257,6 +306,10 @@ public class ScrollViewElement : EclipseElement
         float scrollAmount = -deltaY * 20;
         ScrollOffset += scrollAmount;
         ScrollOffset = Math.Clamp(ScrollOffset, 0, ContentSize - viewportSize);
+        
+        // 更新最后滚动时间（用于自动隐藏）
+        _lastScrollTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+        
         return true;
     }
     

@@ -33,6 +33,11 @@ public class ScrollView : ComponentBase, IElementHandler, IDisposable
     /// </summary>
     [Parameter] public ScrollOrientation Orientation { get; set; } = ScrollOrientation.Vertical;
     
+    /// <summary>
+    /// 滚动条可见性模式
+    /// </summary>
+    [Parameter] public ScrollbarVisibility ScrollbarVisibility { get; set; } = ScrollbarVisibility.Visible;
+    
     [Parameter] public RenderFragment? ChildContent { get; set; }
     
     private ScrollViewElement? _element;
@@ -88,6 +93,7 @@ public class ScrollView : ComponentBase, IElementHandler, IDisposable
         _element.VerticalAlignment = VerticalAlignment;
         _element.BackgroundColor = ParseBackground(Background);
         _element.Orientation = Orientation;
+        _element.ScrollbarVisibility = ScrollbarVisibility;
         _element.OnClick = OnClick.HasDelegate ? async (e, p) => await OnClick.InvokeAsync() : null;
     }
     

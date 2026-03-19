@@ -21,7 +21,7 @@
         <Grid RowDefinitions="*, Auto" Spacing="0">
             <!-- 页面内容 -->
             <GridItem Row="0">
-                <ScrollView PaddingLeft="20" PaddingTop="20" PaddingRight="20" PaddingBottom="20">
+                <ScrollView PaddingLeft="20" PaddingTop="20" PaddingRight="20" PaddingBottom="20" ScrollbarVisibility="ScrollbarVisibility.Auto">
                     @{
                         // 使用独立变量来确保页面切换的原子性
                         var currentPage = _currentPage;
@@ -64,7 +64,7 @@
             
             <!-- 底部导航栏 -->
             <GridItem Row="1" Background="#F5F5F5">
-                <ScrollView Orientation="ScrollOrientation.Horizontal" PaddingLeft="10" PaddingTop="8" PaddingRight="10" PaddingBottom="16">
+                <ScrollView Orientation="ScrollOrientation.Horizontal" ScrollbarVisibility="ScrollbarVisibility.Hidden" PaddingLeft="10" PaddingTop="8" PaddingRight="10" PaddingBottom="8">
                     <StackPanel Orientation="StackOrientation.Horizontal" Spacing="5">
                         <Button Text="🏠 主页" Width="90" Height="36" Background="#E0E0E0" OnClick="GoToMain" />
                         <Button Text="📝 TextBox" Width="90" Height="36" Background="#E0E0E0" OnClick="GoToTextBox" />
