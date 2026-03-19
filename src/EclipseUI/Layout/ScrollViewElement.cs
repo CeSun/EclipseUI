@@ -140,7 +140,8 @@ public class ScrollViewElement : EclipseElement
         }
         
         // 在裁剪区域外绘制滚动条（这样滚动条才会显示在内容上方）
-        if (ShowScrollbar && ContentHeight > Height)
+        float contentAreaHeight = Height - PaddingTop - PaddingBottom;
+        if (ShowScrollbar && ContentHeight > contentAreaHeight)
         {
             RenderScrollbar(canvas);
         }
@@ -160,7 +161,11 @@ public class ScrollViewElement : EclipseElement
         
         float scrollbarHeight = Math.Max(30, contentAreaHeight * contentVisibleRatio);
         float scrollbarY = Y + PaddingTop + scrollRatio * (contentAreaHeight - scrollbarHeight);
-        float scrollbarX = X + Width - PaddingRight - scrollbarWidth - paddingRight;
+        
+        // 获取画布的实际裁剪边界，确保滚动条不会画到窗口外
+        var clipBounds = canvas.LocalClipBounds;
+        float effectiveRight = Math.Min(X + Width, clipBounds.Right);
+        float scrollbarX = effectiveRight - PaddingRight - scrollbarWidth - paddingRight;
         
         // 绘制滚动条背景（轨道）
         var bgRect = new SKRect(scrollbarX, Y + PaddingTop, scrollbarX + scrollbarWidth, Y + PaddingTop + contentAreaHeight);
