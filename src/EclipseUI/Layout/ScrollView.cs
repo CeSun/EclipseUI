@@ -28,6 +28,11 @@ public class ScrollView : ComponentBase, IElementHandler, IDisposable
     
     [Parameter] public string? Background { get; set; }
     
+    /// <summary>
+    /// 滚动方向，默认垂直
+    /// </summary>
+    [Parameter] public ScrollOrientation Orientation { get; set; } = ScrollOrientation.Vertical;
+    
     [Parameter] public RenderFragment? ChildContent { get; set; }
     
     private ScrollViewElement? _element;
@@ -44,7 +49,8 @@ public class ScrollView : ComponentBase, IElementHandler, IDisposable
                     PaddingLeft = PaddingLeft,
                     PaddingTop = PaddingTop,
                     PaddingRight = PaddingRight,
-                    PaddingBottom = PaddingBottom
+                    PaddingBottom = PaddingBottom,
+                    Orientation = Orientation
                 };
                 UpdateElementFromParameters();
             }
@@ -81,6 +87,7 @@ public class ScrollView : ComponentBase, IElementHandler, IDisposable
         _element.HorizontalAlignment = HorizontalAlignment;
         _element.VerticalAlignment = VerticalAlignment;
         _element.BackgroundColor = ParseBackground(Background);
+        _element.Orientation = Orientation;
         _element.OnClick = OnClick.HasDelegate ? async (e, p) => await OnClick.InvokeAsync() : null;
     }
     

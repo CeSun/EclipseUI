@@ -6,28 +6,21 @@
     <TextBlock Text="🔽 ComboBox 下拉选择" FontSize="24" FontWeight="true" />
     
     <TextBlock Text="选择一个选项：" FontSize="16" PaddingBottom="5" />
-    <ComboBox ItemsSource="@_comboBoxItems" SelectedItem="_comboBoxSelected" SelectedItemChanged="OnComboBoxChanged" Placeholder="请选择..." Width="250" />
-    <TextBlock Text="@_comboBoxDisplay" FontSize="12" PaddingBottom="20" />
+    <ComboBox ItemsSource="@_comboBoxItems" @bind-SelectedItem="_comboBoxSelected" Placeholder="请选择..." Width="250" />
+    <TextBlock Text="@($"当前选择：{_comboBoxSelected ?? "无"}")" FontSize="12" PaddingBottom="20" />
     
     <TextBlock Text="更多选项示例：" FontSize="16" PaddingBottom="5" />
     <ComboBox ItemsSource="@_fruits" Placeholder="选择水果..." Width="250" PaddingBottom="15" />
     
     <TextBlock Text="带初始值的下拉框：" FontSize="16" PaddingBottom="5" />
-    <ComboBox ItemsSource="@_colors" SelectedItem="_selectedColor" Placeholder="选择颜色..." Width="250" />
+    <ComboBox ItemsSource="@_colors" @bind-SelectedItem="_selectedColor" Placeholder="选择颜色..." Width="250" />
 </StackPanel>
 
 @code {
     private List<string> _comboBoxItems = new() { "选项一", "选项二", "选项三", "选项四", "选项五" };
     private string? _comboBoxSelected;
-    private string _comboBoxDisplay = "当前选择：无";
     
     private List<string> _fruits = new() { "🍎 苹果", "🍌 香蕉", "🍊 橙子", "🍇 葡萄", "🍓 草莓" };
     private List<string> _colors = new() { "🔴 红色", "🟢 绿色", "🔵 蓝色", "🟡 黄色", "🟣 紫色" };
     private string? _selectedColor;
-    
-    private void OnComboBoxChanged(string? v)
-    {
-        _comboBoxSelected = v;
-        _comboBoxDisplay = $"当前选择：{v ?? "无"}";
-    }
 }

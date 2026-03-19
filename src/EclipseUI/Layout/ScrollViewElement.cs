@@ -4,82 +4,104 @@ using EclipseUI.Core;
 namespace EclipseUI.Layout;
 
 /// <summary>
+/// 滚动方向
+/// </summary>
+public enum ScrollOrientation
+{
+    Vertical,
+    Horizontal
+}
+
+/// <summary>
 /// 滚动视图元素
 /// </summary>
 public class ScrollViewElement : EclipseElement
 {
     /// <summary>
-    /// 滚动偏移量（垂直方向）
+    /// 滚动方向
+    /// </summary>
+    public ScrollOrientation Orientation { get; set; } = ScrollOrientation.Vertical;
+    
+    /// <summary>
+    /// 滚动偏移量
     /// </summary>
     public float ScrollOffset { get; set; }
     
     /// <summary>
-    /// 内容总高度
+    /// 内容总尺寸（根据方向为高度或宽度）
     /// </summary>
-    public float ContentHeight { get; private set; }
+    public float ContentSize { get; private set; }
     
     /// <summary>
     /// 是否显示滚动条
     /// </summary>
     public bool ShowScrollbar { get; set; } = true;
     
+    // 滚动条常量
+    private const float ScrollbarWidth = 8;
+    private const float ScrollbarMargin = 2;
+    
     public override SKSize Measure(SKCanvas canvas, float availableWidth, float availableHeight)
     {
-        // 计算内容区域尺寸
         float contentWidth = availableWidth - PaddingLeft - PaddingRight;
         float contentHeight = availableHeight - PaddingTop - PaddingBottom;
         
-        // 应用 MaxWidth/MaxHeight 限制
         if (MaxWidth.HasValue)
             contentWidth = Math.Min(contentWidth, MaxWidth.Value - PaddingLeft - PaddingRight);
         if (MaxHeight.HasValue)
             contentHeight = Math.Min(contentHeight, MaxHeight.Value - PaddingTop - PaddingBottom);
         
-        // 测量子元素（传递可用宽度，无限高度让内容决定实际高度）
         float measuredContentHeight = 0;
         float measuredContentWidth = 0;
         
-        // 如果宽度是无限的，先用一个合理的默认值测量
-        float measureWidth = float.IsPositiveInfinity(contentWidth) ? 800 : contentWidth;
-        
-        if (Children.Count > 0)
+        if (Orientation == ScrollOrientation.Vertical)
         {
+            // 垂直滚动：宽度固定，高度无限
+            float measureWidth = float.IsPositiveInfinity(contentWidth) ? 800 : contentWidth;
             foreach (var child in Children)
             {
                 var childSize = child.Measure(canvas, measureWidth, float.PositiveInfinity);
                 measuredContentWidth = Math.Max(measuredContentWidth, childSize.Width);
                 measuredContentHeight += childSize.Height;
             }
-        }
-        
-        // 应用用户设置的尺寸
-        float finalWidth, finalHeight;
-        
-        if (RequestedWidth.HasValue)
-        {
-            finalWidth = RequestedWidth.Value;
-        }
-        else if (float.IsPositiveInfinity(availableWidth))
-        {
-            // 宽度无限时，使用测量的内容宽度
-            finalWidth = measuredContentWidth + PaddingLeft + PaddingRight;
+            ContentSize = measuredContentHeight;
         }
         else
         {
-            // 宽度有限时，使用可用宽度（Stretch 行为）
-            finalWidth = availableWidth;
+            // 水平滚动：高度固定，宽度无限
+            float measureHeight = float.IsPositiveInfinity(contentHeight) ? 600 : contentHeight;
+            foreach (var child in Children)
+            {
+                var childSize = child.Measure(canvas, float.PositiveInfinity, measureHeight);
+                measuredContentWidth += childSize.Width;
+                measuredContentHeight = Math.Max(measuredContentHeight, childSize.Height);
+            }
+            ContentSize = measuredContentWidth;
         }
         
-        finalHeight = RequestedHeight ?? contentHeight;
+        float finalWidth, finalHeight;
         
-        // 应用 Min/Max 限制
+        if (RequestedWidth.HasValue)
+            finalWidth = RequestedWidth.Value;
+        else if (float.IsPositiveInfinity(availableWidth))
+            finalWidth = measuredContentWidth + PaddingLeft + PaddingRight;
+        else
+            finalWidth = availableWidth;
+        
+        if (RequestedHeight.HasValue)
+            finalHeight = RequestedHeight.Value;
+        else if (float.IsPositiveInfinity(availableHeight))
+            finalHeight = measuredContentHeight + PaddingTop + PaddingBottom;
+        else if (Orientation == ScrollOrientation.Horizontal)
+            // 水平滚动时，高度应该是内容高度，而不是可用高度
+            finalHeight = measuredContentHeight + PaddingTop + PaddingBottom;
+        else
+            finalHeight = availableHeight;
+        
         if (MinWidth.HasValue) finalWidth = Math.Max(finalWidth, MinWidth.Value);
         if (MinHeight.HasValue) finalHeight = Math.Max(finalHeight, MinHeight.Value);
         if (MaxWidth.HasValue) finalWidth = Math.Min(finalWidth, MaxWidth.Value);
         if (MaxHeight.HasValue) finalHeight = Math.Min(finalHeight, MaxHeight.Value);
-        
-        // 保存内容总高度用于滚动（不包含 Padding，Padding 是 ScrollView 自身的装饰）
-        ContentHeight = measuredContentHeight;
         
         return new SKSize(finalWidth, finalHeight);
     }
@@ -88,20 +110,35 @@ public class ScrollViewElement : EclipseElement
     {
         base.Arrange(canvas, x, y, width, height);
         
-        // 限制滚动偏移量（使用内容区域高度）
-        float contentAreaHeight = height - PaddingTop - PaddingBottom;
-        float maxScroll = Math.Max(0, ContentHeight - contentAreaHeight);
+        float viewportSize = Orientation == ScrollOrientation.Vertical
+            ? height - PaddingTop - PaddingBottom
+            : width - PaddingLeft - PaddingRight;
+        
+        float maxScroll = Math.Max(0, ContentSize - viewportSize);
         ScrollOffset = Math.Clamp(ScrollOffset, 0, maxScroll);
         
-        // 排列子元素（应用滚动偏移）
-        float currentY = y + PaddingTop - ScrollOffset;
         float contentWidth = width - PaddingLeft - PaddingRight;
+        float contentHeight = height - PaddingTop - PaddingBottom;
         
-        foreach (var child in Children)
+        if (Orientation == ScrollOrientation.Vertical)
         {
-            var childSize = child.Measure(canvas, contentWidth, float.PositiveInfinity);
-            child.Arrange(canvas, x + PaddingLeft, currentY, contentWidth, childSize.Height);
-            currentY += childSize.Height;
+            float currentY = y + PaddingTop - ScrollOffset;
+            foreach (var child in Children)
+            {
+                var childSize = child.Measure(canvas, contentWidth, float.PositiveInfinity);
+                child.Arrange(canvas, x + PaddingLeft, currentY, contentWidth, childSize.Height);
+                currentY += childSize.Height;
+            }
+        }
+        else
+        {
+            float currentX = x + PaddingLeft - ScrollOffset;
+            foreach (var child in Children)
+            {
+                var childSize = child.Measure(canvas, float.PositiveInfinity, contentHeight);
+                child.Arrange(canvas, currentX, y + PaddingTop, childSize.Width, contentHeight);
+                currentX += childSize.Width;
+            }
         }
     }
     
@@ -113,7 +150,6 @@ public class ScrollViewElement : EclipseElement
         
         try
         {
-            // 绘制背景
             if (BackgroundColor.HasValue)
             {
                 var rect = new SKRect(X, Y, X + Width, Y + Height);
@@ -121,7 +157,6 @@ public class ScrollViewElement : EclipseElement
                 canvas.DrawRect(rect, bgPaint);
             }
             
-            // 设置裁剪区域
             var clipRect = new SKRect(
                 X + PaddingLeft,
                 Y + PaddingTop,
@@ -130,18 +165,18 @@ public class ScrollViewElement : EclipseElement
             );
             canvas.ClipRect(clipRect);
             
-            // 渲染子元素
             RenderChildren(canvas);
         }
         finally
         {
-            // 恢复裁剪状态，确保滚动条不受裁剪影响
             canvas.Restore();
         }
         
-        // 在裁剪区域外绘制滚动条（这样滚动条才会显示在内容上方）
-        float contentAreaHeight = Height - PaddingTop - PaddingBottom;
-        if (ShowScrollbar && ContentHeight > contentAreaHeight)
+        float viewportSize = Orientation == ScrollOrientation.Vertical
+            ? Height - PaddingTop - PaddingBottom
+            : Width - PaddingLeft - PaddingRight;
+        
+        if (ShowScrollbar && ContentSize > viewportSize)
         {
             RenderScrollbar(canvas);
         }
@@ -149,142 +184,136 @@ public class ScrollViewElement : EclipseElement
     
     private void RenderScrollbar(SKCanvas canvas)
     {
-        float scrollbarWidth = 6;
-        float paddingRight = 4;
+        float viewportSize = Orientation == ScrollOrientation.Vertical
+            ? Height - PaddingTop - PaddingBottom
+            : Width - PaddingLeft - PaddingRight;
         
-        // 内容区域高度（不包括 Padding）
-        float contentAreaHeight = Height - PaddingTop - PaddingBottom;
+        float contentVisibleRatio = viewportSize / ContentSize;
+        float scrollRatio = ScrollOffset / (ContentSize - viewportSize);
+        float scrollbarLength = Math.Max(30, viewportSize * contentVisibleRatio);
         
-        // 计算滚动条位置和大小
-        float contentVisibleRatio = contentAreaHeight / ContentHeight;
-        float scrollRatio = ScrollOffset / (ContentHeight - contentAreaHeight);
+        float scrollbarX, scrollbarY, scrollbarW, scrollbarH;
         
-        float scrollbarHeight = Math.Max(30, contentAreaHeight * contentVisibleRatio);
-        float scrollbarY = Y + PaddingTop + scrollRatio * (contentAreaHeight - scrollbarHeight);
-        
-        // 获取画布的实际裁剪边界，确保滚动条不会画到窗口外
         var clipBounds = canvas.LocalClipBounds;
-        float effectiveRight = Math.Min(X + Width, clipBounds.Right);
-        float scrollbarX = effectiveRight - PaddingRight - scrollbarWidth - paddingRight;
         
-        // 绘制滚动条背景（轨道）
-        var bgRect = new SKRect(scrollbarX, Y + PaddingTop, scrollbarX + scrollbarWidth, Y + PaddingTop + contentAreaHeight);
-        using var bgPaint = new SKPaint 
-        { 
-            Color = new SKColor(0, 0, 0, 30), 
-            IsAntialias = true 
-        };
-        canvas.DrawRect(bgRect, bgPaint);
-        
-        // 根据状态设置滚动条颜色
-        byte alpha;
-        if (_isDraggingScrollbar)
-            alpha = 150;  // 拖动时最深
-        else if (_isHoveringScrollbar)
-            alpha = 120;  // 悬停时较深
+        if (Orientation == ScrollOrientation.Vertical)
+        {
+            float effectiveRight = Math.Min(X + Width, clipBounds.Right);
+            scrollbarX = effectiveRight - ScrollbarWidth - ScrollbarMargin;
+            scrollbarY = Y + PaddingTop + scrollRatio * (viewportSize - scrollbarLength);
+            scrollbarW = ScrollbarWidth;
+            scrollbarH = scrollbarLength;
+            _renderedScrollbarX = scrollbarX;
+            _renderedScrollbarY = Y + PaddingTop;
+        }
         else
-            alpha = 80;   // 默认
+        {
+            // 水平滚动条在 ScrollView 最底部边缘（Padding 外部）
+            scrollbarX = X + PaddingLeft + scrollRatio * (viewportSize - scrollbarLength);
+            scrollbarY = Y + Height - ScrollbarWidth - ScrollbarMargin;
+            scrollbarW = scrollbarLength;
+            scrollbarH = ScrollbarWidth;
+            _renderedScrollbarX = X + PaddingLeft;
+            _renderedScrollbarY = scrollbarY;
+        }
         
-        // 绘制滚动条
-        var thumbRect = new SKRect(scrollbarX, scrollbarY, scrollbarX + scrollbarWidth, scrollbarY + scrollbarHeight);
-        using var thumbPaint = new SKPaint 
-        { 
-            Color = new SKColor(0, 0, 0, alpha), 
-            IsAntialias = true 
-        };
-        canvas.DrawRoundRect(thumbRect, 3, 3, thumbPaint);
+        // 绘制轨道
+        SKRect bgRect;
+        if (Orientation == ScrollOrientation.Vertical)
+            bgRect = new SKRect(scrollbarX, Y + PaddingTop, scrollbarX + ScrollbarWidth, Y + PaddingTop + viewportSize);
+        else
+            bgRect = new SKRect(X + PaddingLeft, scrollbarY, X + PaddingLeft + viewportSize, scrollbarY + ScrollbarWidth);
+        
+        using var bgPaint = new SKPaint { Color = new SKColor(0, 0, 0, 20), IsAntialias = true };
+        canvas.DrawRoundRect(bgRect, ScrollbarWidth / 2, ScrollbarWidth / 2, bgPaint);
+        
+        // 绘制滑块
+        byte alpha = _isDraggingScrollbar ? (byte)150 : (_isHoveringScrollbar ? (byte)120 : (byte)80);
+        var thumbRect = new SKRect(scrollbarX, scrollbarY, scrollbarX + scrollbarW, scrollbarY + scrollbarH);
+        using var thumbPaint = new SKPaint { Color = new SKColor(0, 0, 0, alpha), IsAntialias = true };
+        canvas.DrawRoundRect(thumbRect, ScrollbarWidth / 2, ScrollbarWidth / 2, thumbPaint);
     }
     
-    /// <summary>
-    /// 处理鼠标滚轮事件
-    /// </summary>
     public override bool HandleMouseWheel(float deltaY)
     {
-        // 首先尝试让子元素处理
         for (int i = Children.Count - 1; i >= 0; i--)
         {
             if (Children[i].HandleMouseWheel(deltaY))
                 return true;
         }
         
-        // 子元素没有处理，自己处理滚动
-        float contentAreaHeight = Height - PaddingTop - PaddingBottom;
-        if (ContentHeight <= contentAreaHeight)
+        float viewportSize = Orientation == ScrollOrientation.Vertical
+            ? Height - PaddingTop - PaddingBottom
+            : Width - PaddingLeft - PaddingRight;
+        
+        if (ContentSize <= viewportSize)
             return false;
         
-        float scrollAmount = -deltaY * 20; // 滚动速度（反向，符合直觉）
+        float scrollAmount = -deltaY * 20;
         ScrollOffset += scrollAmount;
-        ScrollOffset = Math.Clamp(ScrollOffset, 0, ContentHeight - contentAreaHeight);
+        ScrollOffset = Math.Clamp(ScrollOffset, 0, ContentSize - viewportSize);
         return true;
     }
     
-    /// <summary>
-    /// 是否正在拖动滚动条
-    /// </summary>
     private bool _isDraggingScrollbar;
-    private float _dragStartY;
+    private float _dragStartPos;
     private float _dragStartOffset;
-    
-    /// <summary>
-    /// 鼠标是否悬停在滚动条上
-    /// </summary>
     private bool _isHoveringScrollbar;
+    private float _renderedScrollbarX;
+    private float _renderedScrollbarY;
     
-    /// <summary>
-    /// 处理鼠标按下事件
-    /// </summary>
     public override bool HandleMouseDown(float x, float y)
     {
-        // 首先检查子元素（从后往前，优先处理上层的元素）
         for (int i = Children.Count - 1; i >= 0; i--)
         {
             if (Children[i].HandleMouseDown(x, y))
                 return true;
         }
         
-        // 然后检查滚动条
-        if (ContentHeight <= Height || !ShowScrollbar)
+        float viewportSize = Orientation == ScrollOrientation.Vertical
+            ? Height - PaddingTop - PaddingBottom
+            : Width - PaddingLeft - PaddingRight;
+        
+        if (ContentSize <= viewportSize || !ShowScrollbar)
             return false;
         
-        // 内容区域高度
-        float contentAreaHeight = Height - PaddingTop - PaddingBottom;
-        
         // 检查是否点击在滚动条区域
-        float scrollbarWidth = 6;
-        float paddingRight = 4;
-        float scrollbarX = X + Width - PaddingRight - scrollbarWidth - paddingRight;
-        
-        if (x >= scrollbarX && x <= scrollbarX + scrollbarWidth &&
-            y >= Y + PaddingTop && y <= Y + PaddingTop + contentAreaHeight)
+        bool inScrollbarArea;
+        if (Orientation == ScrollOrientation.Vertical)
         {
-            // 检查是否点击在滑块上
-            float scrollbarHeight = GetScrollbarHeight();
-            float contentVisibleRatio = contentAreaHeight / ContentHeight;
-            float scrollRatio = ScrollOffset / (ContentHeight - contentAreaHeight);
-            float scrollbarY = Y + PaddingTop + scrollRatio * (contentAreaHeight - scrollbarHeight);
+            inScrollbarArea = x >= _renderedScrollbarX && x <= _renderedScrollbarX + ScrollbarWidth &&
+                              y >= Y + PaddingTop && y <= Y + PaddingTop + viewportSize;
+        }
+        else
+        {
+            inScrollbarArea = x >= X + PaddingLeft && x <= X + PaddingLeft + viewportSize &&
+                              y >= _renderedScrollbarY && y <= _renderedScrollbarY + ScrollbarWidth;
+        }
+        
+        if (inScrollbarArea)
+        {
+            float scrollbarLength = Math.Max(30, viewportSize * (viewportSize / ContentSize));
+            float scrollRatio = ScrollOffset / (ContentSize - viewportSize);
+            float scrollbarPos = Orientation == ScrollOrientation.Vertical
+                ? Y + PaddingTop + scrollRatio * (viewportSize - scrollbarLength)
+                : X + PaddingLeft + scrollRatio * (viewportSize - scrollbarLength);
             
-            if (y >= scrollbarY && y <= scrollbarY + scrollbarHeight)
+            float clickPos = Orientation == ScrollOrientation.Vertical ? y : x;
+            
+            if (clickPos >= scrollbarPos && clickPos <= scrollbarPos + scrollbarLength)
             {
-                // 点击在滑块上，开始拖动
                 _isDraggingScrollbar = true;
-                _dragStartY = y;
+                _dragStartPos = clickPos;
                 _dragStartOffset = ScrollOffset;
                 return true;
             }
             else
             {
-                // 点击在空白区域，滚动一页
-                float pageScrollAmount = contentAreaHeight * 0.8f; // 滚动 80% 的可视区域
-                if (y < scrollbarY)
-                {
-                    // 点击在滑块上方，向上滚动
+                float pageScrollAmount = viewportSize * 0.8f;
+                if (clickPos < scrollbarPos)
                     ScrollOffset = Math.Max(0, ScrollOffset - pageScrollAmount);
-                }
                 else
-                {
-                    // 点击在滑块下方，向下滚动
-                    ScrollOffset = Math.Min(ContentHeight - contentAreaHeight, ScrollOffset + pageScrollAmount);
-                }
+                    ScrollOffset = Math.Min(ContentSize - viewportSize, ScrollOffset + pageScrollAmount);
                 return true;
             }
         }
@@ -292,12 +321,8 @@ public class ScrollViewElement : EclipseElement
         return false;
     }
     
-    /// <summary>
-    /// 处理鼠标移动事件
-    /// </summary>
     public override bool HandleMouseMove(float x, float y)
     {
-        // 首先处理子元素
         bool childHandled = false;
         for (int i = Children.Count - 1; i >= 0; i--)
         {
@@ -305,57 +330,49 @@ public class ScrollViewElement : EclipseElement
                 childHandled = true;
         }
         
-        // 内容区域高度
-        float contentAreaHeight = Height - PaddingTop - PaddingBottom;
+        float viewportSize = Orientation == ScrollOrientation.Vertical
+            ? Height - PaddingTop - PaddingBottom
+            : Width - PaddingLeft - PaddingRight;
         
-        // 处理拖动
         if (_isDraggingScrollbar)
         {
-            float deltaY = y - _dragStartY;
-            float scrollRatio = deltaY / (contentAreaHeight - GetScrollbarHeight());
-            float newOffset = _dragStartOffset + scrollRatio * (ContentHeight - contentAreaHeight);
+            float currentPos = Orientation == ScrollOrientation.Vertical ? y : x;
+            float deltaPos = currentPos - _dragStartPos;
+            float scrollbarLength = Math.Max(30, viewportSize * (viewportSize / ContentSize));
+            float scrollRatio = deltaPos / (viewportSize - scrollbarLength);
+            float newOffset = _dragStartOffset + scrollRatio * (ContentSize - viewportSize);
             
-            ScrollOffset = Math.Clamp(newOffset, 0, ContentHeight - contentAreaHeight);
+            ScrollOffset = Math.Clamp(newOffset, 0, ContentSize - viewportSize);
             return true;
         }
         
-        // 检测是否悬停在滚动条上
-        if (ContentHeight <= contentAreaHeight || !ShowScrollbar)
+        if (ContentSize <= viewportSize || !ShowScrollbar)
             return childHandled;
         
-        float scrollbarWidth = 6;
-        float paddingRight = 4;
-        float scrollbarX = X + Width - PaddingRight - scrollbarWidth - paddingRight;
-        
         bool wasHovering = _isHoveringScrollbar;
-        _isHoveringScrollbar = (x >= scrollbarX && x <= scrollbarX + scrollbarWidth &&
-                                y >= Y + PaddingTop && y <= Y + PaddingTop + contentAreaHeight);
+        if (Orientation == ScrollOrientation.Vertical)
+        {
+            _isHoveringScrollbar = x >= _renderedScrollbarX && x <= _renderedScrollbarX + ScrollbarWidth &&
+                                   y >= Y + PaddingTop && y <= Y + PaddingTop + viewportSize;
+        }
+        else
+        {
+            _isHoveringScrollbar = x >= X + PaddingLeft && x <= X + PaddingLeft + viewportSize &&
+                                   y >= _renderedScrollbarY && y <= _renderedScrollbarY + ScrollbarWidth;
+        }
         
         return childHandled || _isHoveringScrollbar != wasHovering;
     }
     
-    /// <summary>
-    /// 处理鼠标释放事件
-    /// </summary>
     public override void HandleMouseUp()
     {
         base.HandleMouseUp();
         _isDraggingScrollbar = false;
     }
     
-    /// <summary>
-    /// 处理鼠标离开事件
-    /// </summary>
     public override void HandleMouseLeave()
     {
         base.HandleMouseLeave();
         _isHoveringScrollbar = false;
-    }
-    
-    private float GetScrollbarHeight()
-    {
-        float contentAreaHeight = Height - PaddingTop - PaddingBottom;
-        float contentVisibleRatio = contentAreaHeight / ContentHeight;
-        return Math.Max(30, contentAreaHeight * contentVisibleRatio);
     }
 }

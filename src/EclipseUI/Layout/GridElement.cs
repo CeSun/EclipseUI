@@ -225,10 +225,17 @@ public class GridElement : EclipseElement
                 currentColOffset += Spacing;
         }
         
-        return new SKSize(
-            totalWidth + PaddingLeft + PaddingRight,
-            totalHeight + PaddingTop + PaddingBottom
-        );
+        // 计算最终尺寸
+        float finalWidth = totalWidth + PaddingLeft + PaddingRight;
+        float finalHeight = totalHeight + PaddingTop + PaddingBottom;
+        
+        // 当可用宽度有限时，不要返回超出可用宽度的尺寸
+        if (!float.IsPositiveInfinity(availableWidth))
+            finalWidth = Math.Min(finalWidth, availableWidth);
+        if (!float.IsPositiveInfinity(availableHeight))
+            finalHeight = Math.Min(finalHeight, availableHeight);
+        
+        return new SKSize(finalWidth, finalHeight);
     }
     
     public override void Arrange(SKCanvas canvas, float x, float y, float width, float height)
@@ -581,17 +588,17 @@ public class GridElement : EclipseElement
             maxCol = Math.Max(maxCol, GetColumn(child) + GetColumnSpan(child));
         }
         
-        // 确保行列定义数量足够（默认为 Auto）
+        // 确保行列定义数量足够（默认为 Star，这样会自动填充可用空间）
         if (RowDefinitions.Count < maxRow)
         {
             while (RowDefinitions.Count < maxRow)
-                RowDefinitions.Add(new RowDefinitionInternal { Height = GridLength.Auto });
+                RowDefinitions.Add(new RowDefinitionInternal { Height = GridLength.Star });
             shouldClearCache = true;
         }
         if (ColumnDefinitions.Count < maxCol)
         {
             while (ColumnDefinitions.Count < maxCol)
-                ColumnDefinitions.Add(new ColumnDefinitionInternal { Width = GridLength.Auto });
+                ColumnDefinitions.Add(new ColumnDefinitionInternal { Width = GridLength.Star });
             shouldClearCache = true;
         }
         

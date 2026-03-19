@@ -58,16 +58,18 @@
             
             <!-- 底部导航栏 -->
             <GridItem Row="1" Background="#F5F5F5">
-                <StackPanel Orientation="StackOrientation.Horizontal" Spacing="5" PaddingLeft="10" PaddingTop="8" PaddingRight="10" PaddingBottom="8">
-                    <Button Text="🏠 主页" Width="90" Height="36" Background="#E0E0E0" OnClick="GoToMain" />
-                    <Button Text="📝 TextBox" Width="90" Height="36" Background="#E0E0E0" OnClick="GoToTextBox" />
-                    <Button Text="🔽 ComboBox" Width="90" Height="36" Background="#E0E0E0" OnClick="GoToComboBox" />
-                    <Button Text="☑️ CheckBox" Width="90" Height="36" Background="#E0E0E0" OnClick="GoToCheckBox" />
-                    <Button Text="🔘 Radio" Width="90" Height="36" Background="#E0E0E0" OnClick="GoToRadioButton" />
-                    <Button Text="🔛 Toggle" Width="90" Height="36" Background="#E0E0E0" OnClick="GoToToggleSwitch" />
-                    <Button Text="📊 Slider" Width="90" Height="36" Background="#E0E0E0" OnClick="GoToSlider" />
-                    <Button Text="🔍 布局测试" Width="90" Height="36" Background="#E0E0E0" OnClick="GoToLayoutTest" />
-                </StackPanel>
+                <ScrollView Orientation="ScrollOrientation.Horizontal" PaddingLeft="10" PaddingTop="8" PaddingRight="10" PaddingBottom="16">
+                    <StackPanel Orientation="StackOrientation.Horizontal" Spacing="5">
+                        <Button Text="🏠 主页" Width="90" Height="36" Background="#E0E0E0" OnClick="GoToMain" />
+                        <Button Text="📝 TextBox" Width="90" Height="36" Background="#E0E0E0" OnClick="GoToTextBox" />
+                        <Button Text="🔽 ComboBox" Width="90" Height="36" Background="#E0E0E0" OnClick="GoToComboBox" />
+                        <Button Text="☑️ CheckBox" Width="90" Height="36" Background="#E0E0E0" OnClick="GoToCheckBox" />
+                        <Button Text="🔘 Radio" Width="90" Height="36" Background="#E0E0E0" OnClick="GoToRadioButton" />
+                        <Button Text="🔛 Toggle" Width="90" Height="36" Background="#E0E0E0" OnClick="GoToToggleSwitch" />
+                        <Button Text="📊 Slider" Width="90" Height="36" Background="#E0E0E0" OnClick="GoToSlider" />
+                        <Button Text="🔍 布局测试" Width="90" Height="36" Background="#E0E0E0" OnClick="GoToLayoutTest" />
+                    </StackPanel>
+                </ScrollView>
             </GridItem>
         </Grid>
     </GridItem>
