@@ -147,19 +147,21 @@ public class EclipseWindow : IDisposable
                 // 处理 surrogate pair（emoji 等）
                 if (char.IsHighSurrogate(c))
                 {
-                    // 保存 high surrogate，等待 low surrogate
                     _pendingHighSurrogate = c;
                     return;
                 }
                 else if (char.IsLowSurrogate(c) && _pendingHighSurrogate.HasValue)
                 {
-                    // 组合 surrogate pair
                     text = new string(new char[] { _pendingHighSurrogate.Value, c });
                     _pendingHighSurrogate = null;
                 }
+                else if (char.IsLowSurrogate(c))
+                {
+                    // 孤立的 low surrogate，跳过
+                    return;
+                }
                 else
                 {
-                    // 普通字符
                     _pendingHighSurrogate = null;
                     text = c.ToString();
                 }

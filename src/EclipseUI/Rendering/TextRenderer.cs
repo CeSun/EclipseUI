@@ -11,8 +11,27 @@ public static class TextRenderer
     private static SKTypeface? _emojiTypeface;
     private static SKTypeface? _chineseTypeface;
 
-    private static SKTypeface EmojiTypeface =>
-        _emojiTypeface ??= SKTypeface.FromFamilyName("Segoe UI Emoji", SKFontStyle.Normal);
+    private static SKTypeface EmojiTypeface
+    {
+        get
+        {
+            if (_emojiTypeface == null)
+            {
+                // 尝试多个 emoji 字体
+                _emojiTypeface = SKTypeface.FromFamilyName("Segoe UI Emoji", SKFontStyle.Normal);
+                if (_emojiTypeface == null || _emojiTypeface.FamilyName == "")
+                {
+                    _emojiTypeface = SKTypeface.FromFamilyName("Apple Color Emoji", SKFontStyle.Normal);
+                }
+                if (_emojiTypeface == null || _emojiTypeface.FamilyName == "")
+                {
+                    _emojiTypeface = SKTypeface.FromFamilyName("Noto Color Emoji", SKFontStyle.Normal);
+                }
+                _emojiTypeface ??= SKTypeface.Default;
+            }
+            return _emojiTypeface;
+        }
+    }
 
     private static SKTypeface ChineseTypeface =>
         _chineseTypeface ??= SKTypeface.FromFamilyName("SimSun", SKFontStyle.Normal)
@@ -246,8 +265,6 @@ public static class TextRenderer
     private static void DrawMixedText(IRenderContext context, string text, float x, float y, float fontSize, Color color)
     {
         float currentX = x;
-        var chineseFont = new SkiaFont("SimSun", fontSize);
-        var emojiFont = new SkiaFont("Segoe UI Emoji", fontSize);
 
         int i = 0;
         while (i < text.Length)
@@ -277,7 +294,6 @@ public static class TextRenderer
                 i++;
             }
 
-            var font = isEmoji ? emojiFont : chineseFont;
             var width = MeasureCharacter(character, fontSize, isEmoji);
             
             // 绘制时只绘制基础字符（变体选择器不需要单独绘制，它只是修饰符）
@@ -286,7 +302,10 @@ public static class TextRenderer
             {
                 drawChar = character[0].ToString();
             }
-            context.DrawText(drawChar, currentX, y, font, color);
+            
+            // 使用 DrawTextDirect 直接指定字体
+            string fontFamily = isEmoji ? "Segoe UI Emoji" : "SimSun";
+            context.DrawTextDirect(drawChar, currentX, y, fontSize, fontFamily, color);
             currentX += width;
         }
     }

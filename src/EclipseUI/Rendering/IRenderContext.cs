@@ -31,6 +31,11 @@ public interface IRenderContext
     void DrawText(string text, float x, float y, float fontSize, Color color);
     
     /// <summary>
+    /// 绘制文本（直接指定字体名，用于 emoji 等特殊字体）
+    /// </summary>
+    void DrawTextDirect(string text, float x, float y, float fontSize, string fontFamily, Color color);
+    
+    /// <summary>
     /// 绘制图片
     /// </summary>
     void DrawImage(IImage image, float x, float y, float? width = null, float? height = null);

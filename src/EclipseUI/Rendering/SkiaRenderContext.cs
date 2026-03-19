@@ -69,7 +69,27 @@ public class SkiaRenderContext : IRenderContext, IDisposable
         else if (font.IsBold) fontStyle = SKFontStyle.Bold;
         else if (font.IsItalic) fontStyle = SKFontStyle.Italic;
         
-        using var typeface = SKTypeface.FromFamilyName(font.FamilyName, fontStyle);
+        SKTypeface? typeface = null;
+        
+        // Emoji 字体特殊处理
+        if (font.FamilyName.Contains("Emoji", StringComparison.OrdinalIgnoreCase))
+        {
+            // 尝试多个 emoji 字体
+            string[] emojiFonts = { "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji" };
+            foreach (var emojiFont in emojiFonts)
+            {
+                typeface = SKTypeface.FromFamilyName(emojiFont, fontStyle);
+                if (typeface != null && !string.IsNullOrEmpty(typeface.FamilyName))
+                    break;
+            }
+        }
+        else
+        {
+            typeface = SKTypeface.FromFamilyName(font.FamilyName, fontStyle);
+        }
+        
+        typeface ??= SKTypeface.Default;
+        
         using var paint = new SKPaint
         {
             TextSize = font.Size,
@@ -101,6 +121,39 @@ public class SkiaRenderContext : IRenderContext, IDisposable
             
             _canvas.DrawText(text, x, y, paint);
         }
+    }
+    
+    public void DrawTextDirect(string text, float x, float y, float fontSize, string fontFamily, Color color)
+    {
+        // 尝试获取指定字体
+        SKTypeface? typeface = null;
+        
+        if (fontFamily.Contains("Emoji", StringComparison.OrdinalIgnoreCase))
+        {
+            // Emoji 字体列表
+            string[] emojiFonts = { "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji" };
+            foreach (var font in emojiFonts)
+            {
+                typeface = SKTypeface.FromFamilyName(font);
+                if (typeface != null) break;
+            }
+        }
+        else
+        {
+            typeface = SKTypeface.FromFamilyName(fontFamily);
+        }
+        
+        typeface ??= SKTypeface.Default;
+        
+        using var paint = new SKPaint
+        {
+            TextSize = fontSize,
+            IsAntialias = true,
+            Color = new SKColor(color.R, color.G, color.B, color.A),
+            Typeface = typeface
+        };
+        
+        _canvas.DrawText(text, x, y, paint);
     }
     
     public void DrawImage(IImage image, float x, float y, float? width = null, float? height = null)
