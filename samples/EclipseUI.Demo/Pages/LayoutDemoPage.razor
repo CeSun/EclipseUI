@@ -1,0 +1,120 @@
+@using EclipseUI.Controls
+@using EclipseUI.Layout
+@using EclipseUI.Core
+
+<ScrollView>
+    <StackPanel Spacing="30" PaddingLeft="20" PaddingRight="20" PaddingTop="20" PaddingBottom="20">
+        
+        <!-- ListBox -->
+        <StackPanel Spacing="10">
+            <TextBlock Text="📋 ListBox 列表框" FontSize="24" FontWeight="true" />
+            
+            <TextBlock Text="使用 ItemsSource：" FontSize="16" />
+            <ListBox ItemsSource="@_listItems" @bind-SelectedItem="_listSelected" Width="250" Height="180" />
+            <TextBlock Text="@($"选中：{_listSelected ?? "无"}")" FontSize="12" />
+            
+            <TextBlock Text="使用 ListBoxItem 子组件：" FontSize="16" PaddingTop="10" />
+            <ListBox @bind-SelectedItem="_selectedAnimal" Width="250" Height="180">
+                <ListBoxItem Value="cat" Text="🐱 猫咪" />
+                <ListBoxItem Value="dog" Text="🐶 狗狗" />
+                <ListBoxItem Value="rabbit" Text="🐰 兔子" />
+                <ListBoxItem Value="hamster" Text="🐹 仓鼠" />
+                <ListBoxItem Value="bird" Text="🐦 小鸟" />
+            </ListBox>
+            <TextBlock Text="@($"选中值：{_selectedAnimal ?? "无"}")" FontSize="12" />
+        </StackPanel>
+        
+        <!-- TabControl -->
+        <StackPanel Spacing="10">
+            <TextBlock Text="📑 TabControl 选项卡" FontSize="24" FontWeight="true" />
+            
+            <TabControl @bind-SelectedIndex="_tabIndex" Height="200">
+                <TabItem Header="🏠 首页">
+                    <StackPanel PaddingLeft="16" PaddingTop="16">
+                        <TextBlock Text="🏠 首页内容" FontSize="18" FontWeight="true" />
+                        <TextBlock Text="这是第一个选项卡的内容" FontSize="14" PaddingTop="8" />
+                    </StackPanel>
+                </TabItem>
+                <TabItem Header="⚙️ 设置">
+                    <StackPanel PaddingLeft="16" PaddingTop="16">
+                        <TextBlock Text="⚙️ 设置内容" FontSize="18" FontWeight="true" />
+                        <TextBlock Text="这是第二个选项卡的内容" FontSize="14" PaddingTop="8" />
+                        <CheckBox IsChecked="true" Content="启用通知" PaddingTop="12" />
+                    </StackPanel>
+                </TabItem>
+                <TabItem Header="👤 关于">
+                    <StackPanel PaddingLeft="16" PaddingTop="16">
+                        <TextBlock Text="👤 关于内容" FontSize="18" FontWeight="true" />
+                        <TextBlock Text="EclipseUI Demo v1.0" FontSize="14" PaddingTop="8" />
+                    </StackPanel>
+                </TabItem>
+            </TabControl>
+            <TextBlock Text="@($"当前 Tab 索引：{_tabIndex}")" FontSize="12" />
+        </StackPanel>
+        
+        <!-- WrapPanel -->
+        <StackPanel Spacing="10">
+            <TextBlock Text="🔄 WrapPanel 流式布局" FontSize="24" FontWeight="true" />
+            
+            <TextBlock Text="水平方向（自动换行）：" FontSize="16" />
+            <Border Background="#F5F5F5" CornerRadius="8">
+                <WrapPanel ItemSpacing="8" LineSpacing="8" PaddingLeft="12" PaddingTop="12" PaddingRight="12" PaddingBottom="12">
+                    <Button Content="按钮 1" />
+                    <Button Content="按钮 2" />
+                    <Button Content="按钮 3" />
+                    <Button Content="长按钮 4" />
+                    <Button Content="按钮 5" />
+                    <Button Content="按钮 6" />
+                    <Button Content="很长的按钮 7" />
+                    <Button Content="按钮 8" />
+                </WrapPanel>
+            </Border>
+            
+            <TextBlock Text="标签示例：" FontSize="16" PaddingTop="10" />
+            <WrapPanel ItemSpacing="6" LineSpacing="6">
+                @foreach (var tag in _tags)
+                {
+                    <Border Background="#E3F2FD" CornerRadius="12">
+                        <TextBlock Text="@tag" FontSize="12" PaddingLeft="10" PaddingRight="10" PaddingTop="4" PaddingBottom="4" />
+                    </Border>
+                }
+            </WrapPanel>
+        </StackPanel>
+        
+        <!-- Canvas -->
+        <StackPanel Spacing="10">
+            <TextBlock Text="🎨 Canvas 绝对定位" FontSize="24" FontWeight="true" />
+            
+            <Border Background="#FFF3E0" CornerRadius="8" BorderBrush="#FFB74D" BorderThickness="1">
+                <Canvas Height="200">
+                    <CanvasItem Left="20" Top="20">
+                        <TextBlock Text="左上角 (20, 20)" FontSize="12" />
+                    </CanvasItem>
+                    <CanvasItem Right="20" Top="20">
+                        <TextBlock Text="右上角" FontSize="12" />
+                    </CanvasItem>
+                    <CanvasItem Left="20" Bottom="20">
+                        <TextBlock Text="左下角" FontSize="12" />
+                    </CanvasItem>
+                    <CanvasItem Right="20" Bottom="20">
+                        <TextBlock Text="右下角" FontSize="12" />
+                    </CanvasItem>
+                    <CanvasItem Left="100" Top="80">
+                        <Border Background="#4CAF50" CornerRadius="20">
+                            <TextBlock Text="居中元素" Foreground="#FFFFFF" FontSize="14" PaddingLeft="16" PaddingRight="16" PaddingTop="8" PaddingBottom="8" />
+                        </Border>
+                    </CanvasItem>
+                </Canvas>
+            </Border>
+        </StackPanel>
+        
+    </StackPanel>
+</ScrollView>
+
+@code {
+    private List<string> _listItems = new() { "项目 A", "项目 B", "项目 C", "项目 D", "项目 E", "项目 F" };
+    private string? _listSelected;
+    private string? _selectedAnimal;
+    private int _tabIndex = 0;
+    private List<string> _tags = new() { "C#", "Blazor", "SkiaSharp", "EclipseUI", "跨平台", "UI框架", "开源" };
+}
