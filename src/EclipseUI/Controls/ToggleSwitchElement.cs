@@ -9,7 +9,18 @@ namespace EclipseUI.Controls;
 /// </summary>
 public class ToggleSwitchElement : EclipseElement
 {
-    public bool IsOn { get; set; }
+    private bool _isOn;
+    
+    public bool IsOn 
+    { 
+        get => _isOn;
+        set
+        {
+            _isOn = value;
+            _animationProgress = value ? 1 : 0;
+        }
+    }
+    
     public string OnContent { get; set; } = "";
     public string OffContent { get; set; } = "";
     public float FontSize { get; set; } = 12;
@@ -43,11 +54,6 @@ public class ToggleSwitchElement : EclipseElement
     /// 点击事件
     /// </summary>
     public Action<EclipseElement, SKPoint>? OnClick { get; set; }
-    
-    public ToggleSwitchElement()
-    {
-        _animationProgress = 0;
-    }
     
     public override SKSize Measure(SKCanvas canvas, float availableWidth, float availableHeight)
     {

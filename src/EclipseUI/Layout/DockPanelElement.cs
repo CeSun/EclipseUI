@@ -21,24 +21,27 @@ public class DockPanelElement : EclipseElement
         var dockChildren = GetDockChildren();
         int lastDockIndex = dockChildren.Count - 1;
         
+        // 检查是否在无限空间中
+        bool isWidthInfinite = float.IsPositiveInfinity(availableWidth);
+        bool isHeightInfinite = float.IsPositiveInfinity(availableHeight);
+        
         // 第一次遍历：测量所有子元素
-        var measurements = new List<(DockPanelItemElement item, SKSize size)>();
         foreach (var child in dockChildren)
         {
             var childDock = child.Dock;
+            int childIndex = dockChildren.IndexOf(child);
             
             // 最后一个元素且 LastChildFill=true 时，视为 Fill
-            if (dockChildren.IndexOf(child) == lastDockIndex && LastChildFill)
+            if (childIndex == lastDockIndex && LastChildFill)
             {
                 childDock = Dock.Fill;
             }
             
             // 计算可用空间
-            float childAvailWidth = availableWidth - usedLeft - usedRight;
-            float childAvailHeight = availableHeight - usedTop - usedBottom;
+            float childAvailWidth = isWidthInfinite ? float.PositiveInfinity : availableWidth - usedLeft - usedRight;
+            float childAvailHeight = isHeightInfinite ? float.PositiveInfinity : availableHeight - usedTop - usedBottom;
             
             var size = child.Measure(canvas, childAvailWidth, childAvailHeight);
-            measurements.Add((child, size));
             
             // 累加占用的空间
             switch (childDock)
@@ -60,8 +63,9 @@ public class DockPanelElement : EclipseElement
                     maxHeight = Math.Max(maxHeight, size.Height);
                     break;
                 case Dock.Fill:
-                    maxWidth = Math.Max(maxWidth, childAvailWidth);
-                    maxHeight = Math.Max(maxHeight, childAvailHeight);
+                    // Fill 元素：使用测量出的实际尺寸，而不是可用空间
+                    maxWidth = Math.Max(maxWidth, size.Width);
+                    maxHeight = Math.Max(maxHeight, size.Height);
                     break;
             }
         }
@@ -69,6 +73,12 @@ public class DockPanelElement : EclipseElement
         // 计算总尺寸
         float totalWidth = usedLeft + usedRight + maxWidth;
         float totalHeight = usedTop + usedBottom + maxHeight;
+        
+        // 应用 RequestedWidth/Height
+        if (RequestedWidth.HasValue)
+            totalWidth = RequestedWidth.Value - PaddingLeft - PaddingRight;
+        if (RequestedHeight.HasValue)
+            totalHeight = RequestedHeight.Value - PaddingTop - PaddingBottom;
         
         return new SKSize(
             totalWidth + PaddingLeft + PaddingRight,

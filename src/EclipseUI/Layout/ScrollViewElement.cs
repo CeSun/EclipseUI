@@ -35,23 +35,42 @@ public class ScrollViewElement : EclipseElement
         if (MaxHeight.HasValue)
             contentHeight = Math.Min(contentHeight, MaxHeight.Value - PaddingTop - PaddingBottom);
         
-        // 测量子元素（传递无限高度，让内容决定实际高度）
+        // 测量子元素（传递可用宽度，无限高度让内容决定实际高度）
         float measuredContentHeight = 0;
         float measuredContentWidth = 0;
+        
+        // 如果宽度是无限的，先用一个合理的默认值测量
+        float measureWidth = float.IsPositiveInfinity(contentWidth) ? 800 : contentWidth;
         
         if (Children.Count > 0)
         {
             foreach (var child in Children)
             {
-                var childSize = child.Measure(canvas, contentWidth, float.PositiveInfinity);
+                var childSize = child.Measure(canvas, measureWidth, float.PositiveInfinity);
                 measuredContentWidth = Math.Max(measuredContentWidth, childSize.Width);
                 measuredContentHeight += childSize.Height;
             }
         }
         
         // 应用用户设置的尺寸
-        float finalWidth = RequestedWidth ?? (measuredContentWidth + PaddingLeft + PaddingRight);
-        float finalHeight = RequestedHeight ?? contentHeight;
+        float finalWidth, finalHeight;
+        
+        if (RequestedWidth.HasValue)
+        {
+            finalWidth = RequestedWidth.Value;
+        }
+        else if (float.IsPositiveInfinity(availableWidth))
+        {
+            // 宽度无限时，使用测量的内容宽度
+            finalWidth = measuredContentWidth + PaddingLeft + PaddingRight;
+        }
+        else
+        {
+            // 宽度有限时，使用可用宽度（Stretch 行为）
+            finalWidth = availableWidth;
+        }
+        
+        finalHeight = RequestedHeight ?? contentHeight;
         
         // 应用 Min/Max 限制
         if (MinWidth.HasValue) finalWidth = Math.Max(finalWidth, MinWidth.Value);
