@@ -70,40 +70,63 @@ internal sealed class EclipseComponentAdapter
         if (_pendingEdits == null)
             return;
 
-        // 注意：先处理所有 Remove，再处理所有 Add，避免索引混乱
-        // 第一步：收集所有需要移除和添加的元素
-        var removes = new List<PendingEdit>();
-        var adds = new List<PendingEdit>();
-        
         for (var i = 0; i < _pendingEdits.Count; i++)
         {
             var edit = _pendingEdits[i];
-            if (edit.Type == EditType.Remove)
-                removes.Add(edit);
+            var nextEdit = _pendingEdits.ElementAtOrDefault(i + 1);
+
+            // 如果有连续的 Remove -> Add 操作且索引相同，优化为替换
+            if (nextEdit.Index == edit.Index
+                && edit.Type == EditType.Remove
+                && nextEdit.Type == EditType.Add
+                && edit.Element?._targetElement != null
+                && nextEdit.Element?._targetElement != null)
+            {
+                var newChild = nextEdit.Element._targetElement.Element;
+                var index = edit.Index;
+                var parentChildren = _targetElement.Element.Children;
+                
+                // 按索引移除旧元素
+                if (index >= 0 && index < parentChildren.Count)
+                {
+                    var removed = parentChildren[index];
+                    removed.Parent = null;
+                    parentChildren.RemoveAt(index);
+                }
+                // 在同位置插入新元素
+                if (newChild != null)
+                {
+                    if (index >= 0 && index <= parentChildren.Count)
+                        _targetElement.Element.InsertChild(index, newChild);
+                    else
+                        _targetElement.Element.AddChild(newChild);
+                }
+                
+                i++; // 跳过下一个 Add 操作
+            }
+            else if (edit.Type == EditType.Remove)
+            {
+                var index = edit.Index;
+                var parentChildren = _targetElement.Element.Children;
+                if (index >= 0 && index < parentChildren.Count)
+                {
+                    var removed = parentChildren[index];
+                    removed.Parent = null;
+                    parentChildren.RemoveAt(index);
+                }
+            }
             else if (edit.Type == EditType.Add)
-                adds.Add(edit);
-        }
-
-        // 第二步：先移除（从后往前，避免索引问题）
-        for (var i = removes.Count - 1; i >= 0; i--)
-        {
-            var edit = removes[i];
-            var parentElement = PhysicalTarget._targetElement.Element;
-            var child = edit.Element._targetElement.Element;
-            parentElement.RemoveChild(child);
-        }
-
-        // 第三步：再添加（从前往后，按索引插入）
-        foreach (var edit in adds)
-        {
-            var parentElement = PhysicalTarget._targetElement.Element;
-            var child = edit.Element._targetElement.Element;
-            var index = edit.Index;
-            
-            if (index >= 0 && index < parentElement.Children.Count)
-                parentElement.InsertChild(index, child);
-            else
-                parentElement.AddChild(child);
+            {
+                var child = edit.Element?._targetElement?.Element;
+                if (child != null)
+                {
+                    var index = edit.Index;
+                    if (index >= 0 && index <= _targetElement.Element.Children.Count)
+                        _targetElement.Element.InsertChild(index, child);
+                    else
+                        _targetElement.Element.AddChild(child);
+                }
+            }
         }
 
         _pendingEdits.Clear();
@@ -113,7 +136,41 @@ internal sealed class EclipseComponentAdapter
     {
         var targetEdits = PhysicalTarget._pendingEdits ??= new();
         adaptersWithPendingEdits.Add(PhysicalTarget);
-        targetEdits.Add(new(EditType.Remove, index, childToRemove));
+
+        if (targetEdits.Count == 0)
+        {
+            targetEdits.Add(new(EditType.Remove, index, childToRemove));
+            return;
+        }
+
+        // 参考 Blazonia：如果有 Add 和 Remove 操作，把 Remove 放在对应 Add 之前以便优化为替换
+        int i;
+        for (i = targetEdits.Count; i > 0; i--)
+        {
+            var previousEdit = targetEdits[i - 1];
+
+            if (previousEdit.Type == EditType.Remove)
+                break;
+
+            if (previousEdit.Index < index - 1)
+                break;
+
+            if (i >= 2
+                && previousEdit.Type == EditType.Add
+                && targetEdits[i - 2] is { Type: EditType.Remove } previousRemoval
+                && previousRemoval.Index == previousEdit.Index)
+            {
+                break;
+            }
+
+            if (previousEdit.Index <= index)
+                index--;
+
+            if (previousEdit.Index > index)
+                targetEdits[i - 1] = previousEdit with { Index = previousEdit.Index - 1 };
+        }
+
+        targetEdits.Insert(i, new(EditType.Remove, index, childToRemove));
     }
 
     private void AddPendingAddition(EclipseComponentAdapter childToAdd, int index, HashSet<EclipseComponentAdapter> adaptersWithPendingEdits)
@@ -121,6 +178,37 @@ internal sealed class EclipseComponentAdapter
         var targetEdits = PhysicalTarget._pendingEdits ??= new();
         targetEdits.Add(new(EditType.Add, index, childToAdd));
         adaptersWithPendingEdits.Add(PhysicalTarget);
+    }
+
+    private int GetChildPhysicalIndex(EclipseComponentAdapter childAdapter)
+    {
+        var index = 0;
+        return FindChildPhysicalIndexRecursive(this, childAdapter, ref index) ? index : -1;
+
+        static bool FindChildPhysicalIndexRecursive(EclipseComponentAdapter parent, EclipseComponentAdapter targetChild, ref int index)
+        {
+            foreach (var child in parent.Children)
+            {
+                if (child is null)
+                    continue;
+
+                if (child == targetChild)
+                    return true;
+
+                if (child._targetElement != null)
+                {
+                    index++;
+                }
+
+                if (child._targetElement == null)
+                {
+                    if (FindChildPhysicalIndexRecursive(child, targetChild, ref index))
+                        return true;
+                }
+            }
+
+            return false;
+        }
     }
 
     private void ApplyRemoveFrame(int siblingIndex, HashSet<EclipseComponentAdapter> adaptersWithPendingEdits)
@@ -134,13 +222,17 @@ internal sealed class EclipseComponentAdapter
     {
         if (childToRemove?._targetElement != null)
         {
+            // 计算物理索引并添加到 pending edits
             var index = PhysicalTarget.GetChildPhysicalIndex(childToRemove);
             PhysicalTarget.AddPendingRemoval(childToRemove, index, adaptersWithPendingEdits);
         }
         else if (childToRemove != null)
         {
+            // 当前组件没有元素，递归处理子组件
             for (int i = 0; i < childToRemove.Children.Count; i++)
+            {
                 childToRemove.ApplyRemoveFrame(i, adaptersWithPendingEdits);
+            }
         }
     }
 
@@ -188,37 +280,6 @@ internal sealed class EclipseComponentAdapter
 
         var elementIndex = PhysicalTarget.GetChildPhysicalIndex(childAdapter);
         AddPendingAddition(childAdapter, elementIndex, adaptersWithPendingEdits);
-    }
-
-    private int GetChildPhysicalIndex(EclipseComponentAdapter childAdapter)
-    {
-        var index = 0;
-        return FindChildPhysicalIndexRecursive(this, childAdapter, ref index) ? index : -1;
-
-        static bool FindChildPhysicalIndexRecursive(EclipseComponentAdapter parent, EclipseComponentAdapter targetChild, ref int index)
-        {
-            foreach (var child in parent.Children)
-            {
-                if (child is null)
-                    continue;
-
-                if (child == targetChild)
-                    return true;
-
-                if (child._targetElement != null)
-                {
-                    index++;
-                }
-
-                if (child._targetElement == null)
-                {
-                    if (FindChildPhysicalIndexRecursive(child, targetChild, ref index))
-                        return true;
-                }
-            }
-
-            return false;
-        }
     }
 
     private int InsertFrameRange(
