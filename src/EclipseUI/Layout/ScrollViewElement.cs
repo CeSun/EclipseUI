@@ -267,6 +267,23 @@ public class ScrollViewElement : EclipseElement
     private float _renderedScrollbarX;
     private float _renderedScrollbarY;
     
+    public override bool HandleClick(SKPoint point)
+    {
+        if (!IsVisible) return false;
+        
+        // 检查点击是否在 ScrollView 区域内
+        var rect = new SKRect(X, Y, X + Width, Y + Height);
+        if (!rect.Contains(point)) return false;
+        
+        // 传递给子元素处理
+        for (int i = Children.Count - 1; i >= 0; i--)
+        {
+            if (Children[i].HandleClick(point)) return true;
+        }
+        
+        return false;
+    }
+    
     public override bool HandleMouseDown(float x, float y)
     {
         for (int i = Children.Count - 1; i >= 0; i--)

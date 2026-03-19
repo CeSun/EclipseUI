@@ -193,6 +193,28 @@ public class TabControlElement : EclipseElement
         return false;
     }
     
+    public override bool HandleClick(SKPoint point)
+    {
+        if (!IsVisible) return false;
+        
+        var rect = new SKRect(X, Y, X + Width, Y + Height);
+        if (!rect.Contains(point)) return false;
+        
+        // Tab 头部点击已在 HandleMouseDown 处理
+        if (point.Y >= Y && point.Y <= Y + HeaderHeight)
+        {
+            return true;
+        }
+        
+        // 传递给当前选中 Tab 的内容
+        if (SelectedIndex >= 0 && SelectedIndex < Children.Count)
+        {
+            return Children[SelectedIndex].HandleClick(point);
+        }
+        
+        return false;
+    }
+    
     public override bool HandleMouseMove(float x, float y)
     {
         // 检查 Tab 头部悬停

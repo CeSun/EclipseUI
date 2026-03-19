@@ -154,10 +154,11 @@ public class CheckBoxElement : EclipseElement
         }
         else
         {
-            IsChecked = !IsChecked;
+            IsChecked = IsChecked != true;
         }
         
-        OnCheckedChanged?.Invoke(IsChecked);
+        // 触发回调（不等待，让 UI 立即响应）
+        _ = OnCheckedChanged?.Invoke(IsChecked);
         OnClick?.Invoke(this, point);
         
         return true;
