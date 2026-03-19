@@ -6,18 +6,18 @@
     <TextBlock Text="🔘 RadioButton 单选框" FontSize="24" FontWeight="true" />
     
     <TextBlock Text="选择支付方式：" FontSize="16" PaddingBottom="5" />
-    <RadioButton Content="💳 信用卡" GroupName="Payment" IsChecked="_radio1" IsCheckedChanged="OnRadioChanged" PaddingBottom="10" />
-    <RadioButton Content="🏦 银行转账" GroupName="Payment" IsChecked="_radio2" IsCheckedChanged="OnRadioChanged" PaddingBottom="10" />
-    <RadioButton Content="💰 支付宝" GroupName="Payment" IsChecked="_radio3" IsCheckedChanged="OnRadioChanged" PaddingBottom="10" />
-    <RadioButton Content="💵 微信支付" GroupName="Payment" IsChecked="_radio4" IsCheckedChanged="OnRadioChanged" PaddingBottom="20" />
+    <RadioButton Content="💳 信用卡" GroupName="Payment" @bind-IsChecked="_radio1" PaddingBottom="10" />
+    <RadioButton Content="🏦 银行转账" GroupName="Payment" @bind-IsChecked="_radio2" PaddingBottom="10" />
+    <RadioButton Content="💰 支付宝" GroupName="Payment" @bind-IsChecked="_radio3" PaddingBottom="10" />
+    <RadioButton Content="💵 微信支付" GroupName="Payment" @bind-IsChecked="_radio4" PaddingBottom="20" />
     
     <TextBlock Text="选择会员等级：" FontSize="16" PaddingBottom="5" />
-    <RadioButton Content="🥉 青铜会员" GroupName="VIP" IsChecked="_vip1" IsCheckedChanged="OnVipChanged" PaddingBottom="10" />
-    <RadioButton Content="🥈 白银会员" GroupName="VIP" IsChecked="_vip2" IsCheckedChanged="OnVipChanged" PaddingBottom="10" />
-    <RadioButton Content="🥇 黄金会员" GroupName="VIP" IsChecked="_vip3" IsCheckedChanged="OnVipChanged" PaddingBottom="10" />
-    <RadioButton Content="💎 钻石会员" GroupName="VIP" IsChecked="_vip4" IsCheckedChanged="OnVipChanged" />
+    <RadioButton Content="🥉 青铜会员" GroupName="VIP" @bind-IsChecked="_vip1" PaddingBottom="10" />
+    <RadioButton Content="🥈 白银会员" GroupName="VIP" @bind-IsChecked="_vip2" PaddingBottom="10" />
+    <RadioButton Content="🥇 黄金会员" GroupName="VIP" @bind-IsChecked="_vip3" PaddingBottom="10" />
+    <RadioButton Content="💎 钻石会员" GroupName="VIP" @bind-IsChecked="_vip4" />
     
-    <TextBlock Text="@_radioDisplay" FontSize="14" PaddingTop="20" />
+    <TextBlock Text="@GetDisplayText()" FontSize="14" PaddingTop="20" />
 </StackPanel>
 
 @code {
@@ -33,18 +33,20 @@
     private bool? _vip3 = false;
     private bool? _vip4 = false;
     
-    private string _radioDisplay = "支付方式：信用卡";
-    
-    private void OnRadioChanged(bool? v)
+    private string GetDisplayText()
     {
-        if (_radio1 == true) _radioDisplay = "支付方式：信用卡";
-        else if (_radio2 == true) _radioDisplay = "支付方式：银行转账";
-        else if (_radio3 == true) _radioDisplay = "支付方式：支付宝";
-        else if (_radio4 == true) _radioDisplay = "支付方式：微信支付";
-    }
-    
-    private void OnVipChanged(bool? v)
-    {
-        // VIP 选择逻辑，可根据需要扩展
+        string payment = "未选择";
+        if (_radio1 == true) payment = "信用卡";
+        else if (_radio2 == true) payment = "银行转账";
+        else if (_radio3 == true) payment = "支付宝";
+        else if (_radio4 == true) payment = "微信支付";
+        
+        string vip = "未选择";
+        if (_vip1 == true) vip = "青铜会员";
+        else if (_vip2 == true) vip = "白银会员";
+        else if (_vip3 == true) vip = "黄金会员";
+        else if (_vip4 == true) vip = "钻石会员";
+        
+        return $"支付方式：{payment} | VIP等级：{vip}";
     }
 }
