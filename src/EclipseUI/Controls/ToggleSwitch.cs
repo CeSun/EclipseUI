@@ -59,8 +59,13 @@ public class ToggleSwitch : ComponentBase, IElementHandler, IDisposable
         _element.OnContent = OnContent ?? "";
         _element.OffContent = OffContent ?? "";
         _element.FontSize = FontSize;
-        _element.OnColor = ParseColor(OnColor);
-        _element.OffColor = ParseColor(OffColor);
+        
+        // 只在有自定义颜色时才覆盖默认值
+        var onColor = ParseColor(OnColor);
+        var offColor = ParseColor(OffColor);
+        if (onColor != SKColors.Transparent) _element.OnColor = onColor;
+        if (offColor != SKColors.Transparent) _element.OffColor = offColor;
+        
         _element.RequestedWidth = Width;
         _element.RequestedHeight = Height;
         

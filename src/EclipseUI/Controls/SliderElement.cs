@@ -5,7 +5,7 @@ using EclipseUI.Rendering;
 namespace EclipseUI.Controls;
 
 /// <summary>
-/// 滑块元素
+/// 滑块元素 - iOS 风格
 /// </summary>
 public class SliderElement : EclipseElement
 {
@@ -16,37 +16,21 @@ public class SliderElement : EclipseElement
     public bool ShowTicks { get; set; }
     public bool IsSnapToTick { get; set; }
     public Orientation Orientation { get; set; } = Orientation.Horizontal;
-    public float FontSize { get; set; } = 12;
-    public SKColor TextColor { get; set; } = SKColors.Black;
-    public SKColor TrackColor { get; set; } = SKColor.Parse("#E0E0E0");
-    public SKColor ThumbColor { get; set; } = SKColors.Blue;
+    public float FontSize { get; set; } = iOSTheme.FontSizeBody;
+    public SKColor TextColor { get; set; } = iOSTheme.LabelPrimary;
+    public SKColor TrackColor { get; set; } = iOSTheme.SystemGray5;
+    public SKColor ThumbColor { get; set; } = SKColors.White;
+    public SKColor MinTrackColor { get; set; } = iOSTheme.SystemBlue;
     
     public bool IsHovered { get; set; }
     public bool IsDragging { get; set; }
     
-    /// <summary>
-    /// 轨道厚度
-    /// </summary>
+    // iOS 风格尺寸
     private const float TrackThickness = 4;
-    
-    /// <summary>
-    /// 滑块半径
-    /// </summary>
-    private const float ThumbRadius = 10;
-    
-    /// <summary>
-    /// 刻度标记大小
-    /// </summary>
+    private const float ThumbSize = 28;
     private const float TickSize = 6;
     
-    /// <summary>
-    /// 值变更回调
-    /// </summary>
     public Func<double, Task>? OnValueChanged { get; set; }
-    
-    /// <summary>
-    /// 点击事件
-    /// </summary>
     public Action<EclipseElement, SKPoint>? OnClick { get; set; }
     
     public override SKSize Measure(SKCanvas canvas, float availableWidth, float availableHeight)
@@ -55,13 +39,37 @@ public class SliderElement : EclipseElement
         
         if (Orientation == Orientation.Horizontal)
         {
-            contentWidth = RequestedWidth ?? 200;
-            contentHeight = ThumbRadius * 2 + 24; // 固定高度：滑块 + 文本空间
+            // 如果有指定宽度则使用，否则使用可用宽度或默认值
+            if (RequestedWidth.HasValue)
+            {
+                contentWidth = RequestedWidth.Value;
+            }
+            else if (availableWidth > 0 && availableWidth < float.MaxValue)
+            {
+                contentWidth = availableWidth;
+            }
+            else
+            {
+                contentWidth = 200;
+            }
+            contentHeight = ThumbSize + 16;
         }
         else
         {
-            contentWidth = ThumbRadius * 2 + 24; // 固定宽度：滑块宽度
-            contentHeight = RequestedHeight ?? 200;
+            contentWidth = ThumbSize + 16;
+            // 如果有指定高度则使用，否则使用可用高度或默认值
+            if (RequestedHeight.HasValue)
+            {
+                contentHeight = RequestedHeight.Value;
+            }
+            else if (availableHeight > 0 && availableHeight < float.MaxValue)
+            {
+                contentHeight = availableHeight;
+            }
+            else
+            {
+                contentHeight = 200;
+            }
         }
         
         float finalWidth = contentWidth;
@@ -80,50 +88,41 @@ public class SliderElement : EclipseElement
         if (!IsVisible) return;
         
         canvas.Save();
-        
         try
         {
             RenderContent(canvas);
         }
         finally
         {
-            canvas.Restore();
+            canvas.Restore();;
         }
     }
     
     protected override void RenderContent(SKCanvas canvas)
     {
         if (Orientation == Orientation.Horizontal)
-        {
             RenderHorizontal(canvas);
-        }
         else
-        {
             RenderVertical(canvas);
-        }
     }
     
-    /// <summary>
-    /// 绘制水平滑块
-    /// </summary>
     private void RenderHorizontal(SKCanvas canvas)
     {
         float trackY = Y + Height / 2;
-        float trackLeft = X + ThumbRadius;
-        float trackRight = X + Width - ThumbRadius;
+        float trackLeft = X + ThumbSize / 2;
+        float trackRight = X + Width - ThumbSize / 2;
         float trackLength = trackRight - trackLeft;
         
-        // 计算滑块位置
         double normalizedValue = (Value - Minimum) / (Maximum - Minimum);
         float thumbX = trackLeft + (float)normalizedValue * trackLength;
         
-        // 绘制轨道背景
+        // 绘制轨道背景（灰色）
         using var trackPaint = new SKPaint { Color = TrackColor, IsAntialias = true };
         var trackRect = new SKRect(trackLeft, trackY - TrackThickness / 2, trackRight, trackY + TrackThickness / 2);
         canvas.DrawRoundRect(trackRect, TrackThickness / 2, TrackThickness / 2, trackPaint);
         
-        // 绘制已填充的轨道
-        using var filledPaint = new SKPaint { Color = ThumbColor, IsAntialias = true };
+        // 绘制已填充的轨道（蓝色）
+        using var filledPaint = new SKPaint { Color = MinTrackColor, IsAntialias = true };
         var filledRect = new SKRect(trackLeft, trackY - TrackThickness / 2, thumbX, trackY + TrackThickness / 2);
         canvas.DrawRoundRect(filledRect, TrackThickness / 2, TrackThickness / 2, filledPaint);
         
@@ -133,26 +132,34 @@ public class SliderElement : EclipseElement
             DrawHorizontalTicks(canvas, trackLeft, trackY, trackLength);
         }
         
-        // 绘制滑块阴影
+        // iOS 风格滑块：白色圆形 + 柔和阴影
+        // 绘制阴影
         using var shadowPaint = new SKPaint 
         { 
-            Color = SKColor.Parse("#40000000"), 
+            Color = new SKColor(0, 0, 0, 40),
             IsAntialias = true,
-            MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 2)
+            MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 3)
         };
-        canvas.DrawCircle(thumbX, trackY + 2, ThumbRadius, shadowPaint);
+        canvas.DrawCircle(thumbX, trackY + 1.5f, ThumbSize / 2 + 1, shadowPaint);
         
-        // 绘制滑块
-        using var thumbPaint = new SKPaint { Color = IsDragging || IsHovered ? SKColors.LightBlue : ThumbColor, IsAntialias = true };
-        canvas.DrawCircle(thumbX, trackY, ThumbRadius, thumbPaint);
+        // 绘制白色滑块
+        using var thumbPaint = new SKPaint { Color = SKColors.White, IsAntialias = true };
+        canvas.DrawCircle(thumbX, trackY, ThumbSize / 2, thumbPaint);
+        
+        // 绘制滑块边框（非常淡的灰色）
+        using var borderPaint = new SKPaint 
+        { 
+            Color = new SKColor(0, 0, 0, 20),
+            IsAntialias = true,
+            Style = SKPaintStyle.Stroke,
+            StrokeWidth = 0.5f
+        };
+        canvas.DrawCircle(thumbX, trackY, ThumbSize / 2, borderPaint);
     }
     
-    /// <summary>
-    /// 绘制水刻度
-    /// </summary>
     private void DrawHorizontalTicks(SKCanvas canvas, float trackLeft, float trackY, float trackLength)
     {
-        using var tickPaint = new SKPaint { Color = SKColors.Gray, IsAntialias = true, StrokeWidth = 1 };
+        using var tickPaint = new SKPaint { Color = iOSTheme.SystemGray3, IsAntialias = true, StrokeWidth = 1 };
         
         double range = Maximum - Minimum;
         int tickCount = (int)(range / TickFrequency) + 1;
@@ -161,21 +168,17 @@ public class SliderElement : EclipseElement
         for (int i = 0; i < tickCount; i++)
         {
             float tickX = trackLeft + i * tickSpacing;
-            canvas.DrawLine(tickX, trackY + TrackThickness / 2 + 2, tickX, trackY + TrackThickness / 2 + 2 + TickSize, tickPaint);
+            canvas.DrawLine(tickX, trackY + TrackThickness / 2 + 4, tickX, trackY + TrackThickness / 2 + 4 + TickSize, tickPaint);
         }
     }
     
-    /// <summary>
-    /// 绘制垂直滑块
-    /// </summary>
     private void RenderVertical(SKCanvas canvas)
     {
         float trackX = X + Width / 2;
-        float trackTop = Y + ThumbRadius;
-        float trackBottom = Y + Height - ThumbRadius;
+        float trackTop = Y + ThumbSize / 2;
+        float trackBottom = Y + Height - ThumbSize / 2;
         float trackLength = trackBottom - trackTop;
         
-        // 计算滑块位置（垂直方向从上到下）
         double normalizedValue = (Value - Minimum) / (Maximum - Minimum);
         float thumbY = trackBottom - (float)normalizedValue * trackLength;
         
@@ -185,58 +188,61 @@ public class SliderElement : EclipseElement
         canvas.DrawRoundRect(trackRect, TrackThickness / 2, TrackThickness / 2, trackPaint);
         
         // 绘制已填充的轨道
-        using var filledPaint = new SKPaint { Color = ThumbColor, IsAntialias = true };
+        using var filledPaint = new SKPaint { Color = MinTrackColor, IsAntialias = true };
         var filledRect = new SKRect(trackX - TrackThickness / 2, thumbY, trackX + TrackThickness / 2, trackBottom);
         canvas.DrawRoundRect(filledRect, TrackThickness / 2, TrackThickness / 2, filledPaint);
         
-        // 绘制滑块阴影
+        // 绘制阴影
         using var shadowPaint = new SKPaint 
         { 
-            Color = SKColor.Parse("#40000000"), 
+            Color = new SKColor(0, 0, 0, 40),
             IsAntialias = true,
-            MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 2)
+            MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 3)
         };
-        canvas.DrawCircle(trackX, thumbY + 2, ThumbRadius, shadowPaint);
+        canvas.DrawCircle(trackX, thumbY + 1.5f, ThumbSize / 2 + 1, shadowPaint);
         
-        // 绘制滑块
-        using var thumbPaint = new SKPaint { Color = IsDragging || IsHovered ? SKColors.LightBlue : ThumbColor, IsAntialias = true };
-        canvas.DrawCircle(trackX, thumbY, ThumbRadius, thumbPaint);
+        // 绘制白色滑块
+        using var thumbPaint = new SKPaint { Color = SKColors.White, IsAntialias = true };
+        canvas.DrawCircle(trackX, thumbY, ThumbSize / 2, thumbPaint);
+        
+        // 绘制滑块边框
+        using var borderPaint = new SKPaint 
+        { 
+            Color = new SKColor(0, 0, 0, 20),
+            IsAntialias = true,
+            Style = SKPaintStyle.Stroke,
+            StrokeWidth = 0.5f
+        };
+        canvas.DrawCircle(trackX, thumbY, ThumbSize / 2, borderPaint);
     }
     
-    /// <summary>
-    /// 根据位置计算值
-    /// </summary>
     private double GetValueFromPosition(float x, float y)
     {
         if (Orientation == Orientation.Horizontal)
         {
-            float trackLeft = X + ThumbRadius;
-            float trackRight = X + Width - ThumbRadius;
+            float trackLeft = X + ThumbSize / 2;
+            float trackRight = X + Width - ThumbSize / 2;
             float trackLength = trackRight - trackLeft;
             float posX = Math.Max(trackLeft, Math.Min(x, trackRight));
             double normalized = (posX - trackLeft) / trackLength;
             double value = Minimum + normalized * (Maximum - Minimum);
             
             if (IsSnapToTick && TickFrequency > 0)
-            {
                 value = Math.Round(value / TickFrequency) * TickFrequency;
-            }
             
             return Math.Max(Minimum, Math.Min(Maximum, value));
         }
         else
         {
-            float trackTop = Y + ThumbRadius;
-            float trackBottom = Y + Height - ThumbRadius;
+            float trackTop = Y + ThumbSize / 2;
+            float trackBottom = Y + Height - ThumbSize / 2;
             float trackLength = trackBottom - trackTop;
             float posY = Math.Max(trackTop, Math.Min(y, trackBottom));
             double normalized = (trackBottom - posY) / trackLength;
             double value = Minimum + normalized * (Maximum - Minimum);
             
             if (IsSnapToTick && TickFrequency > 0)
-            {
                 value = Math.Round(value / TickFrequency) * TickFrequency;
-            }
             
             return Math.Max(Minimum, Math.Min(Maximum, value));
         }
@@ -244,8 +250,7 @@ public class SliderElement : EclipseElement
     
     public override bool HandleMouseDown(float x, float y)
     {
-        // 检查是否点击在滑块上（扩大点击区域以便更容易抓取）
-        float clickRadius = ThumbRadius + 5;
+        float clickRadius = ThumbSize / 2 + 5;
         
         if (Orientation == Orientation.Horizontal)
         {
@@ -254,8 +259,8 @@ public class SliderElement : EclipseElement
             if (range == 0) return false;
             
             double normalizedValue = (Value - Minimum) / range;
-            float trackLeft = X + ThumbRadius;
-            float trackRight = X + Width - ThumbRadius;
+            float trackLeft = X + ThumbSize / 2;
+            float trackRight = X + Width - ThumbSize / 2;
             float thumbX = trackLeft + (float)normalizedValue * (trackRight - trackLeft);
             
             var thumbRect = new SKRect(thumbX - clickRadius, trackY - clickRadius, thumbX + clickRadius, trackY + clickRadius);
@@ -273,8 +278,8 @@ public class SliderElement : EclipseElement
             if (range == 0) return false;
             
             double normalizedValue = (Value - Minimum) / range;
-            float trackTop = Y + ThumbRadius;
-            float trackBottom = Y + Height - ThumbRadius;
+            float trackTop = Y + ThumbSize / 2;
+            float trackBottom = Y + Height - ThumbSize / 2;
             float thumbY = trackBottom - (float)normalizedValue * (trackBottom - trackTop);
             
             var thumbRect = new SKRect(trackX - clickRadius, thumbY - clickRadius, trackX + clickRadius, thumbY + clickRadius);
@@ -304,9 +309,6 @@ public class SliderElement : EclipseElement
         return IsHovered != wasHovered;
     }
     
-    /// <summary>
-    /// 更新值
-    /// </summary>
     private void UpdateValue(float x, float y)
     {
         double newValue = GetValueFromPosition(x, y);

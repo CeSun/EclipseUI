@@ -5,56 +5,35 @@ using EclipseUI.Rendering;
 namespace EclipseUI.Controls;
 
 /// <summary>
-/// 单选框元素
+/// 单选框元素 - iOS 风格
 /// </summary>
 public class RadioButtonElement : EclipseElement
 {
     public bool? IsChecked { get; set; }
     public string Content { get; set; } = "";
     public string GroupName { get; set; } = "Default";
-    public float FontSize { get; set; } = 14;
-    public SKColor TextColor { get; set; } = SKColors.Black;
+    public float FontSize { get; set; } = iOSTheme.FontSizeBody;
+    public SKColor TextColor { get; set; } = iOSTheme.LabelPrimary;
     
     public bool IsHovered { get; set; }
     public bool IsPressed { get; set; }
     
-    /// <summary>
-    /// 单选框尺寸
-    /// </summary>
-    private const float RadioButtonSize = 18;
+    // iOS 风格尺寸
+    private const float RadioButtonSize = 22;
+    private const float Spacing = 10;
     
-    /// <summary>
-    /// 单选框与文本的间距
-    /// </summary>
-    private const float Spacing = 8;
-    
-    /// <summary>
-    /// 选中状态变更回调
-    /// </summary>
     public Func<bool?, Task>? OnCheckedChanged { get; set; }
-    
-    /// <summary>
-    /// 点击事件
-    /// </summary>
     public Action<EclipseElement, SKPoint>? OnClick { get; set; }
     
-    /// <summary>
-    /// 单选框组管理器（用于同组互斥）
-    /// </summary>
     private static Dictionary<string, List<RadioButtonElement>> Groups { get; } = new();
     
-    /// <summary>
-    /// 注册到组（处理组名变更）
-    /// </summary>
     public void RegisterToGroup(string? oldGroupName)
     {
-        // 从旧组移除
         if (!string.IsNullOrEmpty(oldGroupName) && oldGroupName != GroupName && Groups.TryGetValue(oldGroupName, out var oldGroup))
         {
             oldGroup.Remove(this);
         }
         
-        // 添加到新组
         if (!Groups.ContainsKey(GroupName))
         {
             Groups[GroupName] = new List<RadioButtonElement>();
@@ -66,9 +45,6 @@ public class RadioButtonElement : EclipseElement
         }
     }
     
-    /// <summary>
-    /// 从组中移除
-    /// </summary>
     public void UnregisterFromGroup()
     {
         if (Groups.TryGetValue(GroupName, out var group))
@@ -81,10 +57,10 @@ public class RadioButtonElement : EclipseElement
     {
         var textWidth = TextRenderer.MeasureText(Content, FontSize);
         float contentWidth = RadioButtonSize + Spacing + textWidth;
-        float contentHeight = Math.Max(RadioButtonSize, FontSize + 4);
+        float contentHeight = Math.Max(RadioButtonSize, FontSize + 8);
         
         float finalWidth = RequestedWidth ?? contentWidth;
-        float finalHeight = RequestedHeight ?? contentHeight;
+        float finalHeight = RequestedHeight ?? Math.Max(contentHeight, 44); // iOS 最小触摸目标
         
         if (MinWidth.HasValue) finalWidth = Math.Max(finalWidth, MinWidth.Value);
         if (MinHeight.HasValue) finalHeight = Math.Max(finalHeight, MinHeight.Value);
@@ -99,7 +75,6 @@ public class RadioButtonElement : EclipseElement
         if (!IsVisible) return;
         
         canvas.Save();
-        
         try
         {
             RenderContent(canvas);
@@ -115,54 +90,49 @@ public class RadioButtonElement : EclipseElement
         float radioBoxX = X;
         float radioBoxY = Y + (Height - RadioButtonSize) / 2;
         float textX = radioBoxX + RadioButtonSize + Spacing;
-        float textY = Y + (Height + FontSize) / 2;
+        float textY = Y + Height / 2 + FontSize / 3;
         
         float centerX = radioBoxX + RadioButtonSize / 2;
         float centerY = radioBoxY + RadioButtonSize / 2;
         float outerRadius = RadioButtonSize / 2;
-        float innerRadius = outerRadius / 2;
         
-        // 绘制外圆
-        using var outerPaint = new SKPaint 
-        { 
-            Color = IsChecked == true ? SKColors.Blue : SKColors.White, 
-            IsAntialias = true 
-        };
-        canvas.DrawCircle(centerX, centerY, outerRadius, outerPaint);
-        
-        // 绘制外圆边框
-        using var borderPaint = new SKPaint 
-        { 
-            Color = IsChecked == true ? SKColors.Blue : SKColors.Gray, 
-            IsAntialias = true,
-            StrokeWidth = 1.5f,
-            Style = SKPaintStyle.Stroke
-        };
-        canvas.DrawCircle(centerX, centerY, outerRadius, borderPaint);
-        
-        // 绘制内圆（选中状态）
         if (IsChecked == true)
         {
+            // 选中状态：蓝色填充圆 + 白色内圆
+            using var fillPaint = new SKPaint 
+            { 
+                Color = iOSTheme.SystemBlue, 
+                IsAntialias = true 
+            };
+            canvas.DrawCircle(centerX, centerY, outerRadius, fillPaint);
+            
+            // 白色内圆点
             using var innerPaint = new SKPaint 
             { 
                 Color = SKColors.White, 
                 IsAntialias = true 
             };
-            canvas.DrawCircle(centerX, centerY, innerRadius, innerPaint);
+            canvas.DrawCircle(centerX, centerY, outerRadius * 0.35f, innerPaint);
+        }
+        else
+        {
+            // 未选中状态：灰色边框圆
+            using var borderPaint = new SKPaint 
+            { 
+                Color = iOSTheme.SystemGray3, 
+                IsAntialias = true,
+                StrokeWidth = 2f,
+                Style = SKPaintStyle.Stroke
+            };
+            canvas.DrawCircle(centerX, centerY, outerRadius - 1, borderPaint);
         }
         
         // 绘制文本
         if (!string.IsNullOrEmpty(Content))
         {
             using var renderContext = new SkiaRenderContext(canvas);
-            TextRenderer.DrawText(
-                renderContext,
-                Content,
-                textX,
-                textY,
-                FontSize,
-                new Color(TextColor.Red, TextColor.Green, TextColor.Blue, TextColor.Alpha)
-            );
+            TextRenderer.DrawText(renderContext, Content, textX, textY, FontSize,
+                new Color(TextColor.Red, TextColor.Green, TextColor.Blue, TextColor.Alpha));
         }
     }
     
@@ -170,26 +140,19 @@ public class RadioButtonElement : EclipseElement
     {
         if (!IsVisible) return false;
         
-        // 检查点击是否在元素边界内
         var rect = new SKRect(X, Y, X + Width, Y + Height);
         if (!rect.Contains(point)) return false;
         
-        // 选中此单选框（自动取消同组其他）
         SetChecked(true);
-        
         OnClick?.Invoke(this, point);
         
         return true;
     }
     
-    /// <summary>
-    /// 设置选中状态（自动处理同组互斥）
-    /// </summary>
     public void SetChecked(bool? isChecked)
     {
         IsChecked = isChecked;
         
-        // 如果选中，取消同组其他单选框
         if (IsChecked == true && Groups.TryGetValue(GroupName, out var group))
         {
             foreach (var radio in group)

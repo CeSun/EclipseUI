@@ -5,51 +5,28 @@ using EclipseUI.Rendering;
 namespace EclipseUI.Controls;
 
 /// <summary>
-/// 文本输入框元素
+/// 文本输入框元素 - iOS 风格
 /// </summary>
 public class TextBoxElement : EclipseElement
 {
     public string Text { get; set; } = "";
     public string Placeholder { get; set; } = "";
-    public float FontSize { get; set; } = 14;
-    public SKColor TextColor { get; set; } = SKColors.Black;
-    public SKColor? PlaceholderColor { get; set; } = SKColor.Parse("#999999");
+    public float FontSize { get; set; } = iOSTheme.FontSizeBody;
+    public SKColor TextColor { get; set; } = iOSTheme.LabelPrimary;
+    public SKColor? PlaceholderColor { get; set; } = iOSTheme.SystemGray2;
+    public SKColor BorderColor { get; set; } = iOSTheme.SystemGray4;
+    public SKColor FocusBorderColor { get; set; } = iOSTheme.SystemBlue;
+    public float CornerRadius { get; set; } = iOSTheme.CornerRadiusMedium;
     public bool IsFocused { get; set; }
     public bool IsHovered { get; set; }
     
-    /// <summary>
-    /// 光标位置（字符索引）
-    /// </summary>
     public int CaretPosition { get; set; }
-    
-    /// <summary>
-    /// 选中文本起始位置
-    /// </summary>
     public int SelectionStart { get; set; }
-    
-    /// <summary>
-    /// 选中文本结束位置
-    /// </summary>
     public int SelectionEnd { get; set; }
-    
-    /// <summary>
-    /// 是否有选中文本
-    /// </summary>
     public bool HasSelection => SelectionStart != SelectionEnd;
     
-    /// <summary>
-    /// 水平滚动偏移量（用于长文本）
-    /// </summary>
     private float _horizontalScrollOffset = 0;
     
-    /// <summary>
-    /// 是否是多行模式
-    /// </summary>
-    public bool IsMultiline { get; set; } = false;
-    
-    /// <summary>
-    /// 选中文本内容
-    /// </summary>
     public string SelectedText
     {
         get
@@ -61,61 +38,30 @@ public class TextBoxElement : EclipseElement
         }
     }
     
-    /// <summary>
-    /// 光标闪烁状态
-    /// </summary>
     private bool _caretVisible = true;
-    
-    /// <summary>
-    /// 光标闪烁计时器（毫秒）
-    /// </summary>
     private long _lastCaretToggleTime;
-    
-    /// <summary>
-    /// 光标闪烁间隔（毫秒）
-    /// </summary>
     private const int CaretBlinkInterval = 500;
     
-    /// <summary>
-    /// 文本变更回调
-    /// </summary>
     public Func<string, Task>? OnTextChanged { get; set; }
-    
-    /// <summary>
-    /// 焦点变更回调
-    /// </summary>
     public Action<bool>? OnFocus { get; set; }
-    
-    /// <summary>
-    /// 失焦回调
-    /// </summary>
     public Action<bool>? OnBlur { get; set; }
-    
-    /// <summary>
-    /// 按键按下回调
-    /// </summary>
     public Func<string, Task>? OnKeyDown { get; set; }
     
     public override SKSize Measure(SKCanvas canvas, float availableWidth, float availableHeight)
     {
-        // 计算最小高度（基于字体大小）
-        float minHeight = FontSize + PaddingTop + PaddingBottom + 4;
-        
-        // 计算内容尺寸
+        // iOS 风格：更高的输入框
+        float minHeight = FontSize + PaddingTop + PaddingBottom + 16;
         float contentWidth = availableWidth - PaddingLeft - PaddingRight;
-        float contentHeight = Math.Max(FontSize + 4, minHeight - PaddingTop - PaddingBottom);
+        float contentHeight = Math.Max(FontSize + 16, minHeight - PaddingTop - PaddingBottom);
         
-        // 应用用户设置的尺寸
         float finalWidth = RequestedWidth ?? contentWidth;
-        float finalHeight = RequestedHeight ?? (contentHeight + PaddingTop + PaddingBottom);
+        float finalHeight = RequestedHeight ?? Math.Max(contentHeight + PaddingTop + PaddingBottom, 44); // iOS 最小触摸目标
         
-        // 应用 Min/Max 限制
         if (MinWidth.HasValue) finalWidth = Math.Max(finalWidth, MinWidth.Value);
         if (MinHeight.HasValue) finalHeight = Math.Max(finalHeight, MinHeight.Value);
         if (MaxWidth.HasValue) finalWidth = Math.Min(finalWidth, MaxWidth.Value);
         if (MaxHeight.HasValue) finalHeight = Math.Min(finalHeight, MaxHeight.Value);
         
-        // 不要超过可用空间
         finalWidth = Math.Min(finalWidth, availableWidth);
         finalHeight = Math.Min(finalHeight, availableHeight);
         
@@ -127,37 +73,28 @@ public class TextBoxElement : EclipseElement
         if (!IsVisible) return;
         
         canvas.Save();
-        
         try
         {
-            // 绘制背景
-            var borderColor = IsFocused ? SKColors.Blue : (IsHovered ? SKColors.LightGray : SKColors.Gray);
+            var rect = new SKRect(X, Y, X + Width, Y + Height);
+            
+            // iOS 风格背景
+            var bgColor = BackgroundColor ?? iOSTheme.SystemGray6;
+            using var bgPaint = new SKPaint { Color = bgColor, IsAntialias = true };
+            canvas.DrawRoundRect(rect, CornerRadius, CornerRadius, bgPaint);
+            
+            // 边框：聚焦时蓝色，否则浅灰色
+            var borderColor = IsFocused ? FocusBorderColor : iOSTheme.SystemGray4;
             var borderWidth = IsFocused ? 2f : 1f;
-            
-            // 背景填充
-            if (BackgroundColor.HasValue)
-            {
-                var rect = new SKRect(X, Y, X + Width, Y + Height);
-                using var bgPaint = new SKPaint { Color = BackgroundColor.Value, IsAntialias = true };
-                canvas.DrawRect(rect, bgPaint);
-            }
-            
-            // 边框
             using var borderPaint = new SKPaint 
             { 
                 Color = borderColor, 
                 IsAntialias = true,
-                StrokeWidth = borderWidth
+                StrokeWidth = borderWidth,
+                Style = SKPaintStyle.Stroke
             };
-            var borderRect = new SKRect(
-                X + borderWidth / 2, 
-                Y + borderWidth / 2, 
-                X + Width - borderWidth / 2, 
-                Y + Height - borderWidth / 2
-            );
-            canvas.DrawRect(borderRect, borderPaint);
+            var borderRect = new SKRect(X + borderWidth / 2, Y + borderWidth / 2, X + Width - borderWidth / 2, Y + Height - borderWidth / 2);
+            canvas.DrawRoundRect(borderRect, CornerRadius - borderWidth / 2, CornerRadius - borderWidth / 2, borderPaint);
             
-            // 绘制内容
             RenderContent(canvas);
         }
         finally
@@ -171,62 +108,50 @@ public class TextBoxElement : EclipseElement
         // 更新光标闪烁状态
         UpdateCaretBlink();
         
-        // 计算内容区域
+        // 计算内容区域（考虑 Padding）
         float contentX = X + PaddingLeft;
         float contentY = Y + PaddingTop;
         float contentWidth = Width - PaddingLeft - PaddingRight;
         float contentHeight = Height - PaddingTop - PaddingBottom;
         
-        // 设置裁剪区域，确保文本不超出 TextBox
-        using var clipPath = new SKPath();
-        clipPath.AddRect(new SKRect(contentX, contentY, contentX + contentWidth, contentY + contentHeight));
-        canvas.ClipPath(clipPath);
+        // 单行：垂直居中
+        float textY = Y + Height / 2 + FontSize / 3;
+        
+        // 设置裁剪区域
+        canvas.ClipRect(new SKRect(contentX, contentY, contentX + contentWidth, contentY + contentHeight));
         
         using var renderContext = new SkiaRenderContext(canvas);
         
-        // 计算水平滚动偏移（确保光标始终可见）
+        // 计算水平滚动偏移
         UpdateHorizontalScroll(contentWidth);
-        
         float renderX = contentX - _horizontalScrollOffset;
         
-        // 绘制占位符文本（当没有输入文本时）
+        // 绘制占位符文本
         if (string.IsNullOrEmpty(Text) && !string.IsNullOrEmpty(Placeholder))
         {
-            TextRenderer.DrawText(
-                renderContext, 
-                Placeholder, 
-                renderX, 
-                contentY + FontSize, 
-                FontSize, 
+            TextRenderer.DrawText(renderContext, Placeholder, renderX, textY, FontSize, 
                 new Color(PlaceholderColor!.Value.Red, PlaceholderColor.Value.Green, PlaceholderColor.Value.Blue, PlaceholderColor.Value.Alpha),
-                SKTextAlign.Left
-            );
+                SKTextAlign.Left);
         }
         
         // 绘制选中文本背景
         if (HasSelection && IsFocused)
         {
-            DrawSelectionBackground(canvas, renderX, contentY, contentWidth);
+            DrawSelectionBackground(canvas, renderX, textY - FontSize, contentWidth);
         }
         
         // 绘制文本
         if (!string.IsNullOrEmpty(Text))
         {
-            TextRenderer.DrawText(
-                renderContext,
-                Text,
-                renderX,
-                contentY + FontSize,
-                FontSize,
+            TextRenderer.DrawText(renderContext, Text, renderX, textY, FontSize,
                 new Color(TextColor.Red, TextColor.Green, TextColor.Blue, TextColor.Alpha),
-                SKTextAlign.Left
-            );
+                SKTextAlign.Left);
         }
         
-        // 绘制光标（当获得焦点时）
+        // 绘制光标
         if (IsFocused && _caretVisible)
         {
-            DrawCaret(canvas, renderX, contentY);
+            DrawCaret(canvas, renderX, textY - FontSize);
         }
     }
     
@@ -235,8 +160,6 @@ public class TextBoxElement : EclipseElement
     /// </summary>
     private void UpdateHorizontalScroll(float contentWidth)
     {
-        if (IsMultiline) return; // 多行模式不处理水平滚动
-        
         // 测量光标位置的文本宽度
         var prefixText = Text.Substring(0, Math.Min(CaretPosition, Text.Length));
         var caretX = TextRenderer.MeasureText(prefixText, FontSize);
@@ -387,7 +310,7 @@ public class TextBoxElement : EclipseElement
                 ResetCaretBlink();
                 break;
             case "Enter":
-                // TextBox 默认不处理 Enter，可由外部处理
+                // 单行模式不处理 Enter
                 break;
         }
     }

@@ -5,7 +5,7 @@ using EclipseUI.Rendering;
 namespace EclipseUI.Controls;
 
 /// <summary>
-/// 下拉选择框元素
+/// 下拉选择框元素 - iOS 风格
 /// </summary>
 public class ComboBoxElement : EclipseElement
 {
@@ -13,41 +13,23 @@ public class ComboBoxElement : EclipseElement
     public int SelectedIndex { get; set; } = -1;
     public string? SelectedItem { get; set; }
     public string Placeholder { get; set; } = "请选择...";
-    public float FontSize { get; set; } = 14;
-    public SKColor TextColor { get; set; } = SKColors.Black;
-    public SKColor? BackgroundColor { get; set; } = SKColors.White;
+    public float FontSize { get; set; } = iOSTheme.FontSizeBody;
+    public SKColor TextColor { get; set; } = iOSTheme.LabelPrimary;
+    public new SKColor? BackgroundColor { get; set; } = iOSTheme.SystemGray6;
+    public float CornerRadius { get; set; } = iOSTheme.CornerRadiusMedium;
     
     public bool IsDropDownOpen { get; set; }
     public bool IsHovered { get; set; }
     
-    /// <summary>
-    /// 下拉列表最大高度
-    /// </summary>
     public float MaxDropDownHeight { get; set; } = 200;
-    
-    /// <summary>
-    /// 下拉列表项高度
-    /// </summary>
-    private const float ItemHeight = 36;
-    
-    /// <summary>
-    /// 下拉列表滚动偏移
-    /// </summary>
+    private const float ItemHeight = 44; // iOS 标准行高
     private float _dropDownScrollOffset = 0;
-    
-    /// <summary>
-    /// 悬停的项索引
-    /// </summary>
     private int _hoveredItemIndex = -1;
     
-    /// <summary>
-    /// 项选择回调
-    /// </summary>
     public Func<int, string?, Task>? OnItemSelected { get; set; }
     
     public override SKSize Measure(SKCanvas canvas, float availableWidth, float availableHeight)
     {
-        // 测量最长文本的宽度
         float maxTextWidth = 0;
         foreach (var item in ItemsSource)
         {
@@ -55,15 +37,12 @@ public class ComboBoxElement : EclipseElement
             maxTextWidth = Math.Max(maxTextWidth, textWidth);
         }
         
-        // 计算内容宽度（包括下拉箭头）
-        float contentWidth = maxTextWidth + PaddingLeft + PaddingRight + 24;
-        float contentHeight = FontSize + PaddingTop + PaddingBottom + 8;
+        float contentWidth = maxTextWidth + PaddingLeft + PaddingRight + 32;
+        float contentHeight = FontSize + PaddingTop + PaddingBottom + 16;
         
-        // 应用用户设置的尺寸
         float finalWidth = RequestedWidth ?? contentWidth;
-        float finalHeight = RequestedHeight ?? contentHeight;
+        float finalHeight = RequestedHeight ?? Math.Max(contentHeight, 44); // iOS 最小触摸目标
         
-        // 应用 Min/Max 限制
         if (MinWidth.HasValue) finalWidth = Math.Max(finalWidth, MinWidth.Value);
         if (MinHeight.HasValue) finalHeight = Math.Max(finalHeight, MinHeight.Value);
         if (MaxWidth.HasValue) finalWidth = Math.Min(finalWidth, MaxWidth.Value);
@@ -72,9 +51,6 @@ public class ComboBoxElement : EclipseElement
         return new SKSize(finalWidth, finalHeight);
     }
     
-    /// <summary>
-    /// 当前的 Popup 信息
-    /// </summary>
     private PopupInfo? _popupInfo;
     
     public override void Render(SKCanvas canvas)
@@ -82,33 +58,28 @@ public class ComboBoxElement : EclipseElement
         if (!IsVisible) return;
         
         canvas.Save();
-        
         try
         {
-            // 绘制背景
-            var bgColor = BackgroundColor ?? SKColors.White;
             var rect = new SKRect(X, Y, X + Width, Y + Height);
-            using var bgPaint = new SKPaint { Color = bgColor, IsAntialias = true };
-            canvas.DrawRect(rect, bgPaint);
             
-            // 绘制边框
-            var borderColor = IsDropDownOpen ? SKColors.Blue : (IsHovered ? SKColors.LightGray : SKColors.Gray);
+            // iOS 风格背景
+            var bgColor = BackgroundColor ?? iOSTheme.SystemGray6;
+            using var bgPaint = new SKPaint { Color = bgColor, IsAntialias = true };
+            canvas.DrawRoundRect(rect, CornerRadius, CornerRadius, bgPaint);
+            
+            // 边框：展开时蓝色，否则浅灰色
+            var borderColor = IsDropDownOpen ? iOSTheme.SystemBlue : iOSTheme.SystemGray4;
             var borderWidth = IsDropDownOpen ? 2f : 1f;
             using var borderPaint = new SKPaint 
             { 
                 Color = borderColor, 
                 IsAntialias = true,
-                StrokeWidth = borderWidth
+                StrokeWidth = borderWidth,
+                Style = SKPaintStyle.Stroke
             };
-            var borderRect = new SKRect(
-                X + borderWidth / 2, 
-                Y + borderWidth / 2, 
-                X + Width - borderWidth / 2, 
-                Y + Height - borderWidth / 2
-            );
-            canvas.DrawRect(borderRect, borderPaint);
+            var borderRect = new SKRect(X + borderWidth / 2, Y + borderWidth / 2, X + Width - borderWidth / 2, Y + Height - borderWidth / 2);
+            canvas.DrawRoundRect(borderRect, CornerRadius - borderWidth / 2, CornerRadius - borderWidth / 2, borderPaint);
             
-            // 绘制内容
             RenderContent(canvas);
         }
         finally
@@ -119,12 +90,11 @@ public class ComboBoxElement : EclipseElement
     
     protected override void RenderContent(SKCanvas canvas)
     {
-        float contentX = X + PaddingLeft;
-        float contentY = Y + PaddingTop;
+        float contentX = X + PaddingLeft + 12;
+        float contentY = Y + Height / 2 + FontSize / 3;  // 垂直居中
         
         using var renderContext = new SkiaRenderContext(canvas);
         
-        // 绘制选中的文本或占位符
         string displayText = SelectedIndex >= 0 && SelectedIndex < ItemsSource.Count 
             ? ItemsSource[SelectedIndex] 
             : Placeholder;
@@ -144,7 +114,8 @@ public class ComboBoxElement : EclipseElement
             textColor = new Color(TextColor.Red, TextColor.Green, TextColor.Blue, TextColor.Alpha);
         }
         
-        TextRenderer.DrawText(renderContext, displayText, contentX, contentY + FontSize, FontSize, textColor);
+        // contentY 已经是垂直居中位置，不需要再加 FontSize
+        TextRenderer.DrawText(renderContext, displayText, contentX, contentY, FontSize, textColor);
         
         // 绘制下拉箭头
         DrawDropDownArrow(canvas);

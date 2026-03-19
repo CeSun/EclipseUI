@@ -5,7 +5,7 @@ using EclipseUI.Rendering;
 namespace EclipseUI.Controls;
 
 /// <summary>
-/// 开关元素
+/// 开关元素 - iOS 风格
 /// </summary>
 public class ToggleSwitchElement : EclipseElement
 {
@@ -23,44 +23,35 @@ public class ToggleSwitchElement : EclipseElement
     
     public string OnContent { get; set; } = "";
     public string OffContent { get; set; } = "";
-    public float FontSize { get; set; } = 12;
-    public SKColor OnColor { get; set; } = SKColor.Parse("#4CAF50");
-    public SKColor OffColor { get; set; } = SKColors.Gray;
+    public float FontSize { get; set; } = iOSTheme.FontSizeBody;
+    public SKColor OnColor { get; set; } = iOSTheme.SystemGreen;
+    public SKColor OffColor { get; set; } = iOSTheme.SystemGray5;
     
     public bool IsHovered { get; set; }
     public bool IsPressed { get; set; }
     
-    /// <summary>
-    /// 开关轨道高度
-    /// </summary>
-    private const float TrackHeight = 24;
+    // iOS 标准开关尺寸
+    private const float SwitchWidth = 51f;
+    private const float SwitchHeight = 31f;
+    private const float ThumbSize = 27f;
+    private const float ThumbMargin = 2f;
     
-    /// <summary>
-    /// 开关滑块半径
-    /// </summary>
-    private const float ThumbRadius = 10;
-    
-    /// <summary>
-    /// 开关动画进度（0-1）
-    /// </summary>
     private float _animationProgress;
     
-    /// <summary>
-    /// 切换回调
-    /// </summary>
     public Func<bool, Task>? OnToggled { get; set; }
-    
-    /// <summary>
-    /// 点击事件
-    /// </summary>
     public Action<EclipseElement, SKPoint>? OnClick { get; set; }
     
     public override SKSize Measure(SKCanvas canvas, float availableWidth, float availableHeight)
     {
-        // 开关宽度 = 2 * 高度 + 文本空间
-        float trackWidth = TrackHeight * 2 + 8;
-        float contentWidth = trackWidth;
-        float contentHeight = Math.Max(TrackHeight, FontSize + 4);
+        float contentWidth = SwitchWidth;
+        float contentHeight = SwitchHeight;
+        
+        // 如果有文本，增加宽度
+        if (!string.IsNullOrEmpty(OnContent) || !string.IsNullOrEmpty(OffContent))
+        {
+            string text = !string.IsNullOrEmpty(OnContent) ? OnContent : OffContent;
+            contentWidth += TextRenderer.MeasureText(text, FontSize) + 12;
+        }
         
         float finalWidth = RequestedWidth ?? contentWidth;
         float finalHeight = RequestedHeight ?? contentHeight;
@@ -78,7 +69,6 @@ public class ToggleSwitchElement : EclipseElement
         if (!IsVisible) return;
         
         canvas.Save();
-        
         try
         {
             RenderContent(canvas);
@@ -93,57 +83,61 @@ public class ToggleSwitchElement : EclipseElement
     {
         float centerY = Y + Height / 2;
         float trackLeft = X;
-        float trackRight = X + TrackHeight * 2 + 8;
-        float trackCenter = (trackLeft + trackRight) / 2;
+        float trackRight = X + SwitchWidth;
         
-        // 计算滑块位置（带动画）
-        float thumbOffset = (trackRight - trackLeft - ThumbRadius * 2) * _animationProgress;
-        float thumbCenterX = trackLeft + ThumbRadius + thumbOffset;
+        var trackRect = new SKRect(trackLeft, centerY - SwitchHeight / 2, trackRight, centerY + SwitchHeight / 2);
         
-        // 绘制轨道背景
-        var trackColor = InterpolateColor(OffColor, OnColor, _animationProgress);
+        // 轨道背景色：开启绿色，关闭白色
+        var trackColor = _animationProgress > 0.5f ? OnColor : SKColors.White;
         using var trackPaint = new SKPaint { Color = trackColor, IsAntialias = true };
-        var trackRect = new SKRect(trackLeft, centerY - TrackHeight / 2, trackRight, centerY + TrackHeight / 2);
-        canvas.DrawRoundRect(trackRect, TrackHeight / 2, TrackHeight / 2, trackPaint);
+        canvas.DrawRoundRect(trackRect, SwitchHeight / 2, SwitchHeight / 2, trackPaint);
+        
+        // 始终绘制 1px 灰色描边
+        using var borderPaint = new SKPaint 
+        { 
+            Color = iOSTheme.SystemGray3, 
+            IsAntialias = true,
+            Style = SKPaintStyle.Stroke,
+            StrokeWidth = 1f
+        };
+        var borderRect = new SKRect(trackLeft + 0.5f, centerY - SwitchHeight / 2 + 0.5f, trackRight - 0.5f, centerY + SwitchHeight / 2 - 0.5f);
+        canvas.DrawRoundRect(borderRect, SwitchHeight / 2 - 0.5f, SwitchHeight / 2 - 0.5f, borderPaint);
+        
+        // 计算滑块位置
+        float thumbTravel = SwitchWidth - ThumbSize - ThumbMargin * 2;
+        float thumbX = trackLeft + ThumbMargin + thumbTravel * _animationProgress;
+        float thumbY = centerY;
         
         // 绘制滑块阴影
         using var shadowPaint = new SKPaint 
         { 
-            Color = SKColor.Parse("#40000000"), 
+            Color = new SKColor(0, 0, 0, 40),
             IsAntialias = true,
-            MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 2)
+            MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 3)
         };
-        canvas.DrawCircle(thumbCenterX, centerY + 1, ThumbRadius, shadowPaint);
+        canvas.DrawCircle(thumbX + ThumbSize / 2, thumbY + 2, ThumbSize / 2, shadowPaint);
         
-        // 绘制滑块
+        // 绘制白色滑块
         using var thumbPaint = new SKPaint { Color = SKColors.White, IsAntialias = true };
-        canvas.DrawCircle(thumbCenterX, centerY, ThumbRadius, thumbPaint);
+        canvas.DrawCircle(thumbX + ThumbSize / 2, thumbY, ThumbSize / 2, thumbPaint);
         
-        // 绘制文本（可选）
+        // 绘制文本标签（可选）
         if (!string.IsNullOrEmpty(OnContent) || !string.IsNullOrEmpty(OffContent))
         {
-            float textX = trackRight + 8;
-            float textY = Y + (Height + FontSize) / 2;
+            float textX = trackRight + 12;
+            float textY = centerY + FontSize / 3;
             
             string displayText = IsOn ? OnContent : OffContent;
             if (!string.IsNullOrEmpty(displayText))
             {
                 using var renderContext = new SkiaRenderContext(canvas);
-                TextRenderer.DrawText(
-                    renderContext,
-                    displayText,
-                    textX,
-                    textY,
-                    FontSize,
-                    new Color(0, 0, 0, 255)
-                );
+                var textColor = new Color(iOSTheme.LabelPrimary.Red, iOSTheme.LabelPrimary.Green, 
+                    iOSTheme.LabelPrimary.Blue, iOSTheme.LabelPrimary.Alpha);
+                TextRenderer.DrawText(renderContext, displayText, textX, textY, FontSize, textColor);
             }
         }
     }
     
-    /// <summary>
-    /// 颜色插值
-    /// </summary>
     private SKColor InterpolateColor(SKColor from, SKColor to, float progress)
     {
         byte r = (byte)(from.Red + (to.Red - from.Red) * progress);
@@ -160,7 +154,6 @@ public class ToggleSwitchElement : EclipseElement
         var rect = new SKRect(X, Y, X + Width, Y + Height);
         if (!rect.Contains(point)) return false;
         
-        // 切换状态
         IsOn = !IsOn;
         _animationProgress = IsOn ? 1 : 0;
         

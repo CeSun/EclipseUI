@@ -241,14 +241,9 @@ public class GridElement : EclipseElement
         
         var gridChildren = GetGridChildren();
         
-        // 使用 Measure 阶段缓存的行列尺寸，确保与 Measure 结果一致
-        if (_cachedRowHeights == null || _cachedColWidths == null)
-        {
-            // 如果没有缓存（理论上不应该发生），回退到旧逻辑
-            EnsureRowColumnDefinitions(gridChildren);
-            // 简单处理：直接调用 Measure 获取尺寸
-            Measure(canvas, width, height);
-        }
+        // 始终使用 Arrange 传入的尺寸重新计算，确保与实际可用空间一致
+        EnsureRowColumnDefinitions(gridChildren);
+        Measure(canvas, width, height);
         
         int rowCount = _cachedRowCount;
         int colCount = _cachedColCount;

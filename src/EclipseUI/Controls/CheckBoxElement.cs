@@ -5,47 +5,34 @@ using EclipseUI.Rendering;
 namespace EclipseUI.Controls;
 
 /// <summary>
-/// 复选框元素
+/// 复选框元素 - iOS 风格
 /// </summary>
 public class CheckBoxElement : EclipseElement
 {
     public bool? IsChecked { get; set; }
     public string Content { get; set; } = "";
     public bool IsThreeState { get; set; }
-    public float FontSize { get; set; } = 14;
-    public SKColor TextColor { get; set; } = SKColors.Black;
+    public float FontSize { get; set; } = iOSTheme.FontSizeBody;
+    public SKColor TextColor { get; set; } = iOSTheme.LabelPrimary;
     
     public bool IsHovered { get; set; }
     public bool IsPressed { get; set; }
     
-    /// <summary>
-    /// 复选框尺寸
-    /// </summary>
-    private const float CheckBoxSize = 18;
+    // iOS 风格：圆形勾选框
+    private const float CheckBoxSize = 22;
+    private const float Spacing = 10;
     
-    /// <summary>
-    /// 复选框与文本的间距
-    /// </summary>
-    private const float Spacing = 8;
-    
-    /// <summary>
-    /// 选中状态变更回调
-    /// </summary>
     public Func<bool?, Task>? OnCheckedChanged { get; set; }
-    
-    /// <summary>
-    /// 点击事件
-    /// </summary>
     public Action<EclipseElement, SKPoint>? OnClick { get; set; }
     
     public override SKSize Measure(SKCanvas canvas, float availableWidth, float availableHeight)
     {
         var textWidth = TextRenderer.MeasureText(Content, FontSize);
         float contentWidth = CheckBoxSize + Spacing + textWidth;
-        float contentHeight = Math.Max(CheckBoxSize, FontSize + 4);
+        float contentHeight = Math.Max(CheckBoxSize, FontSize + 8);
         
         float finalWidth = RequestedWidth ?? contentWidth;
-        float finalHeight = RequestedHeight ?? contentHeight;
+        float finalHeight = RequestedHeight ?? Math.Max(contentHeight, 44); // iOS 最小触摸目标
         
         if (MinWidth.HasValue) finalWidth = Math.Max(finalWidth, MinWidth.Value);
         if (MinHeight.HasValue) finalHeight = Math.Max(finalHeight, MinHeight.Value);
@@ -60,7 +47,6 @@ public class CheckBoxElement : EclipseElement
         if (!IsVisible) return;
         
         canvas.Save();
-        
         try
         {
             RenderContent(canvas);
@@ -76,82 +62,77 @@ public class CheckBoxElement : EclipseElement
         float checkBoxX = X;
         float checkBoxY = Y + (Height - CheckBoxSize) / 2;
         float textX = checkBoxX + CheckBoxSize + Spacing;
-        float textY = Y + (Height + FontSize) / 2;
+        float textY = Y + Height / 2 + FontSize / 3;
         
-        // 绘制复选框背景
-        using var bgPaint = new SKPaint 
-        { 
-            Color = IsChecked == true || (IsChecked == null && IsThreeState) ? SKColors.Blue : SKColors.White, 
-            IsAntialias = true 
-        };
+        float centerX = checkBoxX + CheckBoxSize / 2;
+        float centerY = checkBoxY + CheckBoxSize / 2;
+        float radius = CheckBoxSize / 2;
         
-        var checkBoxRect = new SKRect(checkBoxX, checkBoxY, checkBoxX + CheckBoxSize, checkBoxY + CheckBoxSize);
-        canvas.DrawRect(checkBoxRect, bgPaint);
-        
-        // 绘制复选框边框
-        using var borderPaint = new SKPaint 
-        { 
-            Color = IsChecked == true || (IsChecked == null && IsThreeState) ? SKColors.Blue : SKColors.Gray, 
-            IsAntialias = true,
-            StrokeWidth = 1.5f,
-            Style = SKPaintStyle.Stroke
-        };
-        canvas.DrawRect(checkBoxRect, borderPaint);
-        
-        // 绘制勾选标记
         if (IsChecked == true)
         {
+            // 选中状态：蓝色填充圆形 + 白色勾
+            using var fillPaint = new SKPaint 
+            { 
+                Color = iOSTheme.SystemBlue, 
+                IsAntialias = true 
+            };
+            canvas.DrawCircle(centerX, centerY, radius, fillPaint);
+            
+            // 绘制白色勾选标记
             using var checkPaint = new SKPaint 
             { 
                 Color = SKColors.White, 
                 IsAntialias = true,
-                StrokeWidth = 2,
-                Style = SKPaintStyle.Stroke
+                StrokeWidth = 2.5f,
+                Style = SKPaintStyle.Stroke,
+                StrokeCap = SKStrokeCap.Round,
+                StrokeJoin = SKStrokeJoin.Round
             };
             
             using var path = new SKPath();
-            float checkStartX = checkBoxX + 4;
-            float checkStartY = checkBoxY + CheckBoxSize / 2 + 1;
-            float checkMidX = checkBoxX + CheckBoxSize / 2;
-            float checkMidY = checkBoxY + CheckBoxSize - 5;
-            float checkEndX = checkBoxX + CheckBoxSize - 4;
-            float checkEndY = checkBoxY + 5;
-            
-            path.MoveTo(checkStartX, checkStartY);
-            path.LineTo(checkMidX, checkMidY);
-            path.LineTo(checkEndX, checkEndY);
-            
+            path.MoveTo(centerX - 5, centerY);
+            path.LineTo(centerX - 1, centerY + 4);
+            path.LineTo(centerX + 6, centerY - 4);
             canvas.DrawPath(path, checkPaint);
         }
         else if (IsChecked == null && IsThreeState)
         {
-            // 绘制不确定状态的横线
+            // 不确定状态：蓝色填充圆形 + 白色横线
+            using var fillPaint = new SKPaint 
+            { 
+                Color = iOSTheme.SystemBlue, 
+                IsAntialias = true 
+            };
+            canvas.DrawCircle(centerX, centerY, radius, fillPaint);
+            
             using var linePaint = new SKPaint 
             { 
                 Color = SKColors.White, 
                 IsAntialias = true,
-                StrokeWidth = 2
+                StrokeWidth = 2.5f,
+                StrokeCap = SKStrokeCap.Round
             };
-            
-            float lineStartX = checkBoxX + 4;
-            float lineY = checkBoxY + CheckBoxSize / 2;
-            float lineEndX = checkBoxX + CheckBoxSize - 4;
-            
-            canvas.DrawLine(lineStartX, lineY, lineEndX, lineY, linePaint);
+            canvas.DrawLine(centerX - 5, centerY, centerX + 5, centerY, linePaint);
+        }
+        else
+        {
+            // 未选中状态：灰色边框圆形
+            using var borderPaint = new SKPaint 
+            { 
+                Color = iOSTheme.SystemGray3, 
+                IsAntialias = true,
+                StrokeWidth = 2f,
+                Style = SKPaintStyle.Stroke
+            };
+            canvas.DrawCircle(centerX, centerY, radius - 1, borderPaint);
         }
         
         // 绘制文本
         if (!string.IsNullOrEmpty(Content))
         {
             using var renderContext = new SkiaRenderContext(canvas);
-            TextRenderer.DrawText(
-                renderContext,
-                Content,
-                textX,
-                textY,
-                FontSize,
-                new Color(TextColor.Red, TextColor.Green, TextColor.Blue, TextColor.Alpha)
-            );
+            TextRenderer.DrawText(renderContext, Content, textX, textY, FontSize,
+                new Color(TextColor.Red, TextColor.Green, TextColor.Blue, TextColor.Alpha));
         }
     }
     
@@ -162,7 +143,6 @@ public class CheckBoxElement : EclipseElement
         var rect = new SKRect(X, Y, X + Width, Y + Height);
         if (!rect.Contains(point)) return false;
         
-        // 切换选中状态
         if (IsThreeState)
         {
             IsChecked = IsChecked switch
