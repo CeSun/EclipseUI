@@ -5,6 +5,7 @@ using SkiaSharp;
 using EclipseUI.Core;
 using Microsoft.AspNetCore.Components;
 using Silk.NET.Maths;
+using System.Diagnostics.CodeAnalysis;
 
 namespace EclipseUI.Host;
 
@@ -27,7 +28,17 @@ public class EclipseWindow : IDisposable
     public int Width { get; set; } = 800;
     public int Height { get; set; } = 600;
     
-    public void Show<TComponent>(Dictionary<string, object>? parameters = null) where TComponent : IComponent
+    /// <summary>
+    /// 静态构造函数 - 注册 Silk.NET 平台（裁剪/AOT 兼容）
+    /// </summary>
+    static EclipseWindow()
+    {
+        // 注册 GLFW 窗口和输入平台，防止裁剪时被移除
+        Silk.NET.Windowing.Glfw.GlfwWindowing.RegisterPlatform();
+        Silk.NET.Input.Glfw.GlfwInput.RegisterPlatform();
+    }
+    
+    public void Show<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TComponent>(Dictionary<string, object>? parameters = null) where TComponent : IComponent
     {
         var options = WindowOptions.Default with
         {

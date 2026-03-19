@@ -1,23 +1,24 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics.CodeAnalysis;
 
 namespace EclipseUI.Core;
 
 /// <summary>
-/// EclipseUI 应用上下�?/// </summary>
+/// EclipseUI 应用上下�?/// </summary>
 public class EclipseApplicationContext
 {
     /// <summary>
-    /// 服务提供�?    /// </summary>
+    /// 服务提供�?    /// </summary>
     public IServiceProvider Services { get; }
     
     /// <summary>
-    /// 渲染�?    /// </summary>
+    /// 渲染�?    /// </summary>
     public EclipseRenderer Renderer { get; }
     
     /// <summary>
-    /// 根组�?    /// </summary>
+    /// 根组�?    /// </summary>
     public IComponent? RootComponent { get; private set; }
     
     /// <summary>
@@ -31,7 +32,7 @@ public class EclipseApplicationContext
     public int Height { get; private set; }
     
     /// <summary>
-    /// 需要重新渲�?    /// </summary>
+    /// 需要重新渲�?    /// </summary>
     public event Action? RenderRequested;
     
     public EclipseApplicationContext(IServiceProvider services, EclipseRenderer renderer)
@@ -54,7 +55,7 @@ public class EclipseApplicationContext
     /// <summary>
     /// 运行应用
     /// </summary>
-    public async Task RunAsync<TComponent>(Dictionary<string, object>? parameters = null) where TComponent : IComponent
+    public async Task RunAsync<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TComponent>(Dictionary<string, object>? parameters = null) where TComponent : IComponent
     {
         RootComponent = await Renderer.AddRootComponent<TComponent>(parameters);
     }
@@ -77,7 +78,7 @@ public class EclipseApplicationContext
 }
 
 /// <summary>
-/// 应用构建�?/// </summary>
+/// 应用构建�?/// </summary>
 public class EclipseApplicationBuilder
 {
     private readonly IServiceCollection _services = new ServiceCollection();

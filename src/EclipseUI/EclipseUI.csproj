@@ -6,6 +6,10 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <LangVersion>latest</LangVersion>
         
+        <!-- AOT/Trimming 兼容性 -->
+        <IsTrimmable>true</IsTrimmable>
+        <IsAotCompatible>true</IsAotCompatible>
+        
         <!-- Package Info -->
         <PackageId>EclipseUI</PackageId>
         <Version>0.1.0-alpha</Version>

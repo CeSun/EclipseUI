@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components.RenderTree;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
 using EclipseUI.Layout;
+using System.Diagnostics.CodeAnalysis;
 using EclipseUI.Controls;
 
 namespace EclipseUI.Core;
@@ -83,7 +84,7 @@ public class EclipseRenderer : Renderer
     /// <summary>
     /// 添加根组件
     /// </summary>
-    public async Task<T> AddRootComponent<T>(Dictionary<string, object>? parameters = null) where T : IComponent
+    public async Task<T> AddRootComponent<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(Dictionary<string, object>? parameters = null) where T : IComponent
     {
         return (T)await AddComponent(typeof(T), parameters);
     }
