@@ -129,7 +129,9 @@ EclipseUI/
 | 控件 | 说明 |
 |------|------|
 | `<StackPanel>` | 水平/垂直堆叠布局 |
-| `<Grid>` | 网格布局（计划中） |
+| `<Grid>` | 网格布局，支持 Auto/Star/Pixel 行列定义 |
+| `<DockPanel>` | 停靠布局 |
+| `<ScrollView>` | 滚动视图，支持垂直/水平滚动 |
 | `<WrapPanel>` | 自动换行布局（计划中） |
 
 ### 基础控件
@@ -137,9 +139,14 @@ EclipseUI/
 | 控件 | 说明 |
 |------|------|
 | `<TextBlock>` | 文本显示 |
+| `<TextBox>` | 文本输入，支持双向绑定 |
 | `<Button>` | 按钮 |
+| `<CheckBox>` | 复选框，支持三态 |
+| `<RadioButton>` | 单选框，支持分组 |
+| `<ToggleSwitch>` | 开关控件 |
+| `<Slider>` | 滑块控件 |
+| `<ComboBox>` | 下拉选择框 |
 | `<Image>` | 图片（计划中） |
-| `<TextBox>` | 文本输入（计划中） |
 
 ---
 
@@ -178,29 +185,40 @@ EclipseUI/
 - [x] 组件模型（EclipseComponentBase）
 - [x] 元素系统（EclipseElement）
 - [x] StackPanel 布局
+- [x] Grid 网格布局（Auto/Star/Pixel 行列）
+- [x] DockPanel 停靠布局
+- [x] ScrollView 滚动视图（垂直/水平）
 - [x] TextBlock 控件
+- [x] TextBox 文本输入（双向绑定）
 - [x] Button 控件
+- [x] CheckBox 复选框（三态支持）
+- [x] RadioButton 单选框（分组互斥）
+- [x] ToggleSwitch 开关
+- [x] Slider 滑块
+- [x] ComboBox 下拉选择
+- [x] PopupService 弹出层管理
 - [x] 事件处理系统
 - [x] 窗口宿主（Silk.NET）
+- [x] iOS 风格主题
 
 ### 计划中 📋
 
 **Phase 1 - 布局完善**
-- [ ] Grid 网格布局
 - [ ] WrapPanel 自动换行
-- [ ] DockPanel 停靠布局
+- [ ] Canvas 绝对定位
 
-**Phase 2 - 输入控件**
-- [ ] TextBox 文本输入
-- [ ] TextEditor 多行编辑
-- [ ] NumberBox 数字输入
-- [ ] ComboBox 下拉选择
+**Phase 2 - 高级控件**
+- [ ] Image 图片显示
+- [ ] Border 边框容器
+- [ ] ProgressBar 进度条
+- [ ] ListBox 列表框
+- [ ] TabControl 选项卡
 
-**Phase 3-6 - 更多功能**
-- [ ] 选择控件（CheckBox, RadioButton, Slider）
-- [ ] 高级控件（Image, Border, ProgressBar, ListBox）
-- [ ] 容器控件（ScrollViewer, TabControl, Expander）
-- [ ] 高级特性（样式、数据绑定、动画、主题）
+**Phase 3 - 高级特性**
+- [ ] 样式系统
+- [ ] 数据绑定增强
+- [ ] 动画系统
+- [ ] 主题切换
 
 ---
 
