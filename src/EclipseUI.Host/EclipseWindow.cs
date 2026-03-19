@@ -86,10 +86,9 @@ public class EclipseWindow : IDisposable
             
             mouse.Click += (m, b, p) =>
             {
-                var pos = m.Position;
                 if (_renderer != null)
                 {
-                    _renderer.HandleClick(pos.X, pos.Y);
+                    _renderer.HandleClick(p.X, p.Y);
                 }
             };
             
