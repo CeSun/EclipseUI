@@ -18,4 +18,10 @@
         <ProjectReference Include="..\..\src\EclipseUI.Host\EclipseUI.Host.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+        <Content Include="Assets\**\*">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
+
 </Project>

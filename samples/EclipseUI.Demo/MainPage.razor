@@ -51,6 +51,9 @@
                             case 7:
                                 <TestLayoutAdaptation />
                                 break;
+                            case 8:
+                                <ControlsPage />
+                                break;
                         }
                     }
                 </ScrollView>
@@ -68,6 +71,7 @@
                         <Button Text="🔛 Toggle" Width="90" Height="36" Background="#E0E0E0" OnClick="GoToToggleSwitch" />
                         <Button Text="📊 Slider" Width="90" Height="36" Background="#E0E0E0" OnClick="GoToSlider" />
                         <Button Text="🔍 布局测试" Width="90" Height="36" Background="#E0E0E0" OnClick="GoToLayoutTest" />
+                        <Button Text="🎨 更多控件" Width="90" Height="36" Background="#E0E0E0" OnClick="GoToControls" />
                     </StackPanel>
                 </ScrollView>
             </GridItem>
@@ -88,6 +92,7 @@
     private void GoToToggleSwitch(MouseEventArgs e) { UpdatePage(5, "ToggleSwitch 测试"); }
     private void GoToSlider(MouseEventArgs e) { UpdatePage(6, "Slider 测试"); }
     private void GoToLayoutTest(MouseEventArgs e) { UpdatePage(7, "布局自适应测试"); }
+    private void GoToControls(MouseEventArgs e) { UpdatePage(8, "Border / Image / ProgressBar"); }
     
     private void UpdatePage(int newPage, string title)
     {
