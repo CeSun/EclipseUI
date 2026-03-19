@@ -81,7 +81,7 @@ public class CheckBoxElement : EclipseElement
         // 绘制复选框背景
         using var bgPaint = new SKPaint 
         { 
-            Color = IsChecked == true ? SKColors.Blue : SKColors.White, 
+            Color = IsChecked == true || (IsChecked == null && IsThreeState) ? SKColors.Blue : SKColors.White, 
             IsAntialias = true 
         };
         
@@ -91,7 +91,7 @@ public class CheckBoxElement : EclipseElement
         // 绘制复选框边框
         using var borderPaint = new SKPaint 
         { 
-            Color = IsChecked == true ? SKColors.Blue : SKColors.Gray, 
+            Color = IsChecked == true || (IsChecked == null && IsThreeState) ? SKColors.Blue : SKColors.Gray, 
             IsAntialias = true,
             StrokeWidth = 1.5f,
             Style = SKPaintStyle.Stroke
