@@ -10,6 +10,7 @@ namespace EclipseUI.Controls;
 public class ComboBoxElement : EclipseElement
 {
     public IList<string> ItemsSource { get; set; } = new List<string>();
+    public IList<string>? ItemValues { get; set; }  // 选项的实际值（与显示文本分离）
     public int SelectedIndex { get; set; } = -1;
     public string? SelectedItem { get; set; }
     public string Placeholder { get; set; } = "请选择...";

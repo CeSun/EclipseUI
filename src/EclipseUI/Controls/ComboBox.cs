@@ -1,9 +1,38 @@
 using SkiaSharp;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Rendering;
 using EclipseUI.Core;
 using EclipseUI.Layout;
 
 namespace EclipseUI.Controls;
+
+/// <summary>
+/// ComboBox 选项组件
+/// </summary>
+public class ComboBoxItem : ComponentBase
+{
+    /// <summary>
+    /// 选项值
+    /// </summary>
+    [Parameter] public string? Value { get; set; }
+    
+    /// <summary>
+    /// 显示文本（如果不设置则使用 Value）
+    /// </summary>
+    [Parameter] public string? Text { get; set; }
+    
+    /// <summary>
+    /// 父 ComboBox 的回调
+    /// </summary>
+    [CascadingParameter] public Action<string, string>? RegisterItem { get; set; }
+    
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        // 向父 ComboBox 注册选项
+        RegisterItem?.Invoke(Value ?? "", Text ?? Value ?? "");
+    }
+}
 
 /// <summary>
 /// 下拉选择框组件
@@ -32,8 +61,15 @@ public class ComboBox : ComponentBase, IElementHandler, IDisposable
     [Parameter] public EventCallback<FocusEventArgs> OnFocus { get; set; }
     [Parameter] public EventCallback<FocusEventArgs> OnBlur { get; set; }
     
+    /// <summary>
+    /// 子内容（ComboBoxItem）
+    /// </summary>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    
     private ComboBoxElement? _element;
     private bool _disposed;
+    private List<(string Value, string Text)> _childItems = new();
+    private bool _childItemsCollected = false;
     
     [Inject] protected EclipseRenderer? Renderer { get; set; }
     
@@ -62,11 +98,55 @@ public class ComboBox : ComponentBase, IElementHandler, IDisposable
         UpdateElementFromParameters();
     }
     
+    protected override void OnAfterRender(bool firstRender)
+    {
+        base.OnAfterRender(firstRender);
+        if (firstRender && _childItems.Count > 0)
+        {
+            _childItemsCollected = true;
+            UpdateElementFromParameters();
+        }
+    }
+    
+    protected override void BuildRenderTree(RenderTreeBuilder builder)
+    {
+        if (ChildContent != null && !_childItemsCollected)
+        {
+            // 只在首次渲染时收集子项
+            _childItems.Clear();
+            
+            // 提供 CascadingValue 让子组件可以注册
+            builder.OpenComponent<CascadingValue<Action<string, string>>>(0);
+            builder.AddAttribute(1, "Value", (Action<string, string>)RegisterChildItem);
+            builder.AddAttribute(2, "ChildContent", ChildContent);
+            builder.CloseComponent();
+        }
+    }
+    
+    private void RegisterChildItem(string value, string text)
+    {
+        _childItems.Add((value, text));
+    }
+    
     private void UpdateElementFromParameters()
     {
         if (_element == null) return;
         
-        _element.ItemsSource = ItemsSource ?? new List<string>();
+        // 优先使用 ItemsSource，否则使用子组件注册的项
+        if (ItemsSource != null && ItemsSource.Count > 0)
+        {
+            _element.ItemsSource = ItemsSource;
+        }
+        else if (_childItems.Count > 0)
+        {
+            _element.ItemsSource = _childItems.Select(x => x.Text).ToList();
+            _element.ItemValues = _childItems.Select(x => x.Value).ToList();
+        }
+        else
+        {
+            _element.ItemsSource = new List<string>();
+        }
+        
         _element.SelectedIndex = SelectedIndex;
         _element.SelectedItem = SelectedItem;
         _element.Placeholder = Placeholder ?? "请选择...";
@@ -85,7 +165,16 @@ public class ComboBox : ComponentBase, IElementHandler, IDisposable
         _element.OnItemSelected = async (index, item) =>
         {
             SelectedIndex = index;
-            SelectedItem = item;
+            
+            // 如果有 ItemValues，使用 Value；否则使用显示文本
+            if (_element.ItemValues != null && index >= 0 && index < _element.ItemValues.Count)
+            {
+                SelectedItem = _element.ItemValues[index];
+            }
+            else
+            {
+                SelectedItem = item;
+            }
             
             if (SelectedItemChanged.HasDelegate)
             {
@@ -93,12 +182,12 @@ public class ComboBox : ComponentBase, IElementHandler, IDisposable
                 {
                     await Renderer.Dispatcher.InvokeAsync(async () =>
                     {
-                        await SelectedItemChanged.InvokeAsync(item);
+                        await SelectedItemChanged.InvokeAsync(SelectedItem);
                     });
                 }
                 else
                 {
-                    await SelectedItemChanged.InvokeAsync(item);
+                    await SelectedItemChanged.InvokeAsync(SelectedItem);
                 }
             }
             
