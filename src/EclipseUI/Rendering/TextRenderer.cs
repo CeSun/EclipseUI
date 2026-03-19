@@ -107,7 +107,16 @@ public static class TextRenderer
             TextSize = fontSize,
             Typeface = isEmoji ? EmojiTypeface : ChineseTypeface
         };
-        return paint.MeasureText(character);
+        
+        // 对于带变体选择器的字符，只测量基础字符
+        // 变体选择器 (U+FE00-U+FE0F) 本身宽度为 0
+        string measureChar = character;
+        if (character.Length == 2 && character[1] >= 0xFE00 && character[1] <= 0xFE0F)
+        {
+            measureChar = character[0].ToString();
+        }
+        
+        return paint.MeasureText(measureChar);
     }
 
     /// <summary>
@@ -270,7 +279,14 @@ public static class TextRenderer
 
             var font = isEmoji ? emojiFont : chineseFont;
             var width = MeasureCharacter(character, fontSize, isEmoji);
-            context.DrawText(character, currentX, y, font, color);
+            
+            // 绘制时只绘制基础字符（变体选择器不需要单独绘制，它只是修饰符）
+            string drawChar = character;
+            if (character.Length == 2 && character[1] >= 0xFE00 && character[1] <= 0xFE0F)
+            {
+                drawChar = character[0].ToString();
+            }
+            context.DrawText(drawChar, currentX, y, font, color);
             currentX += width;
         }
     }

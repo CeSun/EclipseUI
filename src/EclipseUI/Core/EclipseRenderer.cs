@@ -20,6 +20,9 @@ public class EclipseRenderer : Renderer
         
         // 初始化根元素
         RootElement = RootElementHandler.Element;
+        
+        // 初始化 Popup 服务
+        PopupService = new PopupService();
     }
     
     protected override void HandleException(Exception exception)
@@ -39,6 +42,11 @@ public class EclipseRenderer : Renderer
     /// 根元素处理器
     /// </summary>
     internal RootElementHandler RootElementHandler { get; } = new RootElementHandler();
+    
+    /// <summary>
+    /// Popup 服务
+    /// </summary>
+    public PopupService PopupService { get; }
     
     /// <summary>
     /// Skia 画布
@@ -167,6 +175,9 @@ public class EclipseRenderer : Renderer
         RootElement.Arrange(Canvas, 0, 0, SurfaceWidth, SurfaceHeight);
         
         RootElement.Render(Canvas);
+        
+        // 渲染所有 Popup（在最上层）
+        PopupService.Render(Canvas);
     }
     
     /// <summary>
@@ -177,11 +188,18 @@ public class EclipseRenderer : Renderer
         if (RootElement == null) return false;
         
         var point = new SKPoint(x, y);
+        
+        // 优先处理 Popup 层的点击
+        if (PopupService.HandleClick(point))
+        {
+            return true;
+        }
+        
         var handled = RootElement.HandleClick(point);
         
         // 检查是否点击了 TextBox
-        var textBox = FindTextBox(RootElement, x, y);
-        SetFocus(textBox);
+        var tb = FindTextBox(RootElement, x, y);
+        SetFocus(tb);
         
         return handled;
     }
@@ -192,6 +210,12 @@ public class EclipseRenderer : Renderer
     public bool HandleMouseWheel(float deltaY)
     {
         if (RootElement == null) return false;
+        
+        // 优先处理 Popup 层的滚轮
+        if (PopupService.HandleMouseWheel(deltaY))
+        {
+            return true;
+        }
         
         // 查找第一个支持滚轮的 ScrollView
         var scrollView = FindScrollView(RootElement);
@@ -218,6 +242,10 @@ public class EclipseRenderer : Renderer
     public bool HandleMouseMove(float x, float y)
     {
         if (RootElement == null) return false;
+        
+        // 处理 Popup 层的鼠标移动
+        PopupService.HandleMouseMove(x, y);
+        
         return RootElement.HandleMouseMove(x, y);
     }
     

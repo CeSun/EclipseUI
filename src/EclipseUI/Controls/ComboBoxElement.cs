@@ -72,6 +72,11 @@ public class ComboBoxElement : EclipseElement
         return new SKSize(finalWidth, finalHeight);
     }
     
+    /// <summary>
+    /// 当前的 Popup 信息
+    /// </summary>
+    private PopupInfo? _popupInfo;
+    
     public override void Render(SKCanvas canvas)
     {
         if (!IsVisible) return;
@@ -105,12 +110,6 @@ public class ComboBoxElement : EclipseElement
             
             // 绘制内容
             RenderContent(canvas);
-            
-            // 绘制下拉列表
-            if (IsDropDownOpen)
-            {
-                RenderDropDown(canvas);
-            }
         }
         finally
         {
@@ -124,27 +123,28 @@ public class ComboBoxElement : EclipseElement
         float contentY = Y + PaddingTop;
         
         using var renderContext = new SkiaRenderContext(canvas);
-        using var typeface = SKTypeface.FromFamilyName("Microsoft YaHei", SKFontStyle.Normal);
-        using var textPaint = new SKPaint
-        {
-            TextSize = FontSize,
-            IsAntialias = true,
-            Typeface = typeface,
-            Color = TextColor
-        };
         
         // 绘制选中的文本或占位符
         string displayText = SelectedIndex >= 0 && SelectedIndex < ItemsSource.Count 
             ? ItemsSource[SelectedIndex] 
             : Placeholder;
         
+        Color textColor;
         if (string.IsNullOrEmpty(displayText))
         {
             displayText = Placeholder;
-            textPaint.Color = new SKColor(153, 153, 153); // 灰色占位符
+            textColor = new Color(153, 153, 153, 255); // 灰色占位符
+        }
+        else if (SelectedIndex < 0)
+        {
+            textColor = new Color(153, 153, 153, 255); // 灰色占位符
+        }
+        else
+        {
+            textColor = new Color(TextColor.Red, TextColor.Green, TextColor.Blue, TextColor.Alpha);
         }
         
-        canvas.DrawText(displayText, contentX, contentY + FontSize, textPaint);
+        TextRenderer.DrawText(renderContext, displayText, contentX, contentY + FontSize, FontSize, textColor);
         
         // 绘制下拉箭头
         DrawDropDownArrow(canvas);
@@ -186,52 +186,54 @@ public class ComboBoxElement : EclipseElement
         float dropDownWidth = Width;
         float dropDownHeight = Math.Min(ItemsSource.Count * ItemHeight, MaxDropDownHeight);
         
-        // 设置裁剪区域
-        using var clipPath = new SKPath();
-        clipPath.AddRect(new SKRect(dropDownX, dropDownY, dropDownX + dropDownWidth, dropDownY + dropDownHeight));
-        canvas.ClipPath(clipPath);
+        canvas.Save();
         
-        // 绘制下拉列表背景
-        using var bgPaint = new SKPaint { Color = SKColors.White, IsAntialias = true };
-        canvas.DrawRect(new SKRect(dropDownX, dropDownY, dropDownX + dropDownWidth, dropDownY + dropDownHeight), bgPaint);
-        
-        // 绘制下拉列表边框
-        using var borderPaint = new SKPaint { Color = SKColors.Gray, IsAntialias = true, StrokeWidth = 1, Style = SKPaintStyle.Stroke };
-        canvas.DrawRect(new SKRect(dropDownX + 0.5f, dropDownY + 0.5f, dropDownX + dropDownWidth - 0.5f, dropDownY + dropDownHeight - 0.5f), borderPaint);
-        
-        using var renderContext = new SkiaRenderContext(canvas);
-        using var typeface = SKTypeface.FromFamilyName("Microsoft YaHei", SKFontStyle.Normal);
-        using var textPaint = new SKPaint
+        try
         {
-            TextSize = FontSize,
-            IsAntialias = true,
-            Typeface = typeface
-        };
-        
-        // 绘制列表项
-        int visibleStartIndex = (int)(_dropDownScrollOffset / ItemHeight);
-        int visibleEndIndex = Math.Min(visibleStartIndex + (int)(dropDownHeight / ItemHeight) + 1, ItemsSource.Count);
-        
-        for (int i = visibleStartIndex; i < visibleEndIndex; i++)
+            // 设置裁剪区域
+            canvas.ClipRect(new SKRect(dropDownX, dropDownY, dropDownX + dropDownWidth, dropDownY + dropDownHeight));
+            
+            // 绘制下拉列表背景
+            using var bgPaint = new SKPaint { Color = SKColors.White, IsAntialias = true };
+            canvas.DrawRect(new SKRect(dropDownX, dropDownY, dropDownX + dropDownWidth, dropDownY + dropDownHeight), bgPaint);
+            
+            // 绘制下拉列表边框
+            using var borderPaint = new SKPaint { Color = SKColors.Gray, IsAntialias = true, StrokeWidth = 1, Style = SKPaintStyle.Stroke };
+            canvas.DrawRect(new SKRect(dropDownX + 0.5f, dropDownY + 0.5f, dropDownX + dropDownWidth - 0.5f, dropDownY + dropDownHeight - 0.5f), borderPaint);
+            
+            using var renderContext = new SkiaRenderContext(canvas);
+            
+            // 绘制列表项
+            int visibleStartIndex = (int)(_dropDownScrollOffset / ItemHeight);
+            int visibleEndIndex = Math.Min(visibleStartIndex + (int)(dropDownHeight / ItemHeight) + 1, ItemsSource.Count);
+            
+            for (int i = visibleStartIndex; i < visibleEndIndex; i++)
+            {
+                float itemY = dropDownY + (i * ItemHeight) - _dropDownScrollOffset;
+                
+                // 绘制选中项背景
+                if (i == SelectedIndex)
+                {
+                    using var selectedPaint = new SKPaint { Color = SKColor.Parse("#E3F2FD"), IsAntialias = true };
+                    canvas.DrawRect(new SKRect(dropDownX, itemY, dropDownX + dropDownWidth, itemY + ItemHeight), selectedPaint);
+                }
+                // 绘制悬停项背景
+                else if (i == _hoveredItemIndex)
+                {
+                    using var hoverPaint = new SKPaint { Color = SKColor.Parse("#F5F5F5"), IsAntialias = true };
+                    canvas.DrawRect(new SKRect(dropDownX, itemY, dropDownX + dropDownWidth, itemY + ItemHeight), hoverPaint);
+                }
+                
+                // 使用 TextRenderer 绘制文本（支持 Emoji）
+                var textColor = i == SelectedIndex 
+                    ? new Color(0, 0, 255, 255) 
+                    : new Color(0, 0, 0, 255);
+                TextRenderer.DrawText(renderContext, ItemsSource[i], dropDownX + PaddingLeft, itemY + FontSize + 8, FontSize, textColor);
+            }
+        }
+        finally
         {
-            float itemY = dropDownY + (i * ItemHeight) - _dropDownScrollOffset;
-            
-            // 绘制选中项背景
-            if (i == SelectedIndex)
-            {
-                using var selectedPaint = new SKPaint { Color = SKColor.Parse("#E3F2FD"), IsAntialias = true };
-                canvas.DrawRect(new SKRect(dropDownX, itemY, dropDownX + dropDownWidth, itemY + ItemHeight), selectedPaint);
-            }
-            // 绘制悬停项背景
-            else if (i == _hoveredItemIndex)
-            {
-                using var hoverPaint = new SKPaint { Color = SKColor.Parse("#F5F5F5"), IsAntialias = true };
-                canvas.DrawRect(new SKRect(dropDownX, itemY, dropDownX + dropDownWidth, itemY + ItemHeight), hoverPaint);
-            }
-            
-            // 绘制文本
-            textPaint.Color = i == SelectedIndex ? SKColors.Blue : SKColors.Black;
-            canvas.DrawText(ItemsSource[i], dropDownX + PaddingLeft, itemY + FontSize + 8, textPaint);
+            canvas.Restore();
         }
     }
     
@@ -241,80 +243,108 @@ public class ComboBoxElement : EclipseElement
         
         var rect = new SKRect(X, Y, X + Width, Y + Height);
         
-        // 如果点击在下拉列表区域
-        if (IsDropDownOpen)
-        {
-            float dropDownY = Y + Height;
-            float dropDownHeight = Math.Min(ItemsSource.Count * ItemHeight, MaxDropDownHeight);
-            var dropDownRect = new SKRect(X, dropDownY, X + Width, dropDownY + dropDownHeight);
-            
-            if (dropDownRect.Contains(point))
-            {
-                // 计算点击的项索引
-                int clickedIndex = (int)((point.Y - dropDownY + _dropDownScrollOffset) / ItemHeight);
-                if (clickedIndex >= 0 && clickedIndex < ItemsSource.Count)
-                {
-                    SelectedIndex = clickedIndex;
-                    SelectedItem = ItemsSource[clickedIndex];
-                    IsDropDownOpen = false;
-                    OnItemSelected?.Invoke(clickedIndex, SelectedItem);
-                    return true;
-                }
-            }
-            else
-            {
-                // 点击外部，关闭下拉列表
-                IsDropDownOpen = false;
-                return true;
-            }
-        }
-        
         // 点击 ComboBox 主体
         if (rect.Contains(point))
         {
-            IsDropDownOpen = !IsDropDownOpen;
-            _hoveredItemIndex = -1;
+            if (IsDropDownOpen)
+            {
+                CloseDropDown();
+            }
+            else
+            {
+                OpenDropDown();
+            }
             return true;
         }
         
         return false;
     }
     
-    public override bool HandleMouseMove(float x, float y)
+    private void OpenDropDown()
     {
-        var rect = new SKRect(X, Y, X + Width, Y + Height);
-        var wasHovered = IsHovered;
-        IsHovered = rect.Contains(new SKPoint(x, y));
+        IsDropDownOpen = true;
+        _hoveredItemIndex = -1;
         
-        // 如果下拉列表打开，更新悬停项
-        if (IsDropDownOpen)
+        var renderer = EclipseComponentBase.CurrentRenderer;
+        if (renderer != null)
         {
             float dropDownY = Y + Height;
             float dropDownHeight = Math.Min(ItemsSource.Count * ItemHeight, MaxDropDownHeight);
             
-            if (y >= dropDownY && y <= dropDownY + dropDownHeight)
+            _popupInfo = new PopupInfo
             {
-                _hoveredItemIndex = (int)((y - dropDownY + _dropDownScrollOffset) / ItemHeight);
-            }
-            else
+                Owner = this,
+                Bounds = new SKRect(X, dropDownY, X + Width, dropDownY + dropDownHeight),
+                RenderAction = RenderDropDown,
+                HandleClick = HandleDropDownClick,
+                HandleMouseMove = HandleDropDownMouseMove,
+                HandleMouseWheel = HandleDropDownMouseWheel,
+                CloseOnClickOutside = true,
+                OnClose = () =>
+                {
+                    IsDropDownOpen = false;
+                    _popupInfo = null;
+                }
+            };
+            
+            renderer.PopupService.Show(_popupInfo);
+        }
+    }
+    
+    private void CloseDropDown()
+    {
+        IsDropDownOpen = false;
+        
+        if (_popupInfo != null)
+        {
+            EclipseComponentBase.CurrentRenderer?.PopupService.Close(_popupInfo);
+            _popupInfo = null;
+        }
+    }
+    
+    private bool HandleDropDownClick(SKPoint point)
+    {
+        float dropDownY = Y + Height;
+        float dropDownHeight = Math.Min(ItemsSource.Count * ItemHeight, MaxDropDownHeight);
+        var dropDownRect = new SKRect(X, dropDownY, X + Width, dropDownY + dropDownHeight);
+        
+        if (dropDownRect.Contains(point))
+        {
+            int clickedIndex = (int)((point.Y - dropDownY + _dropDownScrollOffset) / ItemHeight);
+            if (clickedIndex >= 0 && clickedIndex < ItemsSource.Count)
             {
-                _hoveredItemIndex = -1;
+                SelectedIndex = clickedIndex;
+                SelectedItem = ItemsSource[clickedIndex];
+                CloseDropDown();
+                OnItemSelected?.Invoke(clickedIndex, SelectedItem);
+                return true;
             }
         }
         
-        return IsHovered != wasHovered;
+        return false;
     }
     
-    public override void HandleMouseLeave()
+    private bool HandleDropDownMouseMove(SKPoint point)
     {
-        IsHovered = false;
-        _hoveredItemIndex = -1;
-    }
-    
-    public override bool HandleMouseWheel(float deltaY)
-    {
-        if (!IsDropDownOpen) return false;
+        float dropDownY = Y + Height;
+        float dropDownHeight = Math.Min(ItemsSource.Count * ItemHeight, MaxDropDownHeight);
         
+        if (point.Y >= dropDownY && point.Y <= dropDownY + dropDownHeight &&
+            point.X >= X && point.X <= X + Width)
+        {
+            _hoveredItemIndex = (int)((point.Y - dropDownY + _dropDownScrollOffset) / ItemHeight);
+            return true;
+        }
+        else
+        {
+            _hoveredItemIndex = -1;
+        }
+        
+        return false;
+    }
+    
+    private bool HandleDropDownMouseWheel(float deltaY)
+    {
         float dropDownHeight = Math.Min(ItemsSource.Count * ItemHeight, MaxDropDownHeight);
         float maxScroll = Math.Max(0, (ItemsSource.Count * ItemHeight) - dropDownHeight);
         
@@ -322,5 +352,19 @@ public class ComboBoxElement : EclipseElement
         _dropDownScrollOffset = Math.Max(0, Math.Min(_dropDownScrollOffset, maxScroll));
         
         return true;
+    }
+    
+    public override bool HandleMouseMove(float x, float y)
+    {
+        var rect = new SKRect(X, Y, X + Width, Y + Height);
+        var wasHovered = IsHovered;
+        IsHovered = rect.Contains(new SKPoint(x, y));
+        return IsHovered != wasHovered;
+    }
+    
+    public override void HandleMouseLeave()
+    {
+        IsHovered = false;
+        _hoveredItemIndex = -1;
     }
 }

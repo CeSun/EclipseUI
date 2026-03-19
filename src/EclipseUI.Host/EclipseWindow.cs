@@ -21,6 +21,7 @@ public class EclipseWindow : IDisposable
     
     // 用于累积 surrogate pair（emoji）
     private char? _pendingHighSurrogate;
+    private System.Numerics.Vector2? _lastMouseDownPosition;
     
     public string Title { get; set; } = "EclipseUI";
     public int Width { get; set; } = 800;
@@ -78,6 +79,7 @@ public class EclipseWindow : IDisposable
             mouse.MouseDown += (m, b) =>
             {
                 var pos = m.Position;
+                _lastMouseDownPosition = pos;  // 记录按下时的位置
                 if (_renderer != null)
                 {
                     _renderer.HandleMouseDown(pos.X, pos.Y);
@@ -88,7 +90,9 @@ public class EclipseWindow : IDisposable
             {
                 if (_renderer != null)
                 {
-                    _renderer.HandleClick(p.X, p.Y);
+                    // 使用 MouseDown 时记录的位置，而非 Click 事件的位置
+                    var pos = _lastMouseDownPosition ?? p;
+                    _renderer.HandleClick(pos.X, pos.Y);
                 }
             };
             
