@@ -63,6 +63,10 @@ EclipseRenderer (Blazor Renderer 继承)
 
 #### ScrollView 功能
 - `Orientation` - 滚动方向（Vertical/Horizontal）
+- `ScrollbarVisibility` - 滚动条可见性（Visible/Hidden/Auto）
+  - Visible: 始终显示
+  - Hidden: 始终隐藏
+  - Auto: 自动隐藏（滚动或悬停时显示，1.5秒后自动隐藏）
 - 自动显示滚动条
 - 支持鼠标滚轮和拖动滚动条
 

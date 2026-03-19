@@ -131,7 +131,7 @@ EclipseUI/
 | `<StackPanel>` | 水平/垂直堆叠布局 |
 | `<Grid>` | 网格布局，支持 Auto/Star/Pixel 行列定义 |
 | `<DockPanel>` | 停靠布局 |
-| `<ScrollView>` | 滚动视图，支持垂直/水平滚动 |
+| `<ScrollView>` | 滚动视图，支持垂直/水平滚动，可配置滚动条可见性 |
 | `<WrapPanel>` | 流式布局，自动换行/换列 |
 | `<Canvas>` | 绝对定位容器 |
 
