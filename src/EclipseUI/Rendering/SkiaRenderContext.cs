@@ -14,6 +14,43 @@ public class SkiaRenderContext : IRenderContext, IDisposable
     // 文本渲染优化：缓存 paint 对象和字体
     private static readonly SKPaint _sharedTextPaint = new SKPaint { IsAntialias = true };
     private static readonly ConcurrentDictionary<string, SKTypeface> _typefaceCache = new();
+
+    private static readonly string[] EmojiFontFamilies =
+    {
+        "Apple Color Emoji",
+        "Segoe UI Emoji",
+        "Noto Color Emoji"
+    };
+
+    private static readonly string[] CjkFontFamilies =
+    {
+        "PingFang SC",
+        "Hiragino Sans GB",
+        "Heiti SC",
+        "STHeiti",
+        "Microsoft YaHei",
+        "SimSun",
+        "Noto Sans CJK SC",
+        "Source Han Sans SC",
+        "Arial Unicode MS"
+    };
+
+    private static SKTypeface ResolveTypefaceFromCandidates(IEnumerable<string> families, SKFontStyle? style = null)
+    {
+        foreach (var family in families)
+        {
+            var typeface = style != null
+                ? SKTypeface.FromFamilyName(family, style)
+                : SKTypeface.FromFamilyName(family);
+
+            if (typeface != null && !string.IsNullOrWhiteSpace(typeface.FamilyName))
+            {
+                return typeface;
+            }
+        }
+
+        return SKTypeface.Default;
+    }
     
     public SkiaRenderContext(SKCanvas canvas)
     {
@@ -87,17 +124,11 @@ public class SkiaRenderContext : IRenderContext, IDisposable
             // Emoji 字体特殊处理
             if (font.FamilyName.Contains("Emoji", StringComparison.OrdinalIgnoreCase))
             {
-                string[] emojiFonts = { "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji" };
-                foreach (var emojiFont in emojiFonts)
-                {
-                    result = SKTypeface.FromFamilyName(emojiFont, fontStyle);
-                    if (result != null && !string.IsNullOrEmpty(result.FamilyName))
-                        break;
-                }
+                result = ResolveTypefaceFromCandidates(EmojiFontFamilies, fontStyle);
             }
             else
             {
-                result = SKTypeface.FromFamilyName(font.FamilyName, fontStyle);
+                result = ResolveTypefaceFromCandidates(new[] { font.FamilyName }.Concat(CjkFontFamilies), fontStyle);
             }
             
             return result ?? SKTypeface.Default;
@@ -121,12 +152,10 @@ public class SkiaRenderContext : IRenderContext, IDisposable
             _sharedTextPaint.Color = new SKColor(color.R, color.G, color.B, color.A);
             
             // 从缓存获取中文字体
-            string chineseFontKey = "Microsoft_YaHei_Normal";
+            string chineseFontKey = "CJK_Default_Normal";
             if (!_typefaceCache.TryGetValue(chineseFontKey, out var chineseTypeface))
             {
-                chineseTypeface = SKTypeface.FromFamilyName("Microsoft YaHei", SKFontStyle.Normal) ??
-                                SKTypeface.FromFamilyName("SimSun", SKFontStyle.Normal) ??
-                                SKTypeface.Default;
+                chineseTypeface = ResolveTypefaceFromCandidates(CjkFontFamilies, SKFontStyle.Normal);
                 _typefaceCache[chineseFontKey] = chineseTypeface;
             }
             
@@ -147,17 +176,11 @@ public class SkiaRenderContext : IRenderContext, IDisposable
         {
             if (fontFamily.Contains("Emoji", StringComparison.OrdinalIgnoreCase))
             {
-                // Emoji 字体列表
-                string[] emojiFonts = { "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji" };
-                foreach (var font in emojiFonts)
-                {
-                    typeface = SKTypeface.FromFamilyName(font);
-                    if (typeface != null) break;
-                }
+                typeface = ResolveTypefaceFromCandidates(EmojiFontFamilies);
             }
             else
             {
-                typeface = SKTypeface.FromFamilyName(fontFamily);
+                typeface = ResolveTypefaceFromCandidates(new[] { fontFamily }.Concat(CjkFontFamilies));
             }
             
             typeface ??= SKTypeface.Default;

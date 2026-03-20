@@ -11,22 +11,47 @@ public static class TextRenderer
     private static SKTypeface? _emojiTypeface;
     private static SKTypeface? _chineseTypeface;
 
+    private static readonly string[] EmojiFontFamilies =
+    {
+        "Apple Color Emoji",
+        "Segoe UI Emoji",
+        "Noto Color Emoji"
+    };
+
+    private static readonly string[] ChineseFontFamilies =
+    {
+        "PingFang SC",
+        "Hiragino Sans GB",
+        "Heiti SC",
+        "STHeiti",
+        "Microsoft YaHei",
+        "SimSun",
+        "Noto Sans CJK SC",
+        "Source Han Sans SC",
+        "Arial Unicode MS"
+    };
+
+    private static SKTypeface? TryCreateTypeface(string[] families)
+    {
+        foreach (var family in families)
+        {
+            var typeface = SKTypeface.FromFamilyName(family, SKFontStyle.Normal);
+            if (typeface != null && !string.IsNullOrWhiteSpace(typeface.FamilyName))
+            {
+                return typeface;
+            }
+        }
+
+        return null;
+    }
+
     private static SKTypeface EmojiTypeface
     {
         get
         {
             if (_emojiTypeface == null)
             {
-                // 尝试多个 emoji 字体
-                _emojiTypeface = SKTypeface.FromFamilyName("Segoe UI Emoji", SKFontStyle.Normal);
-                if (_emojiTypeface == null || _emojiTypeface.FamilyName == "")
-                {
-                    _emojiTypeface = SKTypeface.FromFamilyName("Apple Color Emoji", SKFontStyle.Normal);
-                }
-                if (_emojiTypeface == null || _emojiTypeface.FamilyName == "")
-                {
-                    _emojiTypeface = SKTypeface.FromFamilyName("Noto Color Emoji", SKFontStyle.Normal);
-                }
+                _emojiTypeface = TryCreateTypeface(EmojiFontFamilies);
                 _emojiTypeface ??= SKTypeface.Default;
             }
             return _emojiTypeface;
@@ -34,9 +59,11 @@ public static class TextRenderer
     }
 
     private static SKTypeface ChineseTypeface =>
-        _chineseTypeface ??= SKTypeface.FromFamilyName("SimSun", SKFontStyle.Normal)
-            ?? SKTypeface.FromFamilyName("Microsoft YaHei", SKFontStyle.Normal)
+        _chineseTypeface ??= TryCreateTypeface(ChineseFontFamilies)
             ?? SKTypeface.Default;
+
+    private static string EmojiFontFamily => EmojiTypeface.FamilyName;
+    private static string ChineseFontFamily => ChineseTypeface.FamilyName;
 
     /// <summary>
     /// 绘制文本（支持 Emoji）
@@ -51,7 +78,7 @@ public static class TextRenderer
         }
         else
         {
-            var font = new SkiaFont("SimSun", fontSize);
+            var font = new SkiaFont(ChineseFontFamily, fontSize);
             context.DrawText(text, x, y, font, color);
         }
     }
@@ -304,7 +331,7 @@ public static class TextRenderer
             }
             
             // 使用 DrawTextDirect 直接指定字体
-            string fontFamily = isEmoji ? "Segoe UI Emoji" : "SimSun";
+            string fontFamily = isEmoji ? EmojiFontFamily : ChineseFontFamily;
             context.DrawTextDirect(drawChar, currentX, y, fontSize, fontFamily, color);
             currentX += width;
         }
