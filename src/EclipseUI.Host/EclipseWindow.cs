@@ -23,6 +23,30 @@ public class EclipseWindow : IDisposable
     // 用于累积 surrogate pair（emoji）
     private char? _pendingHighSurrogate;
     private System.Numerics.Vector2? _lastMouseDownPosition;
+
+    /// <summary>
+    /// 将窗口逻辑坐标映射到 Framebuffer 像素坐标，保证高 DPI 下命中测试正确。
+    /// </summary>
+    private System.Numerics.Vector2 MapToFramebufferCoordinates(System.Numerics.Vector2 position)
+    {
+        if (_window == null)
+        {
+            return position;
+        }
+
+        var windowSize = _window.Size;
+        var framebufferSize = _window.FramebufferSize;
+
+        if (windowSize.X <= 0 || windowSize.Y <= 0 || framebufferSize.X <= 0 || framebufferSize.Y <= 0)
+        {
+            return position;
+        }
+
+        var scaleX = (float)framebufferSize.X / windowSize.X;
+        var scaleY = (float)framebufferSize.Y / windowSize.Y;
+
+        return new System.Numerics.Vector2(position.X * scaleX, position.Y * scaleY);
+    }
     
     public string Title { get; set; } = "EclipseUI";
     public int Width { get; set; } = 800;
@@ -72,25 +96,32 @@ public class EclipseWindow : IDisposable
     {
         if (_window == null || _renderer == null) return;
         
+        // 在高 DPI 屏幕上应使用 Framebuffer 尺寸而非窗口逻辑尺寸
+        var initialSize = _window.FramebufferSize;
+        if (initialSize.X <= 0 || initialSize.Y <= 0)
+        {
+            initialSize = _window.Size;
+        }
+
         _gl = _window.CreateOpenGL();
-        _gl.Viewport(0, 0, (uint)_window.Size.X, (uint)_window.Size.Y);
+        _gl.Viewport(0, 0, (uint)initialSize.X, (uint)initialSize.Y);
         
         var glInterface = GRGlInterface.Create();
         _grContext = GRContext.CreateGl(glInterface);
         
         var fbInfo = new GRGlFramebufferInfo(0, SKColorType.Rgba8888.ToGlSizedFormat());
-        var rt = new GRBackendRenderTarget(_window.Size.X, _window.Size.Y, 0, 8, fbInfo);
+        var rt = new GRBackendRenderTarget(initialSize.X, initialSize.Y, 0, 8, fbInfo);
         _surface = SKSurface.Create(_grContext, rt, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
         
-        _renderer.SetSurface(_surface.Canvas, _window.Size.X, _window.Size.Y);
-        _context?.SetSurfaceSize(_window.Size.X, _window.Size.Y);
+        _renderer.SetSurface(_surface.Canvas, initialSize.X, initialSize.Y);
+        _context?.SetSurfaceSize(initialSize.X, initialSize.Y);
         
         _input = _window.CreateInput();
         foreach (var mouse in _input.Mice)
         {
             mouse.MouseDown += (m, b) =>
             {
-                var pos = m.Position;
+                var pos = MapToFramebufferCoordinates(m.Position);
                 _lastMouseDownPosition = pos;  // 记录按下时的位置
                 if (_renderer != null)
                 {
@@ -103,7 +134,7 @@ public class EclipseWindow : IDisposable
                 if (_renderer != null)
                 {
                     // 使用 MouseDown 时记录的位置，而非 Click 事件的位置
-                    var pos = _lastMouseDownPosition ?? p;
+                    var pos = _lastMouseDownPosition ?? MapToFramebufferCoordinates(p);
                     _renderer.HandleClick(pos.X, pos.Y);
                 }
             };
@@ -112,7 +143,7 @@ public class EclipseWindow : IDisposable
             {
                 if (_renderer != null)
                 {
-                    var pos = m.Position;
+                    var pos = MapToFramebufferCoordinates(m.Position);
                     _renderer.HandleMouseWheel(pos.X, pos.Y, s.Y);
                 }
             };
@@ -121,7 +152,8 @@ public class EclipseWindow : IDisposable
             {
                 if (_renderer != null)
                 {
-                    _renderer.HandleMouseMove(p.X, p.Y);
+                    var pos = MapToFramebufferCoordinates(p);
+                    _renderer.HandleMouseMove(pos.X, pos.Y);
                 }
             };
         }
@@ -250,6 +282,7 @@ public class EclipseWindow : IDisposable
     private unsafe void OnResize(Silk.NET.Maths.Vector2D<int> newSize)
     {
         if (_gl == null || _grContext == null || _renderer == null) return;
+        if (newSize.X <= 0 || newSize.Y <= 0) return;
         
         _gl.Viewport(0, 0, (uint)newSize.X, (uint)newSize.Y);
         
