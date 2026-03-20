@@ -30,6 +30,16 @@ public class EclipseElement
     /// </summary>
     public string Class { get; set; } = string.Empty;
     
+    /// <summary>
+    /// 请求重绘（通知渲染器需要重绘）
+    /// </summary>
+    public virtual void RequestRedraw()
+    {
+        // 通过静态引用通知当前渲染器
+        var renderer = EclipseComponentBase.CurrentRenderer as EclipseRenderer;
+        renderer?.MarkDirty();
+    }
+    
     // 布局缓存优化：缓存测量结果和脏标记
     private SKSize? _cachedMeasureSize;
     private bool _isMeasureDirty = true;
