@@ -268,15 +268,25 @@ public class EclipseRenderer : Renderer
     public bool HandleMouseWheel(float x, float y, float deltaY)
     {
         if (RootElement == null) return false;
-        
+
         // 优先处理 Popup 层的滚轮
         if (PopupService.HandleMouseWheel(x, y, deltaY))
         {
+            MarkDirty();
+            OnRenderRequested?.Invoke();
             return true;
         }
-        
+
         // 从根元素开始分发滚轮事件，根据鼠标位置找到对应的可滚动元素
-        return RootElement.HandleMouseWheel(x, y, deltaY);
+        bool handled = RootElement.HandleMouseWheel(x, y, deltaY);
+
+        if (handled)
+        {
+            MarkDirty();
+            OnRenderRequested?.Invoke();
+        }
+
+        return handled;
     }
     
     /// <summary>
@@ -285,7 +295,15 @@ public class EclipseRenderer : Renderer
     public bool HandleMouseDown(float x, float y)
     {
         if (RootElement == null) return false;
-        return RootElement.HandleMouseDown(x, y);
+        bool handled = RootElement.HandleMouseDown(x, y);
+
+        if (handled)
+        {
+            MarkDirty();
+            OnRenderRequested?.Invoke();
+        }
+
+        return handled;
     }
     
     /// <summary>
@@ -294,11 +312,19 @@ public class EclipseRenderer : Renderer
     public bool HandleMouseMove(float x, float y)
     {
         if (RootElement == null) return false;
-        
+
         // 处理 Popup 层的鼠标移动
         PopupService.HandleMouseMove(x, y);
-        
-        return RootElement.HandleMouseMove(x, y);
+
+        bool handled = RootElement.HandleMouseMove(x, y);
+
+        if (handled)
+        {
+            MarkDirty();
+            OnRenderRequested?.Invoke();
+        }
+
+        return handled;
     }
     
     /// <summary>
@@ -306,7 +332,12 @@ public class EclipseRenderer : Renderer
     /// </summary>
     public void HandleMouseUp()
     {
-        RootElement?.HandleMouseUp();
+        if (RootElement != null)
+        {
+            RootElement.HandleMouseUp();
+            MarkDirty();
+            OnRenderRequested?.Invoke();
+        }
     }
     
     /// <summary>

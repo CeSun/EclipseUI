@@ -70,7 +70,7 @@ public class RadioButton : ComponentBase, IElementHandler, IDisposable
         _element.OnCheckedChanged = async (isChecked) =>
         {
             IsChecked = isChecked;
-            
+
             if (IsCheckedChanged.HasDelegate)
             {
                 if (Renderer != null)
@@ -78,11 +78,25 @@ public class RadioButton : ComponentBase, IElementHandler, IDisposable
                     await Renderer.Dispatcher.InvokeAsync(async () =>
                     {
                         await IsCheckedChanged.InvokeAsync(isChecked);
+                        StateHasChanged(); // 通知组件重新渲染
                     });
                 }
                 else
                 {
                     await IsCheckedChanged.InvokeAsync(isChecked);
+                    StateHasChanged(); // 通知组件重新渲染
+                }
+            }
+            else
+            {
+                // 即使没有绑定事件，也需要通知重新渲染
+                if (Renderer != null)
+                {
+                    await Renderer.Dispatcher.InvokeAsync(() => StateHasChanged());
+                }
+                else
+                {
+                    StateHasChanged();
                 }
             }
         };
