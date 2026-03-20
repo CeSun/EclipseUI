@@ -5,6 +5,7 @@ using SkiaSharp;
 using EclipseUI.Layout;
 using System.Diagnostics.CodeAnalysis;
 using EclipseUI.Controls;
+using System.Diagnostics;
 
 namespace EclipseUI.Core;
 
@@ -22,6 +23,9 @@ public class EclipseRenderer : Renderer
         // 初始化根元素
         RootElement = RootElementHandler.Element;
         
+        // 初始化 FPS 计数器
+        FpsCounterElement = new FpsCounterElement();
+        
         // 初始化 Popup 服务
         PopupService = new PopupService();
     }
@@ -38,6 +42,11 @@ public class EclipseRenderer : Renderer
     /// 根元素
     /// </summary>
     public EclipseElement? RootElement { get; private set; }
+    
+    /// <summary>
+    /// FPS 计数器元素（用于帧率显示）
+    /// </summary>
+    public FpsCounterElement? FpsCounterElement { get; private set; }
     
     /// <summary>
     /// 根元素处理器
@@ -176,6 +185,9 @@ public class EclipseRenderer : Renderer
         RootElement.Arrange(Canvas, 0, 0, SurfaceWidth, SurfaceHeight);
         
         RootElement.Render(Canvas);
+        
+        // 渲染 FPS 计数器（在 UI 上方）
+        FpsCounterElement?.Render(Canvas);
         
         // 渲染所有 Popup（在最上层）
         PopupService.Render(Canvas);
