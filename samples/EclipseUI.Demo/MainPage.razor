@@ -57,12 +57,6 @@
                             case 9:
                                 <LayoutDemoPage />
                                 break;
-                            case 10:
-                                <FpsCounterDemo />
-                                break;
-                            case 11:
-                                <StyleDemo />
-                                break;
                         }
                     }
                 </ScrollView>
@@ -82,8 +76,6 @@
                         <Button Text="🔍 布局测试" Width="90" Height="36" Background="#E0E0E0" OnClick="GoToLayoutTest" />
                         <Button Text="🎨 更多控件" Width="90" Height="36" Background="#E0E0E0" OnClick="GoToControls" />
                         <Button Text="📦 布局控件" Width="90" Height="36" Background="#E0E0E0" OnClick="GoToLayoutDemo" />
-                        <Button Text="📊 FPS" Width="90" Height="36" Background="#E0E0E0" OnClick="GoToFpsCounter" />
-                        <Button Text="✨ 样式" Width="90" Height="36" Background="#E0E0E0" OnClick="GoToStyleDemo" />
                     </StackPanel>
                 </ScrollView>
             </GridItem>
@@ -106,8 +98,6 @@
     private void GoToLayoutTest(MouseEventArgs e) { UpdatePage(7, "布局自适应测试"); }
     private void GoToControls(MouseEventArgs e) { UpdatePage(8, "Border / Image / ProgressBar"); }
     private void GoToLayoutDemo(MouseEventArgs e) { UpdatePage(9, "ListBox / TabControl / WrapPanel / Canvas"); }
-    private void GoToFpsCounter(MouseEventArgs e) { UpdatePage(10, "FPS 计数器演示"); }
-    private void GoToStyleDemo(MouseEventArgs e) { UpdatePage(11, "样式系统演示"); }
     
     private void UpdatePage(int newPage, string title)
     {

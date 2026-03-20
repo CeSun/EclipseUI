@@ -310,9 +310,6 @@ public class ScrollViewElement : EclipseElement
         // 更新最后滚动时间（用于自动隐藏）
         _lastScrollTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
         
-        // 触发重绘
-        RequestRedraw();
-        
         return true;
     }
     
@@ -421,10 +418,6 @@ public class ScrollViewElement : EclipseElement
             float newOffset = _dragStartOffset + scrollRatio * (ContentSize - viewportSize);
             
             ScrollOffset = Math.Clamp(newOffset, 0, ContentSize - viewportSize);
-            
-            // 触发重绘
-            RequestRedraw();
-            
             return true;
         }
         

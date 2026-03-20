@@ -1,163 +1,150 @@
-using SkiaSharp;
-using EclipseUI.Styling;
+﻿using SkiaSharp;
 
 namespace EclipseUI.Core;
 
 /// <summary>
-/// EclipseUI 元素基类 - 所�?UI 元素的抽象基�?/// </summary>
+/// EclipseUI 鍏冪礌鍩虹被 - 鎵€锟?UI 鍏冪礌鐨勬娊璞″熀锟?/// </summary>
 public class EclipseElement
 {
     /// <summary>
-    /// 父元�?    /// </summary>
+    /// 鐖跺厓锟?    /// </summary>
     public EclipseElement? Parent { get; internal set; }
     
     /// <summary>
-    /// 子元素列�?    /// </summary>
+    /// 瀛愬厓绱犲垪锟?    /// </summary>
     public List<EclipseElement> Children { get; } = new();
     
     /// <summary>
-    /// 元素是否可见
+    /// 鍏冪礌鏄惁鍙
     /// </summary>
     public bool IsVisible { get; set; } = true;
     
     /// <summary>
-    /// 样式属性
+    /// 鏍峰紡灞炴€?
     /// </summary>
-    public Style Style { get; set; } = new Style();
-    
+        
     /// <summary>
-    /// CSS 类名
+    /// CSS 绫诲悕
     /// </summary>
-    public string Class { get; set; } = string.Empty;
-    
-    /// <summary>
-    /// 请求重绘（通知渲染器需要重绘）
-    /// </summary>
-    public virtual void RequestRedraw()
-    {
-        // 通过静态引用通知当前渲染器
-        var renderer = EclipseComponentBase.CurrentRenderer as EclipseRenderer;
-        renderer?.MarkDirty();
-    }
-    
-    // 布局缓存优化：缓存测量结果和脏标记
+        
+    // 甯冨眬缂撳瓨浼樺寲锛氱紦瀛樻祴閲忕粨鏋滃拰鑴忔爣璁?
     private SKSize? _cachedMeasureSize;
     private bool _isMeasureDirty = true;
     private float _lastAvailableWidth = -1;
     private float _lastAvailableHeight = -1;
     
     /// <summary>
-    /// 元素的位置（相对于父元素�?    /// </summary>
+    /// 鍏冪礌鐨勪綅缃紙鐩稿浜庣埗鍏冪礌锟?    /// </summary>
     public float X { get; set; }
     
     /// <summary>
-    /// 元素的位置（相对于父元素�?    /// </summary>
+    /// 鍏冪礌鐨勪綅缃紙鐩稿浜庣埗鍏冪礌锟?    /// </summary>
     public float Y { get; set; }
     
     /// <summary>
-    /// 元素的宽�?    /// </summary>
+    /// 鍏冪礌鐨勫锟?    /// </summary>
     public float Width { get; set; }
     
     /// <summary>
-    /// 元素的高�?    /// </summary>
+    /// 鍏冪礌鐨勯珮锟?    /// </summary>
     public float Height { get; set; }
     /// <summary>
-    /// �û�����Ŀ��ȣ���ѡ��null ��ʾ�Զ���
+    /// 锟矫伙拷锟斤拷锟斤拷目锟斤拷龋锟斤拷锟窖★拷锟絥ull 锟斤拷示锟皆讹拷锟斤拷
     /// </summary>
     public float? RequestedWidth { get; set; }
     
     /// <summary>
-    /// �û�����ĸ߶ȣ���ѡ��null ��ʾ�Զ���
+    /// 锟矫伙拷锟斤拷锟斤拷母叨龋锟斤拷锟窖★拷锟絥ull 锟斤拷示锟皆讹拷锟斤拷
     /// </summary>
     public float? RequestedHeight { get; set; }    
     /// <summary>
-    /// ��С���ȣ���ѡ��
+    /// 锟斤拷小锟斤拷锟饺ｏ拷锟斤拷选锟斤拷
     /// </summary>
     public float? MinWidth { get; set; }
     
     /// <summary>
-    /// ��С�߶ȣ���ѡ��
+    /// 锟斤拷小锟竭度ｏ拷锟斤拷选锟斤拷
     /// </summary>
     public float? MinHeight { get; set; }
     
     /// <summary>
-    /// �����ȣ���ѡ��
+    /// 锟斤拷锟斤拷锟饺ｏ拷锟斤拷选锟斤拷
     /// </summary>
     public float? MaxWidth { get; set; }
     
     /// <summary>
-    /// ���߶ȣ���ѡ��
+    /// 锟斤拷锟竭度ｏ拷锟斤拷选锟斤拷
     /// </summary>
     public float? MaxHeight { get; set; }
     
     /// <summary>
-    /// ˮƽ���뷽ʽ
+    /// 水平锟斤拷锟诫方式
     /// </summary>
     public HorizontalAlignment HorizontalAlignment { get; set; } = HorizontalAlignment.Stretch;
     
     /// <summary>
-    /// ��ֱ���뷽ʽ
+    /// 锟斤拷直锟斤拷锟诫方式
     /// </summary>
     public VerticalAlignment VerticalAlignment { get; set; } = VerticalAlignment.Stretch;
     
     /// <summary>
-    /// 左边�?    /// </summary>
+    /// 宸﹁竟锟?    /// </summary>
     public float MarginLeft { get; set; }
     
     /// <summary>
-    /// 上边�?    /// </summary>
+    /// 涓婅竟锟?    /// </summary>
     public float MarginTop { get; set; }
     
     /// <summary>
-    /// 右边�?    /// </summary>
+    /// 鍙宠竟锟?    /// </summary>
     public float MarginRight { get; set; }
     
     /// <summary>
-    /// 下边�?    /// </summary>
+    /// 涓嬭竟锟?    /// </summary>
     public float MarginBottom { get; set; }
     
     /// <summary>
-    /// 左内边距
+    /// 宸﹀唴杈硅窛
     /// </summary>
     public float PaddingLeft { get; set; }
     
     /// <summary>
-    /// 上内边距
+    /// 涓婂唴杈硅窛
     /// </summary>
     public float PaddingTop { get; set; }
     
     /// <summary>
-    /// 右内边距
+    /// 鍙冲唴杈硅窛
     /// </summary>
     public float PaddingRight { get; set; }
     
     /// <summary>
-    /// 下内边距
+    /// 涓嬪唴杈硅窛
     /// </summary>
     public float PaddingBottom { get; set; }
     
     /// <summary>
-    /// 背景颜色
+    /// 鑳屾櫙棰滆壊
     /// </summary>
     public SKColor? BackgroundColor { get; set; }
     
     /// <summary>
-    /// 元素 ID（用于事件处理）
+    /// 鍏冪礌 ID锛堢敤浜庝簨浠跺鐞嗭級
     /// </summary>
     public string? Id { get; set; }
     
     /// <summary>
-    /// CSS 类名（用于样式）
+    /// CSS 绫诲悕锛堢敤浜庢牱寮忥級
     /// </summary>
     public string? ClassName { get; set; }
     
     /// <summary>
-    /// 点击事件
+    /// 鐐瑰嚮浜嬩欢
     /// </summary>
     public Action<EclipseElement, SKPoint>? OnClick { get; set; }
     
     /// <summary>
-    /// 获取实际绘制区域（考虑内边距）
+    /// 鑾峰彇瀹為檯缁樺埗鍖哄煙锛堣€冭檻鍐呰竟璺濓級
     /// </summary>
     public SKRect ContentRect => new(
         X + PaddingLeft,
@@ -167,7 +154,7 @@ public class EclipseElement
     );
     
     /// <summary>
-    /// 获取包含边距的外框区�?    /// </summary>
+    /// 鑾峰彇鍖呭惈杈硅窛鐨勫妗嗗尯锟?    /// </summary>
     public SKRect OuterRect => new(
         X - MarginLeft,
         Y - MarginTop,
@@ -176,10 +163,10 @@ public class EclipseElement
     );
     
     /// <summary>
-    /// 测量元素所需的最小尺�?    /// </summary>
+    /// 娴嬮噺鍏冪礌鎵€闇€鐨勬渶灏忓昂锟?    /// </summary>
     public virtual SKSize Measure(SKCanvas canvas, float availableWidth, float availableHeight)
     {
-        // 如果有用户设置的 RequestedWidth/Height，优先使�?
+        // 濡傛灉鏈夌敤鎴疯缃殑 RequestedWidth/Height锛屼紭鍏堜娇锟?
         if (RequestedWidth.HasValue && RequestedHeight.HasValue)
         {
             return new SKSize(RequestedWidth.Value + PaddingLeft + PaddingRight, 
@@ -198,7 +185,7 @@ public class EclipseElement
                 maxHeight = Math.Max(maxHeight, childSize.Height);
             }
             
-            // 如果只设置了 RequestedWidth �?RequestedHeight 中的一�?
+            // 濡傛灉鍙缃簡 RequestedWidth 锟?RequestedHeight 涓殑涓€锟?
             float finalWidth = RequestedWidth ?? maxWidth;
             float finalHeight = RequestedHeight ?? maxHeight;
             
@@ -210,7 +197,7 @@ public class EclipseElement
     }
     
     /// <summary>
-    /// 排列元素及其子元�?    /// </summary>
+    /// 鎺掑垪鍏冪礌鍙婂叾瀛愬厓锟?    /// </summary>
     public virtual void Arrange(SKCanvas canvas, float x, float y, float width, float height)
     {
         X = x;
@@ -221,7 +208,7 @@ public class EclipseElement
     }
     
     /// <summary>
-    /// 排列子元�?    /// </summary>
+    /// 鎺掑垪瀛愬厓锟?    /// </summary>
     protected virtual void ArrangeChildren(SKCanvas canvas)
     {
         foreach (var child in Children)
@@ -233,7 +220,7 @@ public class EclipseElement
     }
     
     /// <summary>
-    /// 绘制元素及其子元�?    /// </summary>
+    /// 缁樺埗鍏冪礌鍙婂叾瀛愬厓锟?    /// </summary>
     public virtual void Render(SKCanvas canvas)
     {
         if (!IsVisible) return;
@@ -259,11 +246,11 @@ public class EclipseElement
     }
     
     /// <summary>
-    /// 绘制元素内容（由子类实现�?    /// </summary>
+    /// 缁樺埗鍏冪礌鍐呭锛堢敱瀛愮被瀹炵幇锟?    /// </summary>
     protected virtual void RenderContent(SKCanvas canvas) { }
     
     /// <summary>
-    /// 绘制子元�?    /// </summary>
+    /// 缁樺埗瀛愬厓锟?    /// </summary>
     protected void RenderChildren(SKCanvas canvas)
     {
         foreach (var child in Children)
@@ -273,7 +260,7 @@ public class EclipseElement
     }
     
     /// <summary>
-    /// 处理点击事件
+    /// 澶勭悊鐐瑰嚮浜嬩欢
     /// </summary>
     public virtual bool HandleClick(SKPoint point)
     {
@@ -292,7 +279,7 @@ public class EclipseElement
     }
     
     /// <summary>
-    /// 处理鼠标按下事件
+    /// 澶勭悊榧犳爣鎸変笅浜嬩欢
     /// </summary>
     public virtual bool HandleMouseDown(float x, float y)
     {
@@ -304,7 +291,7 @@ public class EclipseElement
     }
     
     /// <summary>
-    /// 处理鼠标移动事件
+    /// 澶勭悊榧犳爣绉诲姩浜嬩欢
     /// </summary>
     public virtual bool HandleMouseMove(float x, float y)
     {
@@ -316,7 +303,7 @@ public class EclipseElement
     }
     
     /// <summary>
-    /// 处理鼠标释放事件
+    /// 澶勭悊榧犳爣閲婃斁浜嬩欢
     /// </summary>
     public virtual void HandleMouseUp()
     {
@@ -327,7 +314,7 @@ public class EclipseElement
     }
     
     /// <summary>
-    /// 处理鼠标离开元素区域事件
+    /// 澶勭悊榧犳爣绂诲紑鍏冪礌鍖哄煙浜嬩欢
     /// </summary>
     public virtual void HandleMouseLeave()
     {
@@ -338,11 +325,11 @@ public class EclipseElement
     }
     
     /// <summary>
-    /// 处理鼠标滚轮事件
+    /// 澶勭悊榧犳爣婊氳疆浜嬩欢
     /// </summary>
     public virtual bool HandleMouseWheel(float x, float y, float deltaY)
     {
-        // 从后往前遍历子元素（优先处理上层的元素）
+        // 浠庡悗寰€鍓嶉亶鍘嗗瓙鍏冪礌锛堜紭鍏堝鐞嗕笂灞傜殑鍏冪礌锛?
         for (int i = Children.Count - 1; i >= 0; i--)
         {
             if (Children[i].HandleMouseWheel(x, y, deltaY))
@@ -352,7 +339,7 @@ public class EclipseElement
     }
     
     /// <summary>
-    /// 添加子元素
+    /// 娣诲姞瀛愬厓绱?
     /// </summary>
     public void AddChild(EclipseElement child)
     {
@@ -361,7 +348,7 @@ public class EclipseElement
     }
     
     /// <summary>
-    /// 在指定位置插入子元素
+    /// 鍦ㄦ寚瀹氫綅缃彃鍏ュ瓙鍏冪礌
     /// </summary>
     public void InsertChild(int index, EclipseElement child)
     {
@@ -370,7 +357,7 @@ public class EclipseElement
     }
     
     /// <summary>
-    /// 移除子元素
+    /// 绉婚櫎瀛愬厓绱?
     /// </summary>
     public void RemoveChild(EclipseElement child)
     {
@@ -379,7 +366,7 @@ public class EclipseElement
     }
     
     /// <summary>
-    /// 清除所有子元素
+    /// 娓呴櫎鎵€鏈夊瓙鍏冪礌
     /// </summary>
     public void ClearChildren()
     {
@@ -388,12 +375,12 @@ public class EclipseElement
     }
     
     /// <summary>
-    /// 附加属性值存�?
+    /// 闄勫姞灞炴€у€煎瓨锟?
     /// </summary>
     private readonly Dictionary<int, object?> _attachedProperties = new();
     
     /// <summary>
-    /// 设置附加属性�?
+    /// 璁剧疆闄勫姞灞炴€э拷?
     /// </summary>
     public void SetValue(int propertyKey, object? value)
     {
@@ -401,7 +388,7 @@ public class EclipseElement
     }
     
     /// <summary>
-    /// 获取附加属性�?
+    /// 鑾峰彇闄勫姞灞炴€э拷?
     /// </summary>
     public T GetValue<T>(int propertyKey, T defaultValue)
     {
@@ -412,10 +399,11 @@ public class EclipseElement
 }
 
 /// <summary>
-/// 鼠标事件参数
+/// 榧犳爣浜嬩欢鍙傛暟
 /// </summary>
 public class MouseEventArgs
 {
     public float ClientX { get; set; }
     public float ClientY { get; set; }
 }
+
