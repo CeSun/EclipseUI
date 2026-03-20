@@ -31,12 +31,25 @@ public static class TextRenderer
         "Arial Unicode MS"
     };
 
+    private static bool IsFamilyMatch(string requestedFamily, SKTypeface typeface)
+    {
+        var resolvedFamily = typeface.FamilyName ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(resolvedFamily))
+        {
+            return false;
+        }
+
+        return resolvedFamily.Equals(requestedFamily, StringComparison.OrdinalIgnoreCase) ||
+               resolvedFamily.Contains(requestedFamily, StringComparison.OrdinalIgnoreCase) ||
+               requestedFamily.Contains(resolvedFamily, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static SKTypeface? TryCreateTypeface(string[] families)
     {
         foreach (var family in families)
         {
             var typeface = SKTypeface.FromFamilyName(family, SKFontStyle.Normal);
-            if (typeface != null && !string.IsNullOrWhiteSpace(typeface.FamilyName))
+            if (typeface != null && IsFamilyMatch(family, typeface))
             {
                 return typeface;
             }

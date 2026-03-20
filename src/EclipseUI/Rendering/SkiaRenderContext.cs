@@ -35,6 +35,19 @@ public class SkiaRenderContext : IRenderContext, IDisposable
         "Arial Unicode MS"
     };
 
+    private static bool IsFamilyMatch(string requestedFamily, SKTypeface typeface)
+    {
+        var resolvedFamily = typeface.FamilyName ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(resolvedFamily))
+        {
+            return false;
+        }
+
+        return resolvedFamily.Equals(requestedFamily, StringComparison.OrdinalIgnoreCase) ||
+               resolvedFamily.Contains(requestedFamily, StringComparison.OrdinalIgnoreCase) ||
+               requestedFamily.Contains(resolvedFamily, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static SKTypeface ResolveTypefaceFromCandidates(IEnumerable<string> families, SKFontStyle? style = null)
     {
         foreach (var family in families)
@@ -43,7 +56,7 @@ public class SkiaRenderContext : IRenderContext, IDisposable
                 ? SKTypeface.FromFamilyName(family, style)
                 : SKTypeface.FromFamilyName(family);
 
-            if (typeface != null && !string.IsNullOrWhiteSpace(typeface.FamilyName))
+            if (typeface != null && IsFamilyMatch(family, typeface))
             {
                 return typeface;
             }
