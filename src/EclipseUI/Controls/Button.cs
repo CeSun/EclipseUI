@@ -1,6 +1,7 @@
 using SkiaSharp;
 using Microsoft.AspNetCore.Components;
 using EclipseUI.Core;
+using EclipseUI.Styling;
 
 namespace EclipseUI.Controls;
 
@@ -85,6 +86,27 @@ public class Button : ComponentBase, IElementHandler, IDisposable
         _element.PaddingRight = PaddingRight;
         _element.PaddingBottom = PaddingBottom;
         
+        // 应用内联样式
+        if (!string.IsNullOrEmpty(Style))
+        {
+            var styleProps = Styling.EclipseStyleParser.ParseInlineStyle(Style);
+            foreach (var prop in styleProps)
+            {
+                _element.Style.ApplyProperty(prop.Key, prop.Value);
+            }
+        }
+        
+        // 应用 CSS 类样式
+        if (!string.IsNullOrEmpty(Class))
+        {
+            var classStyle = Styling.StyleManager.GetClassStyle(Class);
+            if (classStyle != null)
+            {
+                // 合并类样式到元素样式中
+                _element.Style = MergeStyles(_element.Style, classStyle);
+            }
+        }
+        
         _element.OnClick = OnClick.HasDelegate ? async (e, p) => 
         {
             if (Renderer != null)
@@ -113,6 +135,58 @@ public class Button : ComponentBase, IElementHandler, IDisposable
         if (!string.IsNullOrEmpty(color) && color.StartsWith('#') && color.Length == 7)
             return SKColor.Parse(color);
         return SKColors.White;
+    }
+    
+    private static Styling.Style MergeStyles(Styling.Style baseStyle, Styling.Style classStyle)
+    {
+        var merged = new Styling.Style();
+        
+        // 合并背景颜色（内联样式优先）
+        merged.BackgroundColor = baseStyle.BackgroundColor ?? classStyle.BackgroundColor;
+        
+        // 合并文本颜色
+        merged.Color = baseStyle.Color ?? classStyle.Color;
+        
+        // 合并字体大小（内联样式优先）
+        merged.FontSize = baseStyle.FontSize != 14f ? baseStyle.FontSize : classStyle.FontSize;
+        
+        // 合并字体族
+        merged.FontFamily = !string.IsNullOrEmpty(baseStyle.FontFamily) ? baseStyle.FontFamily : classStyle.FontFamily;
+        
+        // 合并字体粗细
+        merged.FontBold = baseStyle.FontBold || classStyle.FontBold;
+        
+        // 合并字体斜体
+        merged.FontItalic = baseStyle.FontItalic || classStyle.FontItalic;
+        
+        // 合并边框
+        merged.BorderColor = baseStyle.BorderColor ?? classStyle.BorderColor;
+        merged.BorderWidth = baseStyle.BorderWidth != 1f ? baseStyle.BorderWidth : classStyle.BorderWidth;
+        merged.BorderRadius = baseStyle.BorderRadius != 0f ? baseStyle.BorderRadius : classStyle.BorderRadius;
+        
+        // 合并内边距
+        merged.PaddingLeft = baseStyle.PaddingLeft != 0f ? baseStyle.PaddingLeft : classStyle.PaddingLeft;
+        merged.PaddingTop = baseStyle.PaddingTop != 0f ? baseStyle.PaddingTop : classStyle.PaddingTop;
+        merged.PaddingRight = baseStyle.PaddingRight != 0f ? baseStyle.PaddingRight : classStyle.PaddingRight;
+        merged.PaddingBottom = baseStyle.PaddingBottom != 0f ? baseStyle.PaddingBottom : classStyle.PaddingBottom;
+        
+        // 合并外边距
+        merged.MarginLeft = baseStyle.MarginLeft != 0f ? baseStyle.MarginLeft : classStyle.MarginLeft;
+        merged.MarginTop = baseStyle.MarginTop != 0f ? baseStyle.MarginTop : classStyle.MarginTop;
+        merged.MarginRight = baseStyle.MarginRight != 0f ? baseStyle.MarginRight : classStyle.MarginRight;
+        merged.MarginBottom = baseStyle.MarginBottom != 0f ? baseStyle.MarginBottom : classStyle.MarginBottom;
+        
+        // 合并尺寸
+        merged.Width = baseStyle.Width != -1f ? baseStyle.Width : classStyle.Width;
+        merged.Height = baseStyle.Height != -1f ? baseStyle.Height : classStyle.Height;
+        
+        // 合并透明度
+        merged.Opacity = baseStyle.Opacity != 1f ? baseStyle.Opacity : classStyle.Opacity;
+        
+        // 合并阴影
+        merged.BoxShadow = !string.IsNullOrEmpty(baseStyle.BoxShadow) ? baseStyle.BoxShadow : classStyle.BoxShadow;
+        
+        return merged;
     }
     
     void IDisposable.Dispose()
