@@ -46,7 +46,8 @@ public class EclipseWindow : IDisposable
             Size = new Silk.NET.Maths.Vector2D<int>(Width, Height),
             WindowState = WindowState.Normal,
             IsVisible = true,
-            API = GraphicsAPI.Default
+            API = GraphicsAPI.Default,
+            VSync = true // 启用垂直同步，稳定帧率到显示器刷新率
         };
         
         _window = Window.Create(options);
@@ -270,8 +271,13 @@ public class EclipseWindow : IDisposable
         _gl.Clear((uint)GLEnum.ColorBufferBit);
         
         _renderer.PerformRender();
-        _surface.Flush();
-        _grContext.Flush();
+        
+        // 优化 GPU 刷新：使用默认刷新
+        _surface?.Flush();
+        _grContext?.Flush();
+        
+        // 确保 OpenGL 命令执行（可选，可能影响性能）
+        // _gl.Finish();
     }
     
     private void OnClosing()

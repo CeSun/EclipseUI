@@ -1,4 +1,5 @@
 using SkiaSharp;
+using System.Collections.Concurrent;
 
 namespace EclipseUI.Rendering;
 
@@ -9,6 +10,10 @@ public class SkiaRenderContext : IRenderContext, IDisposable
 {
     private readonly SKCanvas _canvas;
     private readonly SKPaint _defaultPaint;
+    
+    // 文本渲染优化：缓存 paint 对象和字体
+    private static readonly SKPaint _sharedTextPaint = new SKPaint { IsAntialias = true };
+    private static readonly ConcurrentDictionary<string, SKTypeface> _typefaceCache = new();
     
     public SkiaRenderContext(SKCanvas canvas)
     {
@@ -64,41 +69,42 @@ public class SkiaRenderContext : IRenderContext, IDisposable
     
     public void DrawText(string text, float x, float y, IFont font, Color color)
     {
+        // 使用共享的 paint 对象，避免频繁创建/销毁
+        _sharedTextPaint.TextSize = font.Size;
+        _sharedTextPaint.Color = new SKColor(color.R, color.G, color.B, color.A);
+        
         var fontStyle = SKFontStyle.Normal;
         if (font.IsBold && font.IsItalic) fontStyle = SKFontStyle.BoldItalic;
         else if (font.IsBold) fontStyle = SKFontStyle.Bold;
         else if (font.IsItalic) fontStyle = SKFontStyle.Italic;
         
-        SKTypeface? typeface = null;
-        
-        // Emoji 字体特殊处理
-        if (font.FamilyName.Contains("Emoji", StringComparison.OrdinalIgnoreCase))
+        // 从缓存中获取字体
+        string cacheKey = $"{font.FamilyName}_{fontStyle.Weight}_{fontStyle.Width}_{fontStyle.Slant}";
+        SKTypeface? typeface = _typefaceCache.GetOrAdd(cacheKey, key =>
         {
-            // 尝试多个 emoji 字体
-            string[] emojiFonts = { "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji" };
-            foreach (var emojiFont in emojiFonts)
+            SKTypeface? result = null;
+            
+            // Emoji 字体特殊处理
+            if (font.FamilyName.Contains("Emoji", StringComparison.OrdinalIgnoreCase))
             {
-                typeface = SKTypeface.FromFamilyName(emojiFont, fontStyle);
-                if (typeface != null && !string.IsNullOrEmpty(typeface.FamilyName))
-                    break;
+                string[] emojiFonts = { "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji" };
+                foreach (var emojiFont in emojiFonts)
+                {
+                    result = SKTypeface.FromFamilyName(emojiFont, fontStyle);
+                    if (result != null && !string.IsNullOrEmpty(result.FamilyName))
+                        break;
+                }
             }
-        }
-        else
-        {
-            typeface = SKTypeface.FromFamilyName(font.FamilyName, fontStyle);
-        }
+            else
+            {
+                result = SKTypeface.FromFamilyName(font.FamilyName, fontStyle);
+            }
+            
+            return result ?? SKTypeface.Default;
+        });
         
-        typeface ??= SKTypeface.Default;
-        
-        using var paint = new SKPaint
-        {
-            TextSize = font.Size,
-            IsAntialias = true,
-            Color = new SKColor(color.R, color.G, color.B, color.A),
-            Typeface = typeface
-        };
-        
-        _canvas.DrawText(text, x, y, paint);
+        _sharedTextPaint.Typeface = typeface;
+        _canvas.DrawText(text, x, y, _sharedTextPaint);
     }
     
     public void DrawText(string text, float x, float y, float fontSize, Color color)
@@ -110,50 +116,56 @@ public class SkiaRenderContext : IRenderContext, IDisposable
         }
         else
         {
-            using var typeface = SKTypeface.FromFamilyName("Microsoft YaHei", SKFontStyle.Normal);
-            using var paint = new SKPaint
-            {
-                TextSize = fontSize,
-                IsAntialias = true,
-                Color = new SKColor(color.R, color.G, color.B, color.A),
-                Typeface = typeface
-            };
+            // 使用优化的文本绘制
+            _sharedTextPaint.TextSize = fontSize;
+            _sharedTextPaint.Color = new SKColor(color.R, color.G, color.B, color.A);
             
-            _canvas.DrawText(text, x, y, paint);
+            // 从缓存获取中文字体
+            string chineseFontKey = "Microsoft_YaHei_Normal";
+            if (!_typefaceCache.TryGetValue(chineseFontKey, out var chineseTypeface))
+            {
+                chineseTypeface = SKTypeface.FromFamilyName("Microsoft YaHei", SKFontStyle.Normal) ??
+                                SKTypeface.FromFamilyName("SimSun", SKFontStyle.Normal) ??
+                                SKTypeface.Default;
+                _typefaceCache[chineseFontKey] = chineseTypeface;
+            }
+            
+            _sharedTextPaint.Typeface = chineseTypeface;
+            _canvas.DrawText(text, x, y, _sharedTextPaint);
         }
     }
     
     public void DrawTextDirect(string text, float x, float y, float fontSize, string fontFamily, Color color)
     {
-        // 尝试获取指定字体
-        SKTypeface? typeface = null;
+        // 使用优化的文本绘制
+        _sharedTextPaint.TextSize = fontSize;
+        _sharedTextPaint.Color = new SKColor(color.R, color.G, color.B, color.A);
         
-        if (fontFamily.Contains("Emoji", StringComparison.OrdinalIgnoreCase))
+        // 从缓存获取字体
+        string fontKey = fontFamily;
+        if (!_typefaceCache.TryGetValue(fontKey, out var typeface))
         {
-            // Emoji 字体列表
-            string[] emojiFonts = { "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji" };
-            foreach (var font in emojiFonts)
+            if (fontFamily.Contains("Emoji", StringComparison.OrdinalIgnoreCase))
             {
-                typeface = SKTypeface.FromFamilyName(font);
-                if (typeface != null) break;
+                // Emoji 字体列表
+                string[] emojiFonts = { "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji" };
+                foreach (var font in emojiFonts)
+                {
+                    typeface = SKTypeface.FromFamilyName(font);
+                    if (typeface != null) break;
+                }
             }
+            else
+            {
+                typeface = SKTypeface.FromFamilyName(fontFamily);
+            }
+            
+            typeface ??= SKTypeface.Default;
+            _typefaceCache[fontKey] = typeface;
         }
-        else
-        {
-            typeface = SKTypeface.FromFamilyName(fontFamily);
-        }
         
-        typeface ??= SKTypeface.Default;
-        
-        using var paint = new SKPaint
-        {
-            TextSize = fontSize,
-            IsAntialias = true,
-            Color = new SKColor(color.R, color.G, color.B, color.A),
-            Typeface = typeface
-        };
-        
-        _canvas.DrawText(text, x, y, paint);
+        _sharedTextPaint.Typeface = typeface;
+        _canvas.DrawText(text, x, y, _sharedTextPaint);
     }
     
     public void DrawImage(IImage image, float x, float y, float? width = null, float? height = null)

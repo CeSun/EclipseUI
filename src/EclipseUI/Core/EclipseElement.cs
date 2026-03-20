@@ -19,6 +19,12 @@ public class EclipseElement
     /// </summary>
     public bool IsVisible { get; set; } = true;
     
+    // 布局缓存优化：缓存测量结果和脏标记
+    private SKSize? _cachedMeasureSize;
+    private bool _isMeasureDirty = true;
+    private float _lastAvailableWidth = -1;
+    private float _lastAvailableHeight = -1;
+    
     /// <summary>
     /// 元素的位置（相对于父元素�?    /// </summary>
     public float X { get; set; }

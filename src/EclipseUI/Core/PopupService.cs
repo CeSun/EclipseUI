@@ -15,6 +15,14 @@ public class PopupService
     public IReadOnlyList<PopupInfo> ActivePopups => _popups;
     
     /// <summary>
+    /// 检查是否有待更新的 Popup
+    /// </summary>
+    public bool HasPendingUpdates()
+    {
+        return _popups.Count > 0;
+    }
+    
+    /// <summary>
     /// 显示 Popup
     /// </summary>
     public void Show(PopupInfo popup)

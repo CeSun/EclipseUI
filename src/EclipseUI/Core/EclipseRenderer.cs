@@ -78,6 +78,19 @@ public class EclipseRenderer : Renderer
     /// </summary>
     public Action? OnRenderRequested { get; set; }
     
+    /// <summary>
+    /// 标记 UI 为脏，需要重绘
+    /// </summary>
+    private bool _isDirty = true;
+    
+    /// <summary>
+    /// 标记 UI 为脏
+    /// </summary>
+    public void MarkDirty()
+    {
+        _isDirty = true;
+    }
+    
     public override Dispatcher Dispatcher { get; } = Dispatcher.CreateDefault();
     
     /// <summary>
@@ -142,6 +155,7 @@ public class EclipseRenderer : Renderer
     protected override Task UpdateDisplayAsync(in RenderBatch renderBatch)
     {
         var adaptersWithPendingEdits = new HashSet<EclipseComponentAdapter>();
+        bool hasUpdates = false;
         
         for (int i = 0; i < renderBatch.UpdatedComponents.Count; i++)
         {
@@ -150,6 +164,7 @@ public class EclipseRenderer : Renderer
             {
                 var adapter = _componentAdapters[updatedComponent.ComponentId];
                 adapter.ApplyEdits(updatedComponent.ComponentId, updatedComponent.Edits, renderBatch, adaptersWithPendingEdits);
+                hasUpdates = true;
             }
         }
         
@@ -164,7 +179,13 @@ public class EclipseRenderer : Renderer
             if (_componentAdapters.Remove(disposedComponentId, out var adapter))
             {
                 adapter.Dispose();
+                hasUpdates = true;
             }
+        }
+        
+        if (hasUpdates)
+        {
+            MarkDirty();
         }
         
         OnRenderRequested?.Invoke();
@@ -175,10 +196,25 @@ public class EclipseRenderer : Renderer
     /// <summary>
     /// 执行渲染
     /// </summary>
+    /// <summary>
+    /// 执行渲染
+    /// </summary>
     public void PerformRender()
     {
         if (Canvas == null || RootElement == null) return;
         
+        // 如果 UI 不脏且没有 Popup 需要更新，则跳过重绘
+        if (!_isDirty && !PopupService.HasPendingUpdates())
+        {
+            // 仍然需要渲染 FPS 计数器（因为它每帧都变化）
+            Canvas.Clear(SKColors.White);
+            RootElement.Render(Canvas);
+            FpsCounterElement?.Render(Canvas);
+            PopupService.Render(Canvas);
+            return;
+        }
+        
+        // 完整重绘：Measure + Arrange + Render
         Canvas.Clear(SKColors.White);
         
         RootElement.Measure(Canvas, SurfaceWidth, SurfaceHeight);
@@ -191,6 +227,9 @@ public class EclipseRenderer : Renderer
         
         // 渲染所有 Popup（在最上层）
         PopupService.Render(Canvas);
+        
+        // 重绘完成后标记为干净
+        _isDirty = false;
     }
     
     /// <summary>
@@ -205,6 +244,7 @@ public class EclipseRenderer : Renderer
         // 优先处理 Popup 层的点击
         if (PopupService.HandleClick(point))
         {
+            MarkDirty();
             return true;
         }
         
@@ -213,6 +253,11 @@ public class EclipseRenderer : Renderer
         // 检查是否点击了 TextBox
         var tb = FindTextBox(RootElement, x, y);
         SetFocus(tb);
+        
+        if (handled)
+        {
+            MarkDirty();
+        }
         
         return handled;
     }
@@ -303,6 +348,7 @@ public class EclipseRenderer : Renderer
         if (FocusedElement != null)
         {
             await FocusedElement.HandleTextInput(text);
+            MarkDirty();
             OnRenderRequested?.Invoke();
         }
     }
@@ -315,6 +361,7 @@ public class EclipseRenderer : Renderer
         if (FocusedElement != null)
         {
             await FocusedElement.HandleKeyDown(key);
+            MarkDirty();
             OnRenderRequested?.Invoke();
         }
     }
