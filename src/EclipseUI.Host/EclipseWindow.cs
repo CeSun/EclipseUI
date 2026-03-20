@@ -261,6 +261,9 @@ public class EclipseWindow : IDisposable
         
         _renderer.SetSurface(_surface.Canvas, newSize.X, newSize.Y);
         _context?.SetSurfaceSize(newSize.X, newSize.Y);
+        
+        // 标记 UI 为脏，触发完整重绘以适应新尺寸
+        _renderer.MarkDirty();
     }
     
     private void OnRender(double dt)
