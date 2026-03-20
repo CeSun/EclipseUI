@@ -1,4 +1,5 @@
 using SkiaSharp;
+using EclipseUI.Styling;
 
 namespace EclipseUI.Core;
 
@@ -18,6 +19,16 @@ public class EclipseElement
     /// 元素是否可见
     /// </summary>
     public bool IsVisible { get; set; } = true;
+    
+    /// <summary>
+    /// 样式属性
+    /// </summary>
+    public Style Style { get; set; } = new Style();
+    
+    /// <summary>
+    /// CSS 类名
+    /// </summary>
+    public string Class { get; set; } = string.Empty;
     
     // 布局缓存优化：缓存测量结果和脏标记
     private SKSize? _cachedMeasureSize;
