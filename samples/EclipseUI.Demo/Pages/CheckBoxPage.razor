@@ -13,6 +13,7 @@
     <TextBlock Text="三态复选框（不确定状态）：" FontSize="16" PaddingBottom="5" />
     <CheckBox Content="不确定状态示例" @bind-IsChecked="_checkBoxIndeterminate" IsThreeState="true" PaddingBottom="20" />
     
+    <Button Text="Toggle 条款" OnClick="ToggleTerms" Width="120" Height="32" />
     <TextBlock Text="@GetCheckBoxDisplay()" FontSize="14" PaddingTop="10" />
 </StackPanel>
 
@@ -27,5 +28,9 @@
         return $"状态：条款={(_checkBox1 == true ? "✓" : "✗")}, 邮件={(_checkBox2 == true ? "✓" : "✗")}, 登录={(_checkBox3 == true ? "✓" : "✗")}, 三态={(_checkBoxIndeterminate == null ? "?" : (_checkBoxIndeterminate == true ? "✓" : "✗"))}";
     }
 
-
+    private void ToggleTerms()
+    {
+        _checkBox1 = !_checkBox1;
+        Console.WriteLine($"[DEBUG] Manual toggle: _checkBox1 = {_checkBox1}");
+    }
 }

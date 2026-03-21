@@ -65,6 +65,11 @@ public class CheckBox : ComponentBase, IElementHandler, IDisposable
         _element.OnCheckedChanged = async (isChecked) =>
         {
             IsChecked = isChecked;
+            // 同步更新元素状态，确保渲染一致性
+            if (_element != null)
+            {
+                _element.IsChecked = isChecked;
+            }
 
             if (IsCheckedChanged.HasDelegate)
             {
