@@ -43,7 +43,7 @@ public class HStack : StackLayout
 /// </summary>
 public class Label : ComponentBase
 {
-    public string? Text { get; set; }
+    public object? Text { get; set; }
     public double FontSize { get; set; } = 14;
     public string? Color { get; set; }
     public string? FontWeight { get; set; }
@@ -52,7 +52,7 @@ public class Label : ComponentBase
     public override void Render(IRenderContext context)
     {
         if (Text != null)
-            context.SetText(Text);
+            context.SetText(Text.ToString());
         context.SetAttribute(nameof(FontSize), FontSize);
         if (Color != null)
             context.SetAttribute(nameof(Color), Color);

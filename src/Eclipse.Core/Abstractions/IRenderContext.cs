@@ -7,17 +7,33 @@ namespace Eclipse.Core.Abstractions
     {
         int Depth { get; }
         IReadOnlyList<ComponentId> ComponentPath { get; }
-        IDisposable BeginComponent<T>(ComponentId id) where T : IComponent;
-        void EndComponent();
-        void SetAttribute(string name, object? value);
-        void SetAttributes(IReadOnlyDictionary<string, object?> attributes);
-        void RemoveAttribute(string name);
-        void BindEvent(string eventName, Delegate handler);
-        void UnbindEvent(string eventName);
-        void BindProperty<T>(string propertyName, T currentValue, Action<T> valueChanged);
-        void BindProperty<T>(string propertyName, IBindingContext<T> binding);
-        void SetText(string? text);
+        
+        /// <summary>
+        /// 开始渲染一个组件，返回 scope 和组件实例用于强类型属性设置
+        /// </summary>
+        IDisposable BeginComponent<T>(ComponentId id, out T component) where T : IComponent, new();
+        
+        /// <summary>
+        /// 设置子内容
+        /// </summary>
         IDisposable BeginChildContent();
+        
+        /// <summary>
+        /// 设置属性（运行时/反射场景，或手写组件使用）
+        /// </summary>
+        void SetAttribute(string name, object? value);
+        
+        /// <summary>
+        /// 绑定事件
+        /// </summary>
+        void BindEvent<THandler>(string eventName, THandler handler) where THandler : Delegate;
+        
+        /// <summary>
+        /// 双向绑定属性
+        /// </summary>
+        void BindProperty<T>(string propertyName, T currentValue, Action<T> valueChanged);
+        
+        void SetText(string? text);
         void RenderTemplate(RenderFragment? template);
         void RenderTemplate<T>(RenderFragment<T>? template, T value);
     }

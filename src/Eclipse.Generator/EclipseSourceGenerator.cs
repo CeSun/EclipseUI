@@ -268,7 +268,8 @@ namespace Eclipse.Generator
                             WriteLine($"context.SetText(\"{EscapeString(text.Text)}\");");
                         break;
                     case ExpressionNode expr:
-                        WriteLine($"context.SetAttribute(\"Text\", {expr.Expression});");
+                        // 顶层表达式作为文本输出
+                        WriteLine($"context.SetText({expr.Expression}?.ToString());");
                         break;
                     case IfNode ifNode:
                         GenerateIf(ifNode, sb, ref indent, WriteLine, ref seq);
@@ -283,14 +284,17 @@ namespace Eclipse.Generator
         private void GenerateControl(ControlNode control, StringBuilder sb, ref int indent, Action<string> WriteLine, ref int seq)
         {
             var controlId = $"new ComponentId({++seq})";
-            WriteLine($"using (context.BeginComponent<{control.TagName}>({controlId}))");
+            var varName = $"__{control.TagName.ToLower()}_{seq}";
+            
+            WriteLine($"using (context.BeginComponent<{control.TagName}>({controlId}, out var {varName}))");
             WriteLine("{");
             indent++;
+            
             foreach (var attr in control.Attributes)
             {
                 if (attr.IsEvent)
                 {
-                    // 事件属性用 BindEvent
+                    // 事件绑定
                     WriteLine($"context.BindEvent(\"{attr.Name}\", {attr.Value});");
                 }
                 else if (attr.IsBinding)
@@ -300,21 +304,23 @@ namespace Eclipse.Generator
                     
                     if (isExpression)
                     {
-                        // 表达式只单向绑定，不需要赋值回调
-                        WriteLine($"context.SetAttribute(\"{attr.Name}\", {attr.Value});");
+                        // 表达式：直接属性赋值（单向）
+                        WriteLine($"{varName}.{attr.Name} = {attr.Value};");
                     }
                     else
                     {
-                        // 变量绑定用 BindProperty（双向绑定）
+                        // 变量绑定：双向绑定 + 初始值
+                        WriteLine($"{varName}.{attr.Name} = {attr.Value};");
                         WriteLine($"context.BindProperty(\"{attr.Name}\", {attr.Value}, v => {attr.Value} = v);");
                     }
                 }
                 else
                 {
-                    // 字符串/数值字面量用 SetAttribute
-                    WriteLine($"context.SetAttribute(\"{attr.Name}\", {attr.Value});");
+                    // 字面量：直接属性赋值
+                    WriteLine($"{varName}.{attr.Name} = {attr.Value};");
                 }
             }
+            
             if (control.Children.Count > 0)
             {
                 WriteLine("");
