@@ -14,14 +14,8 @@ public class StackLayout : ComponentBase
     public string? BackgroundColor { get; set; }
     public double Padding { get; set; } = 0;
 
-    public override void Render(IRenderContext context)
-    {
-        context.SetAttribute(nameof(Orientation), Orientation);
-        context.SetAttribute(nameof(Spacing), Spacing);
-        if (BackgroundColor != null)
-            context.SetAttribute(nameof(BackgroundColor), BackgroundColor);
-        context.SetAttribute(nameof(Padding), Padding);
-    }
+    // Render 方法留空 - 属性由生成代码通过 BeginComponent(out var component) 设置
+    public override void Render(IRenderContext context) { }
 }
 
 public enum Orientation
@@ -39,7 +33,7 @@ public class HStack : StackLayout
 }
 
 /// <summary>
-/// 文本标签（显示组件，不支持双向绑定）
+/// 文本标签
 /// </summary>
 public class Label : ComponentBase
 {
@@ -51,14 +45,9 @@ public class Label : ComponentBase
 
     public override void Render(IRenderContext context)
     {
+        // 渲染文本内容到渲染上下文
         if (Text != null)
             context.SetText(Text);
-        context.SetAttribute(nameof(FontSize), FontSize);
-        if (Color != null)
-            context.SetAttribute(nameof(Color), Color);
-        if (FontWeight != null)
-            context.SetAttribute(nameof(FontWeight), FontWeight);
-        context.SetAttribute(nameof(TextAlignment), TextAlignment);
     }
 }
 
@@ -74,21 +63,7 @@ public enum TextAlignment
 /// </summary>
 public class Button : ComponentBase
 {
-    private string? _text;
-    public string? Text 
-    { 
-        get => _text;
-        set
-        {
-            if (_text != value)
-            {
-                var old = _text;
-                _text = value;
-                TextChanged?.Invoke(this, new ValueChangedEventArgs<string?>(old, value));
-            }
-        }
-    }
-    
+    public string? Text { get; set; }
     public string? BackgroundColor { get; set; }
     public string? TextColor { get; set; }
     public double FontSize { get; set; } = 14;
@@ -96,21 +71,12 @@ public class Button : ComponentBase
     public double CornerRadius { get; set; } = 4;
     public double Padding { get; set; } = 8;
 
-    public event EventHandler<ValueChangedEventArgs<string?>>? TextChanged;
     public event EventHandler? OnClick;
 
     public override void Render(IRenderContext context)
     {
         if (Text != null)
             context.SetText(Text);
-        if (BackgroundColor != null)
-            context.SetAttribute(nameof(BackgroundColor), BackgroundColor);
-        if (TextColor != null)
-            context.SetAttribute(nameof(TextColor), TextColor);
-        context.SetAttribute(nameof(FontSize), FontSize);
-        context.SetAttribute(nameof(IsEnabled), IsEnabled);
-        context.SetAttribute(nameof(CornerRadius), CornerRadius);
-        context.SetAttribute(nameof(Padding), Padding);
     }
 }
 
@@ -119,21 +85,7 @@ public class Button : ComponentBase
 /// </summary>
 public class TextInput : ComponentBase
 {
-    private string? _text;
-    public string? Text 
-    { 
-        get => _text;
-        set
-        {
-            if (_text != value)
-            {
-                var old = _text;
-                _text = value;
-                TextChanged?.Invoke(this, new ValueChangedEventArgs<string?>(old, value));
-            }
-        }
-    }
-    
+    public string? Text { get; set; }
     public string? Placeholder { get; set; }
     public double FontSize { get; set; } = 14;
     public string? BackgroundColor { get; set; }
@@ -143,24 +95,19 @@ public class TextInput : ComponentBase
     public bool IsEnabled { get; set; } = true;
     public bool IsPassword { get; set; } = false;
 
-    public event EventHandler<ValueChangedEventArgs<string?>>? TextChanged;
     public event EventHandler<ValueChangedEventArgs<string?>>? OnTextChanged;
 
-    public override void Render(IRenderContext context)
+    public override void Render(IRenderContext context) { }
+}
+
+public class ValueChangedEventArgs<T> : EventArgs
+{
+    public T OldValue { get; }
+    public T NewValue { get; }
+    public ValueChangedEventArgs(T oldValue, T newValue)
     {
-        if (Text != null)
-            context.SetAttribute(nameof(Text), Text);
-        if (Placeholder != null)
-            context.SetAttribute(nameof(Placeholder), Placeholder);
-        context.SetAttribute(nameof(FontSize), FontSize);
-        if (BackgroundColor != null)
-            context.SetAttribute(nameof(BackgroundColor), BackgroundColor);
-        if (BorderColor != null)
-            context.SetAttribute(nameof(BorderColor), BorderColor);
-        context.SetAttribute(nameof(CornerRadius), CornerRadius);
-        context.SetAttribute(nameof(Padding), Padding);
-        context.SetAttribute(nameof(IsEnabled), IsEnabled);
-        context.SetAttribute(nameof(IsPassword), IsPassword);
+        OldValue = oldValue;
+        NewValue = newValue;
     }
 }
 
@@ -169,39 +116,15 @@ public class TextInput : ComponentBase
 /// </summary>
 public class CheckBox : ComponentBase
 {
-    private bool _isChecked;
-    public bool IsChecked 
-    { 
-        get => _isChecked;
-        set
-        {
-            if (_isChecked != value)
-            {
-                var old = _isChecked;
-                _isChecked = value;
-                IsCheckedChanged?.Invoke(this, new ValueChangedEventArgs<bool>(old, value));
-            }
-        }
-    }
-    
+    public bool IsChecked { get; set; }
     public string? Label { get; set; }
     public string? CheckedColor { get; set; }
     public double Size { get; set; } = 20;
     public bool IsEnabled { get; set; } = true;
 
-    public event EventHandler<ValueChangedEventArgs<bool>>? IsCheckedChanged;
     public event EventHandler<ValueChangedEventArgs<bool>>? OnCheckedChanged;
 
-    public override void Render(IRenderContext context)
-    {
-        context.SetAttribute(nameof(IsChecked), IsChecked);
-        if (Label != null)
-            context.SetAttribute(nameof(Label), Label);
-        if (CheckedColor != null)
-            context.SetAttribute(nameof(CheckedColor), CheckedColor);
-        context.SetAttribute(nameof(Size), Size);
-        context.SetAttribute(nameof(IsEnabled), IsEnabled);
-    }
+    public override void Render(IRenderContext context) { }
 }
 
 /// <summary>
@@ -209,21 +132,7 @@ public class CheckBox : ComponentBase
 /// </summary>
 public class Switch : ComponentBase
 {
-    private bool _isToggled;
-    public bool IsToggled 
-    { 
-        get => _isToggled;
-        set
-        {
-            if (_isToggled != value)
-            {
-                var old = _isToggled;
-                _isToggled = value;
-                IsToggledChanged?.Invoke(this, new ValueChangedEventArgs<bool>(old, value));
-            }
-        }
-    }
-    
+    public bool IsToggled { get; set; }
     public string? OnColor { get; set; }
     public string? OffColor { get; set; }
     public double Scale { get; set; } = 1.0;
@@ -231,16 +140,7 @@ public class Switch : ComponentBase
 
     public event EventHandler<ValueChangedEventArgs<bool>>? IsToggledChanged;
 
-    public override void Render(IRenderContext context)
-    {
-        context.SetAttribute(nameof(IsToggled), IsToggled);
-        if (OnColor != null)
-            context.SetAttribute(nameof(OnColor), OnColor);
-        if (OffColor != null)
-            context.SetAttribute(nameof(OffColor), OffColor);
-        context.SetAttribute(nameof(Scale), Scale);
-        context.SetAttribute(nameof(IsEnabled), IsEnabled);
-    }
+    public override void Render(IRenderContext context) { }
 }
 
 /// <summary>
@@ -254,18 +154,7 @@ public class Image : ComponentBase
     public Aspect Aspect { get; set; } = Aspect.AspectFit;
     public string? BackgroundColor { get; set; }
 
-    public override void Render(IRenderContext context)
-    {
-        if (Source != null)
-            context.SetAttribute(nameof(Source), Source);
-        if (Width > 0)
-            context.SetAttribute(nameof(Width), Width);
-        if (Height > 0)
-            context.SetAttribute(nameof(Height), Height);
-        context.SetAttribute(nameof(Aspect), Aspect);
-        if (BackgroundColor != null)
-            context.SetAttribute(nameof(BackgroundColor), BackgroundColor);
-    }
+    public override void Render(IRenderContext context) { }
 }
 
 public enum Aspect
@@ -286,16 +175,7 @@ public class Border : ComponentBase
     public double BorderWidth { get; set; } = 0;
     public double CornerRadius { get; set; } = 0;
 
-    public override void Render(IRenderContext context)
-    {
-        context.SetAttribute(nameof(Padding), Padding);
-        if (BackgroundColor != null)
-            context.SetAttribute(nameof(BackgroundColor), BackgroundColor);
-        if (BorderColor != null)
-            context.SetAttribute(nameof(BorderColor), BorderColor);
-        context.SetAttribute(nameof(BorderWidth), BorderWidth);
-        context.SetAttribute(nameof(CornerRadius), CornerRadius);
-    }
+    public override void Render(IRenderContext context) { }
 }
 
 /// <summary>
@@ -307,13 +187,7 @@ public class ScrollView : ComponentBase
     public string? BackgroundColor { get; set; }
     public double Padding { get; set; } = 0;
 
-    public override void Render(IRenderContext context)
-    {
-        context.SetAttribute(nameof(Orientation), Orientation);
-        if (BackgroundColor != null)
-            context.SetAttribute(nameof(BackgroundColor), BackgroundColor);
-        context.SetAttribute(nameof(Padding), Padding);
-    }
+    public override void Render(IRenderContext context) { }
 }
 
 public enum ScrollOrientation
@@ -330,10 +204,7 @@ public class Spacer : ComponentBase
 {
     public double Size { get; set; } = 10;
 
-    public override void Render(IRenderContext context)
-    {
-        context.SetAttribute(nameof(Size), Size);
-    }
+    public override void Render(IRenderContext context) { }
 }
 
 /// <summary>
@@ -345,13 +216,7 @@ public class Divider : ComponentBase
     public double Thickness { get; set; } = 1;
     public double Margin { get; set; } = 0;
 
-    public override void Render(IRenderContext context)
-    {
-        if (Color != null)
-            context.SetAttribute(nameof(Color), Color);
-        context.SetAttribute(nameof(Thickness), Thickness);
-        context.SetAttribute(nameof(Margin), Margin);
-    }
+    public override void Render(IRenderContext context) { }
 }
 
 /// <summary>
@@ -365,14 +230,5 @@ public class Card : ComponentBase
     public double Elevation { get; set; } = 2;
     public string? BorderColor { get; set; }
 
-    public override void Render(IRenderContext context)
-    {
-        if (BackgroundColor != null)
-            context.SetAttribute(nameof(BackgroundColor), BackgroundColor);
-        context.SetAttribute(nameof(Padding), Padding);
-        context.SetAttribute(nameof(CornerRadius), CornerRadius);
-        context.SetAttribute(nameof(Elevation), Elevation);
-        if (BorderColor != null)
-            context.SetAttribute(nameof(BorderColor), BorderColor);
-    }
+    public override void Render(IRenderContext context) { }
 }

@@ -56,17 +56,4 @@ namespace Eclipse.Core
         protected virtual void OnPropsChanged(TProps? oldProps, TProps newProps) { }
     }
 
-    public abstract class BindableComponentBase : ComponentBase, IBindableComponent
-    {
-        private readonly Dictionary<string, IBindingContext<object>> _bindings = new();
-        public object? GetBoundValue(string propertyName) => _bindings.TryGetValue(propertyName, out var b) ? b.Value : null;
-        public void SetBoundValue(string propertyName, object? value) { if (_bindings.TryGetValue(propertyName, out var b)) b.SetValue(value!); }
-        public event EventHandler<BindingChangedEventArgs>? BindingChanged;
-        protected void RegisterBinding<T>(string propertyName, IBindingContext<T> binding)
-        {
-            var objBinding = new BindingContext<object>(binding.Value!, v => binding.SetValue((T)v!));
-            _bindings[propertyName] = objBinding;
-            binding.ValueChanged += (s, e) => { BindingChanged?.Invoke(this, new BindingChangedEventArgs(propertyName, e.OldValue, e.NewValue)); StateHasChanged(); };
-        }
     }
-}

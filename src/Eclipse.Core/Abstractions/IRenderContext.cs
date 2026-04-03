@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace Eclipse.Core.Abstractions
 {
+    /// <summary>
+    /// 渲染上下文接口 - 由渲染器实现，用于组件渲染
+    /// </summary>
     public interface IRenderContext
     {
         int Depth { get; }
@@ -19,43 +22,18 @@ namespace Eclipse.Core.Abstractions
         IDisposable BeginChildContent();
         
         /// <summary>
-        /// 设置属性（运行时/反射场景，或手写组件使用）
+        /// 设置文本内容
         /// </summary>
-        void SetAttribute(string name, object? value);
-        
-        /// <summary>
-        /// 绑定事件
-        /// </summary>
-        void BindEvent<THandler>(string eventName, THandler handler) where THandler : Delegate;
-        
-        /// <summary>
-        /// 双向绑定属性
-        /// </summary>
-        void BindProperty<T>(string propertyName, T currentValue, Action<T> valueChanged);
-        
         void SetText(string? text);
-        void RenderTemplate(RenderFragment? template);
-        void RenderTemplate<T>(RenderFragment<T>? template, T value);
     }
 
+    /// <summary>
+    /// 渲染片段委托
+    /// </summary>
     public delegate void RenderFragment(IRenderContext context);
+    
+    /// <summary>
+    /// 带参数的渲染片段委托
+    /// </summary>
     public delegate void RenderFragment<T>(IRenderContext context, T value);
-
-    public interface IBindingContext<T>
-    {
-        T Value { get; }
-        event EventHandler<ValueChangedEventArgs<T>>? ValueChanged;
-        void SetValue(T value);
-    }
-
-    public sealed class ValueChangedEventArgs<T> : EventArgs
-    {
-        public T OldValue { get; }
-        public T NewValue { get; }
-        public ValueChangedEventArgs(T oldValue, T newValue)
-        {
-            OldValue = oldValue;
-            NewValue = newValue;
-        }
-    }
 }

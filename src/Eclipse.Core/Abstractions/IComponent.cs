@@ -39,23 +39,4 @@ namespace Eclipse.Core.Abstractions
         TProps GetProps();
     }
 
-    public interface IBindableComponent : IComponent
-    {
-        object? GetBoundValue(string propertyName);
-        void SetBoundValue(string propertyName, object? value);
-        event EventHandler<BindingChangedEventArgs>? BindingChanged;
     }
-
-    public sealed class BindingChangedEventArgs : EventArgs
-    {
-        public string PropertyName { get; }
-        public object? OldValue { get; }
-        public object? NewValue { get; }
-        public BindingChangedEventArgs(string propertyName, object? oldValue, object? newValue)
-        {
-            PropertyName = propertyName;
-            OldValue = oldValue;
-            NewValue = newValue;
-        }
-    }
-}
