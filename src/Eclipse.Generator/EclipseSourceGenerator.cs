@@ -227,7 +227,7 @@ namespace Eclipse.Generator
                     WriteLine(line);
                 WriteLine();
             }
-            WriteLine("public override void Render(IRenderContext context)");
+            WriteLine("public override void Render(IBuildContext context)");
             WriteLine("{");
             indent++;
             GenerateRenderBody(parsed.Markup, sb, ref indent, WriteLine);

@@ -14,8 +14,8 @@ public class StackLayout : ComponentBase
     public string? BackgroundColor { get; set; }
     public double Padding { get; set; } = 0;
 
-    // Render 方法留空 - 属性由生成代码通过 BeginComponent(out var component) 设置
-    public override void Render(IRenderContext context) { }
+    // Build 方法留空 - 属性由生成代码通过 BeginComponent(out var component) 设置
+    public override void Render(IBuildContext context) { }
 }
 
 public enum Orientation
@@ -43,9 +43,9 @@ public class Label : ComponentBase
     public string? FontWeight { get; set; }
     public TextAlignment TextAlignment { get; set; } = TextAlignment.Left;
 
-    public override void Render(IRenderContext context)
+    public override void Render(IBuildContext context)
     {
-        // Render 空实现 - 属性由生成代码通过 BeginComponent(out var component) 设置
+        // Build 空实现 - 属性由生成代码通过 BeginComponent(out var component) 设置
     }
 }
 
@@ -71,9 +71,9 @@ public class Button : ComponentBase
 
     public event EventHandler? OnClick;
 
-    public override void Render(IRenderContext context)
+    public override void Render(IBuildContext context)
     {
-        // Render 空实现 - 属性由生成代码通过 BeginComponent(out var component) 设置
+        // Build 空实现 - 属性由生成代码通过 BeginComponent(out var component) 设置
     }
 }
 
@@ -94,7 +94,7 @@ public class TextInput : ComponentBase
 
     public event EventHandler<ValueChangedEventArgs<string?>>? OnTextChanged;
 
-    public override void Render(IRenderContext context) { }
+    public override void Render(IBuildContext context) { }
 }
 
 public class ValueChangedEventArgs<T> : EventArgs
@@ -121,7 +121,7 @@ public class CheckBox : ComponentBase
 
     public event EventHandler<ValueChangedEventArgs<bool>>? OnCheckedChanged;
 
-    public override void Render(IRenderContext context) { }
+    public override void Render(IBuildContext context) { }
 }
 
 /// <summary>
@@ -137,7 +137,7 @@ public class Switch : ComponentBase
 
     public event EventHandler<ValueChangedEventArgs<bool>>? IsToggledChanged;
 
-    public override void Render(IRenderContext context) { }
+    public override void Render(IBuildContext context) { }
 }
 
 /// <summary>
@@ -151,7 +151,7 @@ public class Image : ComponentBase
     public Aspect Aspect { get; set; } = Aspect.AspectFit;
     public string? BackgroundColor { get; set; }
 
-    public override void Render(IRenderContext context) { }
+    public override void Render(IBuildContext context) { }
 }
 
 public enum Aspect
@@ -172,7 +172,7 @@ public class Border : ComponentBase
     public double BorderWidth { get; set; } = 0;
     public double CornerRadius { get; set; } = 0;
 
-    public override void Render(IRenderContext context) { }
+    public override void Render(IBuildContext context) { }
 }
 
 /// <summary>
@@ -184,7 +184,7 @@ public class ScrollView : ComponentBase
     public string? BackgroundColor { get; set; }
     public double Padding { get; set; } = 0;
 
-    public override void Render(IRenderContext context) { }
+    public override void Render(IBuildContext context) { }
 }
 
 public enum ScrollOrientation
@@ -201,7 +201,7 @@ public class Spacer : ComponentBase
 {
     public double Size { get; set; } = 10;
 
-    public override void Render(IRenderContext context) { }
+    public override void Render(IBuildContext context) { }
 }
 
 /// <summary>
@@ -213,7 +213,7 @@ public class Divider : ComponentBase
     public double Thickness { get; set; } = 1;
     public double Margin { get; set; } = 0;
 
-    public override void Render(IRenderContext context) { }
+    public override void Render(IBuildContext context) { }
 }
 
 /// <summary>
@@ -227,5 +227,5 @@ public class Card : ComponentBase
     public double Elevation { get; set; } = 2;
     public string? BorderColor { get; set; }
 
-    public override void Render(IRenderContext context) { }
+    public override void Render(IBuildContext context) { }
 }

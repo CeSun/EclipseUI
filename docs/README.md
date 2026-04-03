@@ -54,7 +54,7 @@ EclipseUI/
 Source Generator 自动将 `.eui` 文件转换为 C# 代码，生成 `Render` 方法：
 
 ```csharp
-public override void Render(IRenderContext context)
+public override void Render(IBuildContext context)
 {
     using (context.BeginComponent<StackLayout>(new ComponentId(1), out var __stacklayout_1))
     {

@@ -30,8 +30,8 @@
 │                    Eclipse.Core                              │
 │                                                              │
 │  ┌───────────────────┐    ┌───────────────────────┐        │
-│  │ IComponent        │    │ IRenderContext        │        │
-│  │ ComponentBase     │    │ IRenderer             │        │
+│  │ IComponent        │    │ IBuildContext         │        │
+│  │ ComponentBase     │    │ RenderFragment        │        │
 │  └───────────────────┘    └───────────────────────┘        │
 └─────────────────────────────────────────────────────────────┘
                             │
@@ -113,21 +113,21 @@ public abstract class ComponentBase : IComponent
     protected void StateHasChanged() => StateChanged?.Invoke(this, EventArgs.Empty);
     
     // 抽象方法
-    public abstract void Render(IRenderContext context);
+    public abstract void Render(IBuildContext context);
 }
 ```
 
-### 4. IRenderContext
+### 4. IBuildContext
 
-渲染上下文接口——**只负责构建组件树**，不涉及具体渲染行为：
+构建上下文接口——**只负责构建组件树**，不涉及具体渲染行为：
 
 ```csharp
-public interface IRenderContext
+public interface IBuildContext
 {
     int Depth { get; }
     IReadOnlyList<ComponentId> ComponentPath { get; }
     
-    // 组件渲染 - 返回组件实例用于强类型属性设置
+    // 组件构建 - 返回组件实例用于强类型属性设置
     IDisposable BeginComponent<T>(ComponentId id, out T component) where T : IComponent, new();
     
     // 子内容嵌套
@@ -135,7 +135,7 @@ public interface IRenderContext
 }
 ```
 
-> **设计原则**：RenderContext 只负责组件树的构建（组件创建、属性设置、层级嵌套）。
+> **设计原则**：BuildContext 只负责组件树的构建（组件创建、属性设置、层级嵌套）。
 > 具体的渲染行为（如文本显示、图片绘制）由各组件内部处理，或由渲染器在遍历组件树时统一处理。
 
 ### 5. TextContent 组件
@@ -146,7 +146,7 @@ public interface IRenderContext
 public class TextContent : ComponentBase
 {
     public string? Text { get; set; }
-    public override void Render(IRenderContext context) { }
+    public override void Render(IBuildContext context) { }
 }
 ```
 

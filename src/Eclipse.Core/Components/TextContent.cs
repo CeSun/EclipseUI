@@ -9,7 +9,7 @@ public class TextContent : ComponentBase
 {
     public string? Text { get; set; }
     
-    public override void Render(IRenderContext context)
+    public override void Render(IBuildContext context)
     {
         // Render 空实现 - 属性由生成代码通过 BeginComponent(out var component) 设置
         // 实际文本渲染由具体渲染器处理
