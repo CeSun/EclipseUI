@@ -1,4 +1,4 @@
-@using Eclipse.Generator.Tests.Controls
+@using Eclipse.Demo.Controls
 
 @code {
     private string title = "Hello EclipseUI!";

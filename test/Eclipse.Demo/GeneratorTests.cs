@@ -2,7 +2,7 @@ using System;
 using Eclipse.Generator;
 using Xunit;
 
-namespace Eclipse.Generator.Tests;
+namespace Eclipse.Demo;
 
 public class GeneratorTests
 {

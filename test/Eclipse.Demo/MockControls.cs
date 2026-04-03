@@ -2,7 +2,7 @@ using System;
 using Eclipse.Core;
 using Eclipse.Core.Abstractions;
 
-namespace Eclipse.Generator.Tests.Controls;
+namespace Eclipse.Demo.Controls;
 
 /// <summary>
 /// 垂直堆叠布局
