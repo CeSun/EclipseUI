@@ -15,11 +15,10 @@ public class StackLayoutRenderer : ISkiaControlRenderer
         IComponent component, 
         SkiaRenderContext context, 
         SKRect bounds,
-        Action<IComponent, SkiaRenderContext, SKRect> renderChildren)
+        Action<IComponent, SkiaRenderContext, SKRect> renderChild)
     {
         var stack = (StackLayout)component;
         
-        // 计算子组件布局
         var orientation = stack.Orientation;
         var spacing = (float)stack.Spacing * context.Scale;
         var padding = (float)stack.Padding * context.Scale;
@@ -32,11 +31,11 @@ public class StackLayoutRenderer : ISkiaControlRenderer
         
         if (orientation == Orientation.Vertical)
         {
-            RenderVertical(stack, context, contentBounds, spacing, renderChildren);
+            RenderVertical(stack, context, contentBounds, spacing, renderChild);
         }
         else
         {
-            RenderHorizontal(stack, context, contentBounds, spacing, renderChildren);
+            RenderHorizontal(stack, context, contentBounds, spacing, renderChild);
         }
     }
     
@@ -45,15 +44,15 @@ public class StackLayoutRenderer : ISkiaControlRenderer
         SkiaRenderContext context,
         SKRect bounds,
         float spacing,
-        Action<IComponent, SkiaRenderContext, SKRect> renderChildren)
+        Action<IComponent, SkiaRenderContext, SKRect> renderChild)
     {
         float y = bounds.Top;
         
         foreach (var child in stack.Children)
         {
-            var childHeight = EstimateHeight(child, context, bounds.Width);
+            var childHeight = EstimateHeight(child, context);
             var childBounds = new SKRect(bounds.Left, y, bounds.Right, y + childHeight);
-            renderChildren(child, context, childBounds);
+            renderChild(child, context, childBounds);
             y += childHeight + spacing;
         }
     }
@@ -63,7 +62,7 @@ public class StackLayoutRenderer : ISkiaControlRenderer
         SkiaRenderContext context,
         SKRect bounds,
         float spacing,
-        Action<IComponent, SkiaRenderContext, SKRect> renderChildren)
+        Action<IComponent, SkiaRenderContext, SKRect> renderChild)
     {
         float x = bounds.Left;
         var childWidth = (bounds.Width - spacing * (stack.Children.Count - 1)) / stack.Children.Count;
@@ -71,14 +70,13 @@ public class StackLayoutRenderer : ISkiaControlRenderer
         foreach (var child in stack.Children)
         {
             var childBounds = new SKRect(x, bounds.Top, x + childWidth, bounds.Bottom);
-            renderChildren(child, context, childBounds);
+            renderChild(child, context, childBounds);
             x += childWidth + spacing;
         }
     }
     
-    private float EstimateHeight(IComponent component, SkiaRenderContext context, float width)
+    private float EstimateHeight(IComponent component, SkiaRenderContext context)
     {
-        // 简单估算，后续可以根据内容计算
         return component switch
         {
             Label => 24f * context.Scale,
@@ -100,7 +98,7 @@ public class LabelRenderer : ISkiaControlRenderer
         IComponent component, 
         SkiaRenderContext context, 
         SKRect bounds,
-        Action<IComponent, SkiaRenderContext, SKRect> renderChildren)
+        Action<IComponent, SkiaRenderContext, SKRect> renderChild)
     {
         var label = (Label)component;
         
@@ -118,13 +116,11 @@ public class LabelRenderer : ISkiaControlRenderer
             Size = (float)label.FontSize * context.Scale
         };
         
-        // 处理字体粗细
         if (label.FontWeight == "Bold")
         {
             font.Typeface = SKTypeface.FromFamilyName(null, SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);
         }
         
-        // 计算文本位置
         var x = bounds.Left;
         var y = bounds.Top + font.Size;
         
@@ -151,11 +147,10 @@ public class ButtonRenderer : ISkiaControlRenderer
         IComponent component, 
         SkiaRenderContext context, 
         SKRect bounds,
-        Action<IComponent, SkiaRenderContext, SKRect> renderChildren)
+        Action<IComponent, SkiaRenderContext, SKRect> renderChild)
     {
         var button = (Button)component;
         
-        // 绘制背景
         var bgColor = ParseColor(button.BackgroundColor, new SKColor(0x00, 0x7A, 0xFF));
         using var bgPaint = new SKPaint
         {
@@ -167,7 +162,6 @@ public class ButtonRenderer : ISkiaControlRenderer
         var cornerRadius = (float)button.CornerRadius * context.Scale;
         context.Canvas.DrawRoundRect(bounds, cornerRadius, cornerRadius, bgPaint);
         
-        // 绘制文本
         if (!string.IsNullOrEmpty(button.Text))
         {
             using var textPaint = new SKPaint
@@ -181,7 +175,6 @@ public class ButtonRenderer : ISkiaControlRenderer
                 Size = (float)button.FontSize * context.Scale
             };
             
-            // 居中绘制
             var textWidth = font.MeasureText(button.Text);
             var x = bounds.Left + (bounds.Width - textWidth) / 2;
             var y = bounds.Top + (bounds.Height + font.Size) / 2 - font.Size * 0.2f;
@@ -210,7 +203,7 @@ public class TextContentRenderer : ISkiaControlRenderer
         IComponent component, 
         SkiaRenderContext context, 
         SKRect bounds,
-        Action<IComponent, SkiaRenderContext, SKRect> renderChildren)
+        Action<IComponent, SkiaRenderContext, SKRect> renderChild)
     {
         var textContent = (TextContent)component;
         

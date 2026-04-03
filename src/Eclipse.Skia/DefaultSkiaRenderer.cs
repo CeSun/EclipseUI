@@ -33,37 +33,29 @@ public class DefaultSkiaRenderer : ISkiaRenderer
         
         if (_renderers.TryGetValue(type, out var renderer))
         {
-            renderer.Render(component, context, bounds, RenderChildren);
+            renderer.Render(component, context, bounds, RenderChild);
         }
         else
         {
-            // 没有注册渲染器，只渲染子组件
-            RenderChildren(component, context, bounds);
+            // 没有注册渲染器，尝试渲染子组件
+            RenderChild(component, context, bounds);
         }
     }
     
-    private void RenderChildren(IComponent parent, SkiaRenderContext context, SKRect bounds)
+    /// <summary>
+    /// 渲染子组件 - 由容器渲染器调用，用于渲染单个子组件
+    /// </summary>
+    private void RenderChild(IComponent child, SkiaRenderContext context, SKRect bounds)
     {
-        // 简单的垂直布局子组件
-        float y = bounds.Top;
-        float childWidth = bounds.Width;
-        
-        foreach (var child in parent.Children)
-        {
-            var childHeight = EstimateChildHeight(child, context);
-            var childBounds = new SKRect(bounds.Left, y, bounds.Right, y + childHeight);
-            RenderComponent(child, context, childBounds);
-            y += childHeight;
-        }
+        RenderComponent(child, context, bounds);
     }
     
     private float EstimateChildHeight(IComponent component, SkiaRenderContext context)
     {
-        // 简单的高度估算，后续可以根据实际组件属性计算
         return component switch
         {
-            Label label => 24f * context.Scale,
-            Button button => 44f * context.Scale,
+            Label => 24f * context.Scale,
+            Button => 44f * context.Scale,
             StackLayout stack => EstimateStackHeight(stack, context),
             _ => 40f * context.Scale
         };
@@ -98,5 +90,5 @@ public interface ISkiaControlRenderer
         IComponent component, 
         SkiaRenderContext context, 
         SKRect bounds,
-        Action<IComponent, SkiaRenderContext, SKRect> renderChildren);
+        Action<IComponent, SkiaRenderContext, SKRect> renderChild);
 }
