@@ -1,0 +1,52 @@
+@using Eclipse.Generator.Tests.Controls
+
+@code {
+    private string title = "Hello EclipseUI!";
+    private int counter = 0;
+    private string inputText = "";
+    private bool isChecked = false;
+
+    private void Increment()
+    {
+        counter++;
+    }
+
+    private void OnTextChanged(string value)
+    {
+        inputText = value;
+    }
+
+    private void OnChecked(bool value)
+    {
+        isChecked = value;
+    }
+}
+
+<StackLayout Spacing=16 Padding=20>
+    <Label Text=@title FontSize=24 FontWeight="Bold" />
+
+    <HStack Spacing=10>
+        <Label Text="Counter: " />
+        <Label Text=@counter FontSize=18 Color="#007AFF" />
+    </HStack>
+
+    <Button Text="Click Me" OnClick=@Increment BackgroundColor="#007AFF" TextColor="White" />
+
+    <TextInput Placeholder="Type something..." Text=@inputText OnTextChanged=@OnTextChanged />
+    <Label Text=@inputText Color="#666" />
+
+    <CheckBox Label="Enable feature" IsChecked=@isChecked OnCheckedChanged=@OnChecked />
+    <Label Text=@(isChecked ? "Enabled" : "Disabled") />
+
+    @if (counter > 5)
+    {
+        <Label Text="You clicked more than 5 times!" Color="Green" />
+    }
+
+    <Divider Color="#CCC" Thickness=1 Margin=10 />
+
+    <Card BackgroundColor="#F5F5F5" Padding=16>
+        <Label Text="This is a card" FontWeight="Bold" />
+        <Label Text="Cards can contain any content" />
+    </Card>
+</StackLayout>
