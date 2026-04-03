@@ -45,9 +45,7 @@ public class Label : ComponentBase
 
     public override void Render(IRenderContext context)
     {
-        // 渲染文本内容到渲染上下文
-        if (Text != null)
-            context.SetText(Text);
+        // Render 空实现 - 属性由生成代码通过 BeginComponent(out var component) 设置
     }
 }
 
@@ -75,8 +73,7 @@ public class Button : ComponentBase
 
     public override void Render(IRenderContext context)
     {
-        if (Text != null)
-            context.SetText(Text);
+        // Render 空实现 - 属性由生成代码通过 BeginComponent(out var component) 设置
     }
 }
 

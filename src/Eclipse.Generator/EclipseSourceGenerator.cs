@@ -264,11 +264,22 @@ namespace Eclipse.Generator
                         break;
                     case TextNode text:
                         if (!string.IsNullOrWhiteSpace(text.Text))
-                            WriteLine($"context.SetText(\"{EscapeString(text.Text)}\");");
+                        {
+                            // 纯文本节点生成 TextContent 组件
+                            var textVar = $"__textcontent_{++seq}";
+                            WriteLine($"using (context.BeginComponent<TextContent>(new ComponentId({seq}), out var {textVar}))");
+                            WriteLine("{");
+                            WriteLine($"{textVar}.Text = \"{EscapeString(text.Text)}\";");
+                            WriteLine("}");
+                        }
                         break;
                     case ExpressionNode expr:
-                        // 顶层表达式作为文本输出
-                        WriteLine($"context.SetText({expr.Expression}?.ToString());");
+                        // 顶层表达式作为文本输出，生成 TextContent 组件
+                        var exprVar = $"__textcontent_{++seq}";
+                        WriteLine($"using (context.BeginComponent<TextContent>(new ComponentId({seq}), out var {exprVar}))");
+                        WriteLine("{");
+                        WriteLine($"{exprVar}.Text = {expr.Expression}?.ToString();");
+                        WriteLine("}");
                         break;
                     case IfNode ifNode:
                         GenerateIf(ifNode, sb, ref indent, WriteLine, ref seq);

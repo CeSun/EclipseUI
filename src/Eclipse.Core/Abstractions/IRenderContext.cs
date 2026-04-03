@@ -20,11 +20,6 @@ namespace Eclipse.Core.Abstractions
         /// 设置子内容
         /// </summary>
         IDisposable BeginChildContent();
-        
-        /// <summary>
-        /// 设置文本内容
-        /// </summary>
-        void SetText(string? text);
     }
 
     /// <summary>

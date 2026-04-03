@@ -119,7 +119,7 @@ public abstract class ComponentBase : IComponent
 
 ### 4. IRenderContext
 
-渲染上下文接口，定义组件渲染时的操作：
+渲染上下文接口——**只负责构建组件树**，不涉及具体渲染行为：
 
 ```csharp
 public interface IRenderContext
@@ -130,16 +130,40 @@ public interface IRenderContext
     // 组件渲染 - 返回组件实例用于强类型属性设置
     IDisposable BeginComponent<T>(ComponentId id, out T component) where T : IComponent, new();
     
-    // 子内容
+    // 子内容嵌套
     IDisposable BeginChildContent();
-    
-    // 文本内容
-    void SetText(string? text);
 }
 ```
 
-> **注意**：早期版本的 `SetAttribute`、`BindEvent`、`BindProperty`、`RenderTemplate` 已被移除。
-> 现在采用强类型赋值模式：生成代码直接通过 `BeginComponent(out var component)` 获取组件实例并设置属性。
+> **设计原则**：RenderContext 只负责组件树的构建（组件创建、属性设置、层级嵌套）。
+> 具体的渲染行为（如文本显示、图片绘制）由各组件内部处理，或由渲染器在遍历组件树时统一处理。
+
+### 5. TextContent 组件
+
+用于表示标记中的纯文本节点和表达式节点：
+
+```csharp
+public class TextContent : ComponentBase
+{
+    public string? Text { get; set; }
+    public override void Render(IRenderContext context) { }
+}
+```
+
+生成代码示例：
+```csharp
+// 纯文本节点
+using (context.BeginComponent<TextContent>(new ComponentId(1), out var __textcontent_1))
+{
+    __textcontent_1.Text = "Hello World";
+}
+
+// 表达式节点
+using (context.BeginComponent<TextContent>(new ComponentId(2), out var __textcontent_2))
+{
+    __textcontent_2.Text = userName?.ToString();
+}
+```
 
 ## 代码生成策略
 
