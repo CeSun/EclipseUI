@@ -5,6 +5,7 @@
     private int counter = 0;
     private string inputText = "";
     private bool isChecked = false;
+    private string name = "World";
 
     private void OnClick(object? sender, EventArgs e)
     {
@@ -26,6 +27,16 @@
 
 <StackLayout Spacing=16 Padding=20>
     <Label Text=@title FontSize=24 FontWeight="Bold" />
+
+    <Label Text=$"Hello {name}!" FontSize=16 />
+    
+    <Label Text=@"Line 1
+Line 2
+Line 3" FontSize=14 />
+    
+    <Label Text=@$"Name: {name}
+Counter: {counter}
+Checked: {isChecked}" FontSize=12 Color="#666" />
 
     <HStack Spacing=10>
         <Label Text="Counter: " />

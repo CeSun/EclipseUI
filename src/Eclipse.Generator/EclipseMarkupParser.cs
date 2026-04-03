@@ -404,10 +404,41 @@ public class EclipseMarkupParser
     private (string text, bool isBinding) ReadAttributeValue()
     {
         SkipWhitespace();
-        var quote = Peek();
+        var first = Peek();
         var startPos = _position;
         
-        if (quote == '"')
+        // $"" - 内插字符串绑定（不需要 @）
+        if (first == '$' && Peek(1) == '"')
+        {
+            return ReadInterpolatedString(startPos);
+        }
+        
+        // @"..." - 多行字符串字面量
+        // @$"" - 多行内插字符串绑定
+        if (first == '@')
+        {
+            Read(); // 消耗 @
+            var next = Peek();
+            
+            // @$"" - 多行内插字符串
+            if (next == '$' && Peek(1) == '"')
+            {
+                return ReadVerbatimInterpolatedString(startPos);
+            }
+            
+            // @"" - 多行字符串字面量
+            if (next == '"')
+            {
+                return ReadVerbatimString(startPos);
+            }
+            
+            // 否则是原来的绑定表达式处理
+            // 注意：不要回退，ReadAtExpression 期望 @ 已被读取
+            return ReadAtExpression(startPos);
+        }
+        
+        // "" - 普通字符串
+        if (first == '"')
         {
             Read();
             var sb = new StringBuilder();
@@ -488,7 +519,7 @@ public class EclipseMarkupParser
             else
                 return ("\"" + EscapeStringLiteral(sb.ToString()) + "\"", false);
         }
-        else if (quote == '\'')
+        else if (first == '\'')
         {
             Read();
             var sb = new StringBuilder("'");
@@ -506,16 +537,11 @@ public class EclipseMarkupParser
             sb.Append("'");
             return (sb.ToString(), false);
         }
-        else if (quote == '@')
-        {
-            Read();
-            return ReadAtExpression(startPos);
-        }
-        else if (char.IsDigit(quote) || quote == '-' || quote == '+')
+        else if (char.IsDigit(first) || first == '-' || first == '+')
         {
             var sb = new StringBuilder();
             
-            if (quote == '-' || quote == '+')
+            if (first == '-' || first == '+')
             {
                 sb.Append(Read());
             }
@@ -534,7 +560,7 @@ public class EclipseMarkupParser
             
             return (sb.ToString(), false);
         }
-        else if (char.IsLetter(quote) || quote == '_')
+        else if (char.IsLetter(first) || first == '_')
         {
             var sb = new StringBuilder();
             sb.Append(ReadIdentifier());
@@ -558,34 +584,134 @@ public class EclipseMarkupParser
             
             return (sb.ToString(), false);
         }
-        else if (quote == 't' && Match("true"))
+        else if (first == 't' && Match("true"))
         {
             _position += 4;
             return ("true", false);
         }
-        else if (quote == 'f' && Match("false"))
+        else if (first == 'f' && Match("false"))
         {
             _position += 5;
             return ("false", false);
         }
-        else if (quote == 'n' && Match("null"))
+        else if (first == 'n' && Match("null"))
         {
             _position += 4;
             return ("null", false);
         }
         
-        throw new FormatException($"Invalid attribute value starting with '{quote}' at position {startPos}");
+        throw new FormatException($"Invalid attribute value starting with '{first}' at position {startPos}");
+    }
+    
+    /// <summary>
+    /// 读取多行字符串字面量 @"..."
+    /// </summary>
+    private (string text, bool isBinding) ReadVerbatimString(int startPos)
+    {
+        Read(); // 消耗开始的 "
+        var sb = new StringBuilder("@\"");
+        
+        while (!IsAtEnd())
+        {
+            var ch = Peek();
+            if (ch == '"' && Peek(1) == '"')
+            {
+                // 转义的引号 ""
+                Read(); Read();
+                sb.Append("\"\"");
+            }
+            else if (ch == '"')
+            {
+                Read();
+                sb.Append('"');
+                break;
+            }
+            else
+            {
+                sb.Append(Read());
+            }
+        }
+        
+        if (IsAtEnd())
+        {
+            throw new FormatException($"Unclosed verbatim string at position {startPos}, expected '\"'");
+        }
+        
+        return (sb.ToString(), false);
+    }
+    
+    /// <summary>
+    /// 读取多行内插字符串 @$"..."
+    /// </summary>
+    private (string text, bool isBinding) ReadVerbatimInterpolatedString(int startPos)
+    {
+        Read(); // 消耗 $
+        Read(); // 消耗开始的 "
+        var sb = new StringBuilder("$@\"");
+        
+        while (!IsAtEnd())
+        {
+            var ch = Peek();
+            if (ch == '"' && Peek(1) == '"')
+            {
+                // 转义的引号 ""
+                Read(); Read();
+                sb.Append("\"\"");
+            }
+            else if (ch == '"')
+            {
+                Read();
+                sb.Append('"');
+                break;
+            }
+            else if (ch == '{')
+            {
+                sb.Append(Read());
+                // 读取插值表达式
+                var braceDepth = 1;
+                while (!IsAtEnd() && braceDepth > 0)
+                {
+                    var c = Read();
+                    sb.Append(c);
+                    if (c == '{') braceDepth++;
+                    else if (c == '}') braceDepth--;
+                }
+                if (braceDepth > 0)
+                {
+                    throw new FormatException($"Unclosed interpolation in verbatim interpolated string at position {startPos}, expected '}}'");
+                }
+            }
+            else
+            {
+                sb.Append(Read());
+            }
+        }
+        
+        if (IsAtEnd())
+        {
+            throw new FormatException($"Unclosed verbatim interpolated string at position {startPos}, expected '\"'");
+        }
+        
+        return (sb.ToString(), true);
     }
     
     private (string text, bool isBinding) ReadAtExpression(int startPos)
     {
         var next = Peek();
         
+        // @$"" - 多行内插字符串
         if (next == '$' && Peek(1) == '"')
         {
-            return ReadInterpolatedString(startPos);
+            return ReadVerbatimInterpolatedString(startPos);
         }
-        else if (next == '(')
+        
+        // @"" - 多行字符串字面量
+        if (next == '"')
+        {
+            return ReadVerbatimString(startPos);
+        }
+        
+        if (next == '(')
         {
             var exprNode = ParseParenthesizedExpression(_position);
             return (exprNode.Expression, true);

@@ -9,7 +9,6 @@ public class GeneratorTests
     [Fact]
     public void Placeholder_Test()
     {
-        // TODO: 添加实际的测试用例
         Assert.True(true);
     }
 
@@ -31,7 +30,7 @@ public class GeneratorTests
 
         var fontSizeAttr = control.Attributes[1];
         Assert.Equal("FontSize", fontSizeAttr.Name);
-        Assert.Equal("\"24\"", fontSizeAttr.Value);  // 字符串字面量现在带引号
+        Assert.Equal("\"24\"", fontSizeAttr.Value);
         Assert.False(fontSizeAttr.IsBinding);
     }
 
@@ -49,7 +48,7 @@ public class GeneratorTests
         var label = Assert.IsType<ControlNode>(stack.Children[0]);
         Assert.Equal("Label", label.TagName);
         Assert.Equal("Text", label.Attributes[0].Name);
-        Assert.Equal("\"Hello\"", label.Attributes[0].Value);  // 字符串字面量现在带引号
+        Assert.Equal("\"Hello\"", label.Attributes[0].Value);
     }
 
     [Fact]
@@ -65,6 +64,53 @@ public class GeneratorTests
 
         var label = Assert.IsType<ControlNode>(ifNode.ThenBranch[0]);
         Assert.Equal("Label", label.TagName);
+    }
+
+    // ==================== 新语法测试 ====================
+
+    [Fact]
+    public void MarkupParser_InterpolatedString_WithoutAt()
+    {
+        // $"" 不需要 @
+        var parser = new EclipseMarkupParser("<Label Text=$\"Hello {name}\" />");
+        var nodes = parser.Parse();
+
+        Assert.Single(nodes);
+        var control = Assert.IsType<ControlNode>(nodes[0]);
+        var textAttr = control.Attributes[0];
+        Assert.Equal("Text", textAttr.Name);
+        Assert.True(textAttr.IsBinding);
+        Assert.Contains("Hello", textAttr.Value);
+    }
+
+    [Fact]
+    public void MarkupParser_VerbatimString()
+    {
+        // @"" 多行字符串
+        var parser = new EclipseMarkupParser(@"<Label Text=@""Line1
+Line2"" />");
+        var nodes = parser.Parse();
+
+        Assert.Single(nodes);
+        var control = Assert.IsType<ControlNode>(nodes[0]);
+        var textAttr = control.Attributes[0];
+        Assert.Equal("Text", textAttr.Name);
+        Assert.False(textAttr.IsBinding);
+    }
+
+    [Fact]
+    public void MarkupParser_VerbatimInterpolatedString()
+    {
+        // @$"" 多行内插字符串
+        var parser = new EclipseMarkupParser(@"<Label Text=@$""Hello {name}
+World"" />");
+        var nodes = parser.Parse();
+
+        Assert.Single(nodes);
+        var control = Assert.IsType<ControlNode>(nodes[0]);
+        var textAttr = control.Attributes[0];
+        Assert.Equal("Text", textAttr.Name);
+        Assert.True(textAttr.IsBinding);
     }
 
     // ==================== 语法检查测试 ====================
