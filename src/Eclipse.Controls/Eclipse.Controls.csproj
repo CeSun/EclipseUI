@@ -3,16 +3,11 @@
     <TargetFramework>net10.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
-    <RootNamespace>Eclipse.Skia</RootNamespace>
+    <RootNamespace>Eclipse.Controls</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="SkiaSharp" Version="3.119.2" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Eclipse.Core\Eclipse.Core.csproj" />
-    <ProjectReference Include="..\Eclipse.Controls\Eclipse.Controls.csproj" />
   </ItemGroup>
 </Project>

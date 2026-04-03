@@ -1,8 +1,9 @@
 using Eclipse.Core;
 using Eclipse.Core.Abstractions;
+using Eclipse.Controls;
 using SkiaSharp;
 
-namespace Eclipse.Skia.Controls;
+namespace Eclipse.Skia.Renderers;
 
 /// <summary>
 /// StackLayout 渲染器
@@ -127,7 +128,7 @@ public class LabelRenderer : ISkiaControlRenderer
         context.Canvas.DrawText(label.Text, x, y, font, paint);
     }
     
-    private static SKColor ParseColor(string? color, SKColor defaultColor)
+    protected static SKColor ParseColor(string? color, SKColor defaultColor)
     {
         if (string.IsNullOrEmpty(color))
             return defaultColor;
@@ -183,7 +184,7 @@ public class ButtonRenderer : ISkiaControlRenderer
         }
     }
     
-    private static SKColor ParseColor(string? color, SKColor defaultColor)
+    protected static SKColor ParseColor(string? color, SKColor defaultColor)
     {
         if (string.IsNullOrEmpty(color))
             return defaultColor;

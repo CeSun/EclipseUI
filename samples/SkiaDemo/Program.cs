@@ -1,6 +1,5 @@
 using Eclipse.Core;
 using Eclipse.Core.Abstractions;
-using Eclipse.Skia.Controls;
 using Eclipse.Windows;
 
 namespace Eclipse.SkiaDemo;
@@ -13,7 +12,7 @@ static class Program
         // 构建组件树
         var context = new BuildContext();
         
-        using (context.BeginComponent<StackLayout>(new ComponentId(1), out var root))
+        using (context.BeginComponent<Eclipse.Controls.StackLayout>(new ComponentId(1), out var root))
         {
             root.Spacing = 16;
             root.Padding = 20;
@@ -21,7 +20,7 @@ static class Program
             using (context.BeginChildContent())
             {
                 // 标题
-                using (context.BeginComponent<Eclipse.Skia.Controls.Label>(new ComponentId(2), out var title))
+                using (context.BeginComponent<Eclipse.Controls.Label>(new ComponentId(2), out var title))
                 {
                     title.Text = "Hello EclipseUI!";
                     title.FontSize = 32;
@@ -29,7 +28,7 @@ static class Program
                 }
                 
                 // 副标题
-                using (context.BeginComponent<Eclipse.Skia.Controls.Label>(new ComponentId(3), out var subtitle))
+                using (context.BeginComponent<Eclipse.Controls.Label>(new ComponentId(3), out var subtitle))
                 {
                     subtitle.Text = "SkiaSharp 渲染演示";
                     subtitle.FontSize = 18;
@@ -37,7 +36,7 @@ static class Program
                 }
                 
                 // 按钮
-                using (context.BeginComponent<Eclipse.Skia.Controls.Button>(new ComponentId(4), out var button1))
+                using (context.BeginComponent<Eclipse.Controls.Button>(new ComponentId(4), out var button1))
                 {
                     button1.Text = "Click Me";
                     button1.BackgroundColor = "#007AFF";
@@ -47,7 +46,7 @@ static class Program
                 }
                 
                 // 另一个按钮
-                using (context.BeginComponent<Eclipse.Skia.Controls.Button>(new ComponentId(5), out var button2))
+                using (context.BeginComponent<Eclipse.Controls.Button>(new ComponentId(5), out var button2))
                 {
                     button2.Text = "Secondary";
                     button2.BackgroundColor = "#6C757D";
@@ -55,7 +54,7 @@ static class Program
                 }
                 
                 // 更多文本
-                using (context.BeginComponent<Eclipse.Skia.Controls.Label>(new ComponentId(6), out var desc))
+                using (context.BeginComponent<Eclipse.Controls.Label>(new ComponentId(6), out var desc))
                 {
                     desc.Text = "这是一个使用 EclipseUI 框架和 SkiaSharp 渲染的示例应用。";
                     desc.FontSize = 14;

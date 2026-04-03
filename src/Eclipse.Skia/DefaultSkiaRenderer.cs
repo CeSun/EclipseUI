@@ -1,6 +1,7 @@
 using Eclipse.Core;
 using Eclipse.Core.Abstractions;
-using Eclipse.Skia.Controls;
+using Eclipse.Controls;
+using Eclipse.Skia.Renderers;
 using SkiaSharp;
 
 namespace Eclipse.Skia;

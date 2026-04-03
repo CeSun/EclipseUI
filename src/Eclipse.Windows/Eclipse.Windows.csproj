@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Eclipse.Core\Eclipse.Core.csproj" />
+    <ProjectReference Include="..\Eclipse.Controls\Eclipse.Controls.csproj" />
     <ProjectReference Include="..\Eclipse.Skia\Eclipse.Skia.csproj" />
   </ItemGroup>
 </Project>
