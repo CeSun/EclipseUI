@@ -17,6 +17,16 @@ namespace Eclipse.Core.Abstractions
         void OnParametersSet();
         void OnMounted();
         void OnUnmounted();
+        
+        /// <summary>
+        /// 添加子组件
+        /// </summary>
+        void AddChild(IComponent child);
+        
+        /// <summary>
+        /// 移除子组件
+        /// </summary>
+        void RemoveChild(IComponent child);
     }
 
     public readonly struct ComponentId : IEquatable<ComponentId>

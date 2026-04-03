@@ -31,8 +31,8 @@ namespace Eclipse.Core
         public virtual void OnMounted() { if (_isMounted) return; _isMounted = true; }
         public virtual void OnUnmounted() { _isMounted = false; }
         
-        protected void AddChild(IComponent child) { if (child == null) return; _children.Add(child); child.Parent = this; }
-        protected void RemoveChild(IComponent child) { if (child == null) return; _children.Remove(child); child.Parent = null; }
+        public void AddChild(IComponent child) { if (child == null) return; _children.Add(child); child.Parent = this; }
+        public void RemoveChild(IComponent child) { if (child == null) return; _children.Remove(child); child.Parent = null; }
         protected void ClearChildren() { foreach (var child in _children) { child.Parent = null; child.Dispose(); } _children.Clear(); }
         
         public abstract void Render(IBuildContext context);

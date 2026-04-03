@@ -1,8 +1,202 @@
 using System;
+using Eclipse.Core;
+using Eclipse.Core.Abstractions;
+using Eclipse.Demo.Controls;
 using Eclipse.Generator;
 using Xunit;
 
 namespace Eclipse.Demo;
+
+public class BuildContextTests
+{
+    [Fact]
+    public void BuildContext_SimpleComponent()
+    {
+        var context = new BuildContext();
+        
+        using (context.BeginComponent<Label>(new ComponentId(1), out var label))
+        {
+            label.Text = "Hello World";
+            label.FontSize = 16;
+        }
+        
+        var root = context.RootComponent;
+        Assert.NotNull(root);
+        Assert.IsType<Label>(root);
+        
+        var labelRoot = (Label)root!;
+        Assert.Equal("Hello World", labelRoot.Text);
+        Assert.Equal(16, labelRoot.FontSize);
+        Assert.Empty(labelRoot.Children);
+    }
+    
+    [Fact]
+    public void BuildContext_NestedComponentTree()
+    {
+        var context = new BuildContext();
+        
+        using (context.BeginComponent<StackLayout>(new ComponentId(1), out var layout))
+        {
+            layout.Spacing = 10;
+            layout.Padding = 20;
+            
+            using (context.BeginChildContent())
+            {
+                using (context.BeginComponent<Label>(new ComponentId(2), out var label1))
+                {
+                    label1.Text = "Title";
+                    label1.FontSize = 24;
+                }
+                
+                using (context.BeginComponent<Button>(new ComponentId(3), out var button))
+                {
+                    button.Text = "Click Me";
+                }
+            }
+        }
+        
+        var root = context.RootComponent;
+        Assert.NotNull(root);
+        Assert.IsType<StackLayout>(root);
+        
+        var stackLayout = (StackLayout)root!;
+        Assert.Equal(10, stackLayout.Spacing);
+        Assert.Equal(20, stackLayout.Padding);
+        Assert.Equal(2, stackLayout.Children.Count);
+        
+        var child1 = Assert.IsType<Label>(stackLayout.Children[0]);
+        Assert.Equal("Title", child1.Text);
+        Assert.Equal(24, child1.FontSize);
+        
+        var child2 = Assert.IsType<Button>(stackLayout.Children[1]);
+        Assert.Equal("Click Me", child2.Text);
+    }
+    
+    [Fact]
+    public void BuildContext_DepthTracking()
+    {
+        var context = new BuildContext();
+        
+        Assert.Equal(0, context.Depth);
+        
+        using (context.BeginComponent<StackLayout>(new ComponentId(1), out var _))
+        {
+            Assert.Equal(1, context.Depth);
+            
+            using (context.BeginChildContent())
+            {
+                using (context.BeginComponent<Label>(new ComponentId(2), out var _))
+                {
+                    Assert.Equal(2, context.Depth);
+                }
+                
+                Assert.Equal(1, context.Depth);
+            }
+            
+            Assert.Equal(1, context.Depth);
+        }
+        
+        Assert.Equal(0, context.Depth);
+    }
+    
+    [Fact]
+    public void BuildContext_ComponentPathTracking()
+    {
+        var context = new BuildContext();
+        
+        Assert.Empty(context.ComponentPath);
+        
+        using (context.BeginComponent<StackLayout>(new ComponentId(100), out var _))
+        {
+            Assert.Single(context.ComponentPath);
+            Assert.Equal(new ComponentId(100), context.ComponentPath[0]);
+            
+            using (context.BeginChildContent())
+            {
+                using (context.BeginComponent<Label>(new ComponentId(200), out var _))
+                {
+                    Assert.Equal(2, context.ComponentPath.Count);
+                    Assert.Equal(new ComponentId(100), context.ComponentPath[0]);
+                    Assert.Equal(new ComponentId(200), context.ComponentPath[1]);
+                }
+            }
+        }
+        
+        Assert.Empty(context.ComponentPath);
+    }
+    
+    [Fact]
+    public void BuildContext_ParentChildRelationship()
+    {
+        var context = new BuildContext();
+        
+        using (context.BeginComponent<StackLayout>(new ComponentId(1), out var layout))
+        {
+            using (context.BeginChildContent())
+            {
+                using (context.BeginComponent<Label>(new ComponentId(2), out var label))
+                {
+                    label.Text = "Child";
+                }
+            }
+        }
+        
+        var root = context.RootComponent!;
+        var child = root.Children[0];
+        
+        // 验证父子关系
+        Assert.Equal(root, child.Parent);
+        Assert.Contains(child, root.Children);
+    }
+    
+    [Fact]
+    public void BuildContext_LifecycleCalled()
+    {
+        var context = new BuildContext();
+        LifecycleTracker? tracker = null;
+        
+        using (context.BeginComponent<LifecycleTracker>(new ComponentId(1), out tracker))
+        {
+            // tracker is created and OnInitialized called
+            Assert.True(tracker.OnInitializedCalled, "OnInitialized should be called in BeginComponent");
+        }
+        
+        Assert.NotNull(tracker);
+        Assert.True(tracker.OnInitializedCalled, "OnInitializedCalled");
+        Assert.True(tracker.OnParametersSetCalled, "OnParametersSetCalled");
+        Assert.True(tracker.OnMountedCalled, "OnMountedCalled");
+    }
+}
+
+/// <summary>
+/// 生命周期跟踪组件
+/// </summary>
+public class LifecycleTracker : ComponentBase
+{
+    public bool OnInitializedCalled { get; private set; }
+    public bool OnParametersSetCalled { get; private set; }
+    public bool OnMountedCalled { get; private set; }
+    
+    public override void OnInitialized()
+    {
+        base.OnInitialized();
+        OnInitializedCalled = true;
+    }
+    
+    public override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        OnParametersSetCalled = true;
+    }
+    
+    public override void OnMounted()
+    {
+        base.OnMounted();
+        OnMountedCalled = true;
+    }
+    
+    public override void Render(IBuildContext context) { }
+}
 
 public class GeneratorTests
 {
