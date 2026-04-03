@@ -599,15 +599,26 @@ public class EclipseMarkupParser
                 throw new FormatException($"Invalid binding expression at position {startPos}");
             }
             
-            while (!IsAtEnd() && Peek() == '.')
+            // 支持成员访问和方法调用: .Member, .Method(), .Method(args)
+            while (!IsAtEnd() && (Peek() == '.' || Peek() == '('))
             {
-                Read();
-                var member = ReadIdentifier();
-                if (string.IsNullOrEmpty(member))
+                if (Peek() == '.')
                 {
-                    throw new FormatException($"Invalid member access at position {_position}, expected identifier after '.'");
+                    Read();
+                    var member = ReadIdentifier();
+                    if (string.IsNullOrEmpty(member))
+                    {
+                        throw new FormatException($"Invalid member access at position {_position}, expected identifier after '.'");
+                    }
+                    name += "." + member;
                 }
-                name += "." + member;
+                else if (Peek() == '(')
+                {
+                    // 方法调用
+                    Read();
+                    var args = ReadMethodArguments();
+                    name += "(" + args + ")";
+                }
             }
             
             return (name, true);
@@ -616,6 +627,50 @@ public class EclipseMarkupParser
         {
             throw new FormatException($"Invalid expression starting with '@{next}' at position {startPos}");
         }
+    }
+    
+    /// <summary>
+    /// 读取方法参数直到闭合括号
+    /// </summary>
+    private string ReadMethodArguments()
+    {
+        var sb = new StringBuilder();
+        var depth = 1;
+        
+        while (!IsAtEnd() && depth > 0)
+        {
+            var ch = Peek();
+            if (ch == '(')
+            {
+                Read();
+                sb.Append('(');
+                depth++;
+            }
+            else if (ch == ')')
+            {
+                Read();
+                sb.Append(')');
+                depth--;
+            }
+            else if (ch == '"')
+            {
+                // 字符串参数
+                Read();
+                sb.Append('"');
+                while (!IsAtEnd() && Peek() != '"')
+                {
+                    if (Peek() == '\\') { Read(); sb.Append('\\'); }
+                    sb.Append(Read());
+                }
+                if (Peek() == '"') { Read(); sb.Append('"'); }
+            }
+            else
+            {
+                sb.Append(Read());
+            }
+        }
+        
+        return sb.ToString().TrimEnd(')').TrimEnd();
     }
     
     private (string text, bool isBinding) ReadInterpolatedString(int startPos)

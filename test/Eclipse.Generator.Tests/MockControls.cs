@@ -39,11 +39,11 @@ public class HStack : StackLayout
 }
 
 /// <summary>
-/// 文本标签
+/// 文本标签（显示组件，不支持双向绑定）
 /// </summary>
 public class Label : ComponentBase
 {
-    public object? Text { get; set; }
+    public string? Text { get; set; }
     public double FontSize { get; set; } = 14;
     public string? Color { get; set; }
     public string? FontWeight { get; set; }
@@ -52,7 +52,7 @@ public class Label : ComponentBase
     public override void Render(IRenderContext context)
     {
         if (Text != null)
-            context.SetText(Text.ToString());
+            context.SetText(Text);
         context.SetAttribute(nameof(FontSize), FontSize);
         if (Color != null)
             context.SetAttribute(nameof(Color), Color);
@@ -74,13 +74,30 @@ public enum TextAlignment
 /// </summary>
 public class Button : ComponentBase
 {
-    public string? Text { get; set; }
+    private string? _text;
+    public string? Text 
+    { 
+        get => _text;
+        set
+        {
+            if (_text != value)
+            {
+                var old = _text;
+                _text = value;
+                TextChanged?.Invoke(this, new ValueChangedEventArgs<string?>(old, value));
+            }
+        }
+    }
+    
     public string? BackgroundColor { get; set; }
     public string? TextColor { get; set; }
     public double FontSize { get; set; } = 14;
     public bool IsEnabled { get; set; } = true;
     public double CornerRadius { get; set; } = 4;
     public double Padding { get; set; } = 8;
+
+    public event EventHandler<ValueChangedEventArgs<string?>>? TextChanged;
+    public event EventHandler? OnClick;
 
     public override void Render(IRenderContext context)
     {
@@ -102,7 +119,21 @@ public class Button : ComponentBase
 /// </summary>
 public class TextInput : ComponentBase
 {
-    public string? Text { get; set; }
+    private string? _text;
+    public string? Text 
+    { 
+        get => _text;
+        set
+        {
+            if (_text != value)
+            {
+                var old = _text;
+                _text = value;
+                TextChanged?.Invoke(this, new ValueChangedEventArgs<string?>(old, value));
+            }
+        }
+    }
+    
     public string? Placeholder { get; set; }
     public double FontSize { get; set; } = 14;
     public string? BackgroundColor { get; set; }
@@ -111,6 +142,9 @@ public class TextInput : ComponentBase
     public double Padding { get; set; } = 8;
     public bool IsEnabled { get; set; } = true;
     public bool IsPassword { get; set; } = false;
+
+    public event EventHandler<ValueChangedEventArgs<string?>>? TextChanged;
+    public event EventHandler<ValueChangedEventArgs<string?>>? OnTextChanged;
 
     public override void Render(IRenderContext context)
     {
@@ -135,11 +169,28 @@ public class TextInput : ComponentBase
 /// </summary>
 public class CheckBox : ComponentBase
 {
-    public bool IsChecked { get; set; }
+    private bool _isChecked;
+    public bool IsChecked 
+    { 
+        get => _isChecked;
+        set
+        {
+            if (_isChecked != value)
+            {
+                var old = _isChecked;
+                _isChecked = value;
+                IsCheckedChanged?.Invoke(this, new ValueChangedEventArgs<bool>(old, value));
+            }
+        }
+    }
+    
     public string? Label { get; set; }
     public string? CheckedColor { get; set; }
     public double Size { get; set; } = 20;
     public bool IsEnabled { get; set; } = true;
+
+    public event EventHandler<ValueChangedEventArgs<bool>>? IsCheckedChanged;
+    public event EventHandler<ValueChangedEventArgs<bool>>? OnCheckedChanged;
 
     public override void Render(IRenderContext context)
     {
@@ -158,11 +209,27 @@ public class CheckBox : ComponentBase
 /// </summary>
 public class Switch : ComponentBase
 {
-    public bool IsToggled { get; set; }
+    private bool _isToggled;
+    public bool IsToggled 
+    { 
+        get => _isToggled;
+        set
+        {
+            if (_isToggled != value)
+            {
+                var old = _isToggled;
+                _isToggled = value;
+                IsToggledChanged?.Invoke(this, new ValueChangedEventArgs<bool>(old, value));
+            }
+        }
+    }
+    
     public string? OnColor { get; set; }
     public string? OffColor { get; set; }
     public double Scale { get; set; } = 1.0;
     public bool IsEnabled { get; set; } = true;
+
+    public event EventHandler<ValueChangedEventArgs<bool>>? IsToggledChanged;
 
     public override void Render(IRenderContext context)
     {

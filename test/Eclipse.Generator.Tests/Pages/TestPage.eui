@@ -6,20 +6,22 @@
     private string inputText = "";
     private bool isChecked = false;
 
-    private void Increment()
+    private void OnClick(object? sender, EventArgs e)
     {
         counter++;
     }
 
-    private void OnTextChanged(string value)
+    private void OnTextChanged(object? sender, ValueChangedEventArgs<string?> e)
     {
-        inputText = value;
+        inputText = e.NewValue ?? "";
     }
 
-    private void OnChecked(bool value)
+    private void OnCheckedChanged(object? sender, ValueChangedEventArgs<bool> e)
     {
-        isChecked = value;
+        isChecked = e.NewValue;
     }
+    
+    private string CounterText => $"Counter: {counter}";
 }
 
 <StackLayout Spacing=16 Padding=20>
@@ -27,15 +29,15 @@
 
     <HStack Spacing=10>
         <Label Text="Counter: " />
-        <Label Text=@counter FontSize=18 Color="#007AFF" />
+        <Label Text=@CounterText FontSize=18 Color="#007AFF" />
     </HStack>
 
-    <Button Text="Click Me" OnClick=@Increment BackgroundColor="#007AFF" TextColor="White" />
+    <Button Text="Click Me" OnClick=@OnClick BackgroundColor="#007AFF" TextColor="White" />
 
     <TextInput Placeholder="Type something..." Text=@inputText OnTextChanged=@OnTextChanged />
     <Label Text=@inputText Color="#666" />
 
-    <CheckBox Label="Enable feature" IsChecked=@isChecked OnCheckedChanged=@OnChecked />
+    <CheckBox Label="Enable feature" IsChecked=@isChecked OnCheckedChanged=@OnCheckedChanged />
     <Label Text=@(isChecked ? "Enabled" : "Disabled") />
 
     @if (counter > 5)

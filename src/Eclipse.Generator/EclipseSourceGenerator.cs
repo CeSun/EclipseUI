@@ -294,29 +294,12 @@ namespace Eclipse.Generator
             {
                 if (attr.IsEvent)
                 {
-                    // 事件绑定
-                    WriteLine($"context.BindEvent(\"{attr.Name}\", {attr.Value});");
-                }
-                else if (attr.IsBinding)
-                {
-                    // 判断是否是表达式（括号开头、三元运算符等）
-                    var isExpression = attr.Value.StartsWith("(") || attr.Value.Contains("?") || attr.Value.Contains("=>");
-                    
-                    if (isExpression)
-                    {
-                        // 表达式：直接属性赋值（单向）
-                        WriteLine($"{varName}.{attr.Name} = {attr.Value};");
-                    }
-                    else
-                    {
-                        // 变量绑定：双向绑定 + 初始值
-                        WriteLine($"{varName}.{attr.Name} = {attr.Value};");
-                        WriteLine($"context.BindProperty(\"{attr.Name}\", {attr.Value}, v => {attr.Value} = v);");
-                    }
+                    // 事件绑定：OnClick=@Method
+                    WriteLine($"{varName}.{attr.Name} += {attr.Value};");
                 }
                 else
                 {
-                    // 字面量：直接属性赋值
+                    // 属性赋值（包括绑定和字面量）
                     WriteLine($"{varName}.{attr.Name} = {attr.Value};");
                 }
             }
