@@ -180,6 +180,7 @@ public class LabelRenderer : ISkiaControlRenderer
         if (string.IsNullOrEmpty(text)) return;
         
         var currentX = x;
+        var chineseTypeface = GetChineseTypeface();
         
         foreach (var rune in text.EnumerateRunes())
         {
@@ -187,6 +188,9 @@ public class LabelRenderer : ISkiaControlRenderer
             
             // 检查是否是 emoji
             bool isEmoji = (rune.Value >= 0x1F300 && rune.Value <= 0x1F9FF) || (rune.Value >= 0x2600 && rune.Value <= 0x27BF);
+            
+            // 检查是否是中文
+            bool isChinese = rune.Value >= 0x4E00 && rune.Value <= 0x9FFF;
             
             if (isEmoji && emojiTypeface != null)
             {
@@ -201,9 +205,22 @@ public class LabelRenderer : ISkiaControlRenderer
                 canvas.DrawText(chars, currentX, y, emojiFont, paint);
                 currentX += emojiFont.MeasureText(chars);
             }
+            else if (isChinese && baseFont.Typeface != chineseTypeface)
+            {
+                // 中文字符且当前字体不是中文字体，fallback 到中文字体
+                using var chineseFont = new SKFont
+                {
+                    Typeface = chineseTypeface,
+                    Size = baseFont.Size,
+                    Edging = baseFont.Edging,
+                    Subpixel = baseFont.Subpixel
+                };
+                canvas.DrawText(chars, currentX, y, chineseFont, paint);
+                currentX += chineseFont.MeasureText(chars);
+            }
             else
             {
-                // 使用基础字体
+                // 使用基础字体（英文、数字、符号等）
                 canvas.DrawText(chars, currentX, y, baseFont, paint);
                 currentX += baseFont.MeasureText(chars);
             }
@@ -218,11 +235,13 @@ public class LabelRenderer : ISkiaControlRenderer
         if (string.IsNullOrEmpty(text)) return 0;
         
         float width = 0;
+        var chineseTypeface = GetChineseTypeface();
         
         foreach (var rune in text.EnumerateRunes())
         {
             var chars = rune.ToString();
             bool isEmoji = (rune.Value >= 0x1F300 && rune.Value <= 0x1F9FF) || (rune.Value >= 0x2600 && rune.Value <= 0x27BF);
+            bool isChinese = rune.Value >= 0x4E00 && rune.Value <= 0x9FFF;
             
             if (isEmoji && emojiTypeface != null)
             {
@@ -232,6 +251,15 @@ public class LabelRenderer : ISkiaControlRenderer
                     Size = baseFont.Size
                 };
                 width += emojiFont.MeasureText(chars);
+            }
+            else if (isChinese && baseFont.Typeface != chineseTypeface)
+            {
+                using var chineseFont = new SKFont
+                {
+                    Typeface = chineseTypeface,
+                    Size = baseFont.Size
+                };
+                width += chineseFont.MeasureText(chars);
             }
             else
             {
