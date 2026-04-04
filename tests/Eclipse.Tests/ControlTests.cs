@@ -118,7 +118,7 @@ public class ControlTests
         var button = new Button();
         
         // Act - 订阅事件
-        button.OnClick += (s, e) => { };
+        button.Click += (s, e) => { };
         
         // Assert - 无异常即为成功
         Assert.True(button.IsEnabled);

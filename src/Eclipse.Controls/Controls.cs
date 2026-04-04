@@ -1,7 +1,28 @@
 using Eclipse.Core;
 using Eclipse.Core.Abstractions;
+using Eclipse.Input;
+using System.Collections.Generic;
 
 namespace Eclipse.Controls;
+
+/// <summary>
+/// 可交互控件基类 - 支持输入事件
+/// </summary>
+public abstract class InteractiveControl : InputElementBase
+{
+    private Rect _bounds;
+    
+    /// <summary>
+    /// 是否启用
+    /// </summary>
+    public bool IsEnabled { get; set; } = true;
+    
+    public override bool IsInputEnabled => IsEnabled;
+    public override bool IsVisible => true;
+    public override Rect Bounds => _bounds;
+    
+    internal void SetBounds(Rect bounds) => _bounds = bounds;
+}
 
 /// <summary>
 /// 垂直堆叠布局
@@ -13,14 +34,7 @@ public class StackLayout : ComponentBase
     public string? BackgroundColor { get; set; }
     public string? Padding { get; set; } = "0";
     
-    /// <summary>
-    /// 获取解析后的间距
-    /// </summary>
     public double GetSpacing() => double.TryParse(Spacing, out var spacing) ? spacing : 0;
-    
-    /// <summary>
-    /// 获取解析后的内边距
-    /// </summary>
     public double GetPadding() => double.TryParse(Padding, out var padding) ? padding : 0;
     
     public override void Build(IBuildContext context) { }
@@ -52,9 +66,6 @@ public class Label : ComponentBase
     public string? FontFamily { get; set; }
     public TextAlignment TextAlignment { get; set; } = TextAlignment.Left;
     
-    /// <summary>
-    /// 获取解析后的字体大小
-    /// </summary>
     public double GetFontSize() => double.TryParse(FontSize, out var size) ? size : 14;
     
     public override void Build(IBuildContext context) { }
@@ -68,30 +79,47 @@ public enum TextAlignment
 }
 
 /// <summary>
-/// 按钮
+/// 按钮 - 支持输入事件
 /// </summary>
-public class Button : ComponentBase
+public class Button : InteractiveControl
 {
     public string? Text { get; set; }
     public string? BackgroundColor { get; set; } = "#007AFF";
     public string? TextColor { get; set; } = "White";
     public string? FontSize { get; set; } = "14";
     public string? FontFamily { get; set; }
-    public bool IsEnabled { get; set; } = true;
     public string? CornerRadius { get; set; } = "4";
     public string? Padding { get; set; } = "8";
     
-    /// <summary>
-    /// 获取解析后的字体大小
-    /// </summary>
     public double GetFontSize() => double.TryParse(FontSize, out var size) ? size : 14;
-    
-    /// <summary>
-    /// 获取解析后的圆角半径
-    /// </summary>
     public double GetCornerRadius() => double.TryParse(CornerRadius, out var radius) ? radius : 4;
     
-    public event EventHandler? OnClick;
+    /// <summary>
+    /// 点击事件 (新 API)
+    /// </summary>
+    public event EventHandler? Click;
+    
+    /// <summary>
+    /// 点击事件 (兼容旧 API，由 Source Generator 使用)
+    /// </summary>
+    public event EventHandler? OnClick
+    {
+        add => Click += value;
+        remove => Click -= value;
+    }
+    
+    public Button()
+    {
+        IsFocusable = true;
+        
+        Tapped += (s, e) =>
+        {
+            if (IsEnabled)
+            {
+                Click?.Invoke(this, EventArgs.Empty);
+            }
+        };
+    }
     
     public override void Build(IBuildContext context) { }
 }
@@ -99,7 +127,7 @@ public class Button : ComponentBase
 /// <summary>
 /// 文本输入框
 /// </summary>
-public class TextInput : ComponentBase
+public class TextInput : InteractiveControl
 {
     public string? Text { get; set; }
     public string? Placeholder { get; set; }
@@ -108,10 +136,24 @@ public class TextInput : ComponentBase
     public string? BorderColor { get; set; }
     public double CornerRadius { get; set; } = 4;
     public double Padding { get; set; } = 8;
-    public bool IsEnabled { get; set; } = true;
     public bool IsPassword { get; set; } = false;
     
-    public event EventHandler<ValueChangedEventArgs<string?>>? OnTextChanged;
+    public event EventHandler<ValueChangedEventArgs<string?>>? TextChanged;
+    
+    public TextInput()
+    {
+        IsFocusable = true;
+    }
+    
+    public void SetText(string? newText)
+    {
+        if (Text != newText)
+        {
+            var oldText = Text;
+            Text = newText;
+            TextChanged?.Invoke(this, new ValueChangedEventArgs<string?>(oldText, newText));
+        }
+    }
     
     public override void Build(IBuildContext context) { }
 }
@@ -130,15 +172,42 @@ public class ValueChangedEventArgs<T> : EventArgs
 /// <summary>
 /// 复选框
 /// </summary>
-public class CheckBox : ComponentBase
+public class CheckBox : InteractiveControl
 {
-    public bool IsChecked { get; set; }
+    private bool _isChecked;
+    
+    public bool IsChecked
+    {
+        get => _isChecked;
+        set
+        {
+            if (_isChecked != value)
+            {
+                var oldValue = _isChecked;
+                _isChecked = value;
+                CheckedChanged?.Invoke(this, new ValueChangedEventArgs<bool>(oldValue, value));
+            }
+        }
+    }
+    
     public string? Label { get; set; }
     public string? CheckedColor { get; set; }
     public double Size { get; set; } = 20;
-    public bool IsEnabled { get; set; } = true;
     
-    public event EventHandler<ValueChangedEventArgs<bool>>? OnCheckedChanged;
+    public event EventHandler<ValueChangedEventArgs<bool>>? CheckedChanged;
+    
+    public CheckBox()
+    {
+        IsFocusable = true;
+        
+        Tapped += (s, e) =>
+        {
+            if (IsEnabled)
+            {
+                IsChecked = !IsChecked;
+            }
+        };
+    }
     
     public override void Build(IBuildContext context) { }
 }
