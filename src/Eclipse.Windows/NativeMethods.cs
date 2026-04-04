@@ -74,6 +74,9 @@ internal static class NativeMethods
     public static extern bool InvalidateRect(IntPtr hWnd, IntPtr lpRect, bool bErase);
 
     [DllImport("user32.dll")]
+    public static extern bool RedrawWindow(IntPtr hWnd, ref RECT lprcUpdate, IntPtr hrgnUpdate, uint flags);
+
+    [DllImport("user32.dll")]
     public static extern bool GetClientRect(IntPtr hWnd, out RECT lpRect);
 
     [DllImport("user32.dll")]
@@ -262,6 +265,11 @@ internal static class NativeMethods
 
     // Raster Operations
     public const uint SRCCOPY = 0x00CC0020;
+
+    // RedrawWindow flags
+    public const uint RDW_INVALIDATE = 0x0001;
+    public const uint RDW_ERASE = 0x0004;
+    public const uint RDW_ALLCHILDREN = 0x0080;
 
     // Standard Cursors
     public static readonly IntPtr IDC_ARROW = new IntPtr(32512);

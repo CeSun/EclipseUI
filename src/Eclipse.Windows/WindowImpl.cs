@@ -325,6 +325,7 @@ public class WindowImpl : IDisposable
 
         _angleContext.MakeCurrent();
 
+        // 使用 SkiaSharp 的方式更新视口 - 通过在 canvas 上设置尺寸
         // 创建渲染目标
         var framebufferInfo = new GRGlFramebufferInfo(0, SKColorType.Rgba8888.ToGlSizedFormat());
         using var backendRenderTarget = new GRBackendRenderTarget(rect.Width, rect.Height, 0, 8, framebufferInfo);
@@ -338,6 +339,10 @@ public class WindowImpl : IDisposable
         }
 
         var canvas = surface.Canvas;
+        
+        // 重置 canvas 矩阵以匹配新尺寸
+        canvas.ResetMatrix();
+        
         canvas.Clear(SKColors.White);
 
         var context = new SkiaRenderContext(canvas, rect.Width, rect.Height, _scaling);
@@ -449,7 +454,23 @@ public class WindowImpl : IDisposable
     {
         Width = lParam.ToInt32() & 0xFFFF;
         Height = (lParam.ToInt32() >> 16) & 0xFFFF;
-        Invalidate();
+        
+        // 调整 EGL Surface 大小
+        if (_backend == RenderBackend.Angle && _angleContext != null)
+        {
+            _angleContext.ResizeSurface();
+        }
+        
+        // 强制重绘整个窗口
+        var rect = new NativeMethods.RECT
+        {
+            Left = 0,
+            Top = 0,
+            Right = Width,
+            Bottom = Height
+        };
+        NativeMethods.RedrawWindow(_hwnd, ref rect, IntPtr.Zero, 
+            NativeMethods.RDW_INVALIDATE | NativeMethods.RDW_ERASE | NativeMethods.RDW_ALLCHILDREN);
     }
 
     private string GetWindowTitle() => string.Empty;

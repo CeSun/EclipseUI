@@ -16,6 +16,8 @@ internal class AngleD3D11Context : IDisposable
     private IntPtr _hwnd;
     private GRContext? _grContext;
     private bool _isDisposed;
+    private IntPtr _config;
+    private int[] _contextAttribs = Array.Empty<int>();
 
     public IntPtr Display => _eglDisplay;
     public IntPtr Context => _eglContext;
@@ -80,20 +82,12 @@ internal class AngleD3D11Context : IDisposable
         }
         
         Console.WriteLine($"Found {totalConfigs} EGL configs, using first: {config}");
+        
+        _config = config;
+        _contextAttribs = contextAttribs;
 
-        // 7. 创建窗口 Surface - 使用 Avalonia 的属性格式
-        Console.WriteLine($"Creating window surface for hwnd: {_hwnd}");
-        var surfaceAttribs = new int[] { EglConsts.EGL_NONE, EglConsts.EGL_NONE };
-        var surface = _egl.CreateWindowSurface?.Invoke(_eglDisplay, config, _hwnd, surfaceAttribs);
-        _eglSurface = surface ?? IntPtr.Zero;
-        
-        var error = _egl.GetError?.Invoke() ?? 0;
-        if (_eglSurface == IntPtr.Zero)
-        {
-            throw new InvalidOperationException($"Failed to create EGL window surface, error: {error}");
-        }
-        
-        Console.WriteLine("EGL window surface created");
+        // 7. 创建窗口 Surface
+        CreateSurface();
 
         // 8. 创建 OpenGL ES 上下文
         _eglContext = _egl.CreateContext?.Invoke(_eglDisplay, config, IntPtr.Zero, contextAttribs) ?? IntPtr.Zero;
@@ -121,6 +115,47 @@ internal class AngleD3D11Context : IDisposable
         }
 
         Console.WriteLine("ANGLE D3D11 context created successfully");
+    }
+
+    /// <summary>
+    /// 创建 EGL Surface
+    /// </summary>
+    private void CreateSurface()
+    {
+        Console.WriteLine($"Creating window surface for hwnd: {_hwnd}");
+        var surfaceAttribs = new int[] { EglConsts.EGL_NONE, EglConsts.EGL_NONE };
+        var surface = _egl.CreateWindowSurface?.Invoke(_eglDisplay, _config, _hwnd, surfaceAttribs);
+        _eglSurface = surface ?? IntPtr.Zero;
+        
+        var error = _egl.GetError?.Invoke() ?? 0;
+        if (_eglSurface == IntPtr.Zero)
+        {
+            throw new InvalidOperationException($"Failed to create EGL window surface, error: {error}");
+        }
+        
+        Console.WriteLine("EGL window surface created");
+    }
+
+    /// <summary>
+    /// 调整 Surface 大小（窗口大小改变时调用）
+    /// </summary>
+    public void ResizeSurface()
+    {
+        if (_eglSurface != IntPtr.Zero)
+        {
+            // 先解除当前上下文绑定
+            _egl.MakeCurrent?.Invoke(_eglDisplay, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
+            
+            // 销毁旧的 surface
+            _egl.DestroySurface?.Invoke(_eglDisplay, _eglSurface);
+            _eglSurface = IntPtr.Zero;
+        }
+        
+        // 重新创建 surface
+        CreateSurface();
+        
+        // 重新绑定上下文
+        MakeCurrent();
     }
 
     public void MakeCurrent()
