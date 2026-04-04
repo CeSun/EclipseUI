@@ -5,12 +5,12 @@
     <Nullable>enable</Nullable>
     <RootNamespace>Eclipse.Windows</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
-    <UseWindowsForms>true</UseWindowsForms>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Avalonia.Angle.Windows.Natives" Version="2.1.25547.20250602" />
     <PackageReference Include="SkiaSharp" Version="3.119.2" />
-    <PackageReference Include="SkiaSharp.Views.WindowsForms" Version="3.119.2" />
   </ItemGroup>
 
   <ItemGroup>

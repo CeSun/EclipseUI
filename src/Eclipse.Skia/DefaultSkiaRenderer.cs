@@ -69,7 +69,7 @@ public class DefaultSkiaRenderer : ISkiaRenderer
         {
             height += EstimateChildHeight(child, context);
         }
-        height += (float)stack.Spacing * Math.Max(0, stack.Children.Count - 1);
+        height += (float)stack.GetSpacing() * Math.Max(0, stack.Children.Count - 1);
         return height;
     }
     

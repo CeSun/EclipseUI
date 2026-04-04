@@ -9,9 +9,19 @@ namespace Eclipse.Controls;
 public class StackLayout : ComponentBase
 {
     public Orientation Orientation { get; set; } = Orientation.Vertical;
-    public double Spacing { get; set; } = 0;
+    public string? Spacing { get; set; } = "0";
     public string? BackgroundColor { get; set; }
-    public double Padding { get; set; } = 0;
+    public string? Padding { get; set; } = "0";
+    
+    /// <summary>
+    /// 获取解析后的间距
+    /// </summary>
+    public double GetSpacing() => double.TryParse(Spacing, out var spacing) ? spacing : 0;
+    
+    /// <summary>
+    /// 获取解析后的内边距
+    /// </summary>
+    public double GetPadding() => double.TryParse(Padding, out var padding) ? padding : 0;
     
     public override void Render(IBuildContext context) { }
 }
@@ -36,10 +46,15 @@ public class HStack : StackLayout
 public class Label : ComponentBase
 {
     public string? Text { get; set; }
-    public double FontSize { get; set; } = 14;
+    public string? FontSize { get; set; } = "14";
     public string? Color { get; set; }
     public string? FontWeight { get; set; }
     public TextAlignment TextAlignment { get; set; } = TextAlignment.Left;
+    
+    /// <summary>
+    /// 获取解析后的字体大小
+    /// </summary>
+    public double GetFontSize() => double.TryParse(FontSize, out var size) ? size : 14;
     
     public override void Render(IBuildContext context) { }
 }
@@ -59,10 +74,20 @@ public class Button : ComponentBase
     public string? Text { get; set; }
     public string? BackgroundColor { get; set; } = "#007AFF";
     public string? TextColor { get; set; } = "White";
-    public double FontSize { get; set; } = 14;
+    public string? FontSize { get; set; } = "14";
     public bool IsEnabled { get; set; } = true;
-    public double CornerRadius { get; set; } = 4;
-    public double Padding { get; set; } = 8;
+    public string? CornerRadius { get; set; } = "4";
+    public string? Padding { get; set; } = "8";
+    
+    /// <summary>
+    /// 获取解析后的字体大小
+    /// </summary>
+    public double GetFontSize() => double.TryParse(FontSize, out var size) ? size : 14;
+    
+    /// <summary>
+    /// 获取解析后的圆角半径
+    /// </summary>
+    public double GetCornerRadius() => double.TryParse(CornerRadius, out var radius) ? radius : 4;
     
     public event EventHandler? OnClick;
     

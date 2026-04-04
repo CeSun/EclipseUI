@@ -21,8 +21,8 @@ public class StackLayoutRenderer : ISkiaControlRenderer
         var stack = (StackLayout)component;
         
         var orientation = stack.Orientation;
-        var spacing = (float)stack.Spacing * context.Scale;
-        var padding = (float)stack.Padding * context.Scale;
+        var spacing = (float)stack.GetSpacing() * context.Scale;
+        var padding = (float)stack.GetPadding() * context.Scale;
         
         var contentBounds = new SKRect(
             bounds.Left + padding,
@@ -114,7 +114,7 @@ public class LabelRenderer : ISkiaControlRenderer
         
         using var font = new SKFont
         {
-            Size = (float)label.FontSize * context.Scale
+            Size = (float)label.GetFontSize() * context.Scale
         };
         
         if (label.FontWeight == "Bold")
@@ -160,7 +160,7 @@ public class ButtonRenderer : ISkiaControlRenderer
             Style = SKPaintStyle.Fill
         };
         
-        var cornerRadius = (float)button.CornerRadius * context.Scale;
+        var cornerRadius = (float)button.GetCornerRadius() * context.Scale;
         context.Canvas.DrawRoundRect(bounds, cornerRadius, cornerRadius, bgPaint);
         
         if (!string.IsNullOrEmpty(button.Text))
@@ -173,7 +173,7 @@ public class ButtonRenderer : ISkiaControlRenderer
             
             using var font = new SKFont
             {
-                Size = (float)button.FontSize * context.Scale
+                Size = (float)button.GetFontSize() * context.Scale
             };
             
             var textWidth = font.MeasureText(button.Text);
