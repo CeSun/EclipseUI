@@ -95,8 +95,9 @@ public class LabelRenderer : ISkiaControlRenderer
 {
     public Type TargetType => typeof(Label);
     
-    // 缓存中文字体
+    // 缓存字体
     private static SKTypeface? _chineseTypeface;
+    private static SKTypeface? _emojiTypeface;
     
     /// <summary>
     /// 获取支持中文的字体
@@ -106,15 +107,9 @@ public class LabelRenderer : ISkiaControlRenderer
         if (_chineseTypeface != null)
             return _chineseTypeface;
         
-        // 尝试常见的中文字体
         var chineseFonts = new[] { 
-            "Microsoft YaHei",      // 微软雅黑
-            "SimSun",               // 宋体
-            "SimHei",               // 黑体
-            "PingFang SC",          // 苹方 (macOS)
-            "Noto Sans CJK SC",     // 思源黑体
-            "WenQuanYi Micro Hei",  // 文泉驿 (Linux)
-            null                    // 默认字体
+            "Microsoft YaHei", "SimSun", "SimHei", "PingFang SC", 
+            "Noto Sans CJK SC", "WenQuanYi Micro Hei", "Segoe UI", null
         };
         
         foreach (var fontName in chineseFonts)
@@ -132,6 +127,44 @@ public class LabelRenderer : ISkiaControlRenderer
         return _chineseTypeface;
     }
     
+    /// <summary>
+    /// 获取支持 Emoji 的字体
+    /// </summary>
+    public static SKTypeface GetEmojiTypeface()
+    {
+        if (_emojiTypeface != null)
+            return _emojiTypeface;
+        
+        var emojiFonts = new[] { "Segoe UI Emoji", "Noto Color Emoji", "Apple Color Emoji", null };
+        
+        foreach (var fontName in emojiFonts)
+        {
+            var typeface = SKTypeface.FromFamilyName(fontName, SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);
+            if (typeface != null)
+            {
+                _emojiTypeface = typeface;
+                Console.WriteLine($"Using emoji font: {typeface.FamilyName}");
+                return typeface;
+            }
+        }
+        
+        _emojiTypeface = SKTypeface.Default;
+        return _emojiTypeface;
+    }
+    
+    /// <summary>
+    /// 检查文本是否包含 emoji
+    /// </summary>
+    public static bool ContainsEmoji(string text)
+    {
+        foreach (var rune in text.EnumerateRunes())
+        {
+            if (rune.Value >= 0x1F300 && rune.Value <= 0x1F9FF) return true;
+            if (rune.Value >= 0x2600 && rune.Value <= 0x27BF) return true;
+        }
+        return false;
+    }
+    
     public void Render(
         IComponent component, 
         SkiaRenderContext context, 
@@ -143,7 +176,6 @@ public class LabelRenderer : ISkiaControlRenderer
         if (string.IsNullOrEmpty(label.Text))
             return;
         
-        // 使用 SKFont + SKPaint 组合 (SkiaSharp 3.x 推荐方式)
         using var font = new SKFont
         {
             Size = (float)label.GetFontSize() * context.Scale,
@@ -151,8 +183,12 @@ public class LabelRenderer : ISkiaControlRenderer
             Subpixel = true
         };
         
-        // 设置字体 - 支持中文
-        if (label.FontWeight == "Bold")
+        // 根据内容选择字体
+        if (ContainsEmoji(label.Text))
+        {
+            font.Typeface = GetEmojiTypeface();
+        }
+        else if (label.FontWeight == "Bold")
         {
             font.Typeface = SKTypeface.FromFamilyName(GetChineseTypeface().FamilyName, SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright) 
                 ?? GetChineseTypeface();
@@ -211,7 +247,6 @@ public class ButtonRenderer : ISkiaControlRenderer
         
         if (!string.IsNullOrEmpty(button.Text))
         {
-            // 使用 SKFont + SKPaint 组合 (SkiaSharp 3.x 推荐方式)
             using var font = new SKFont
             {
                 Size = (float)button.GetFontSize() * context.Scale,
@@ -219,8 +254,10 @@ public class ButtonRenderer : ISkiaControlRenderer
                 Subpixel = true
             };
             
-            // 使用支持中文的字体
-            font.Typeface = LabelRenderer.GetChineseTypeface();
+            // 根据内容选择字体
+            font.Typeface = LabelRenderer.ContainsEmoji(button.Text) 
+                ? LabelRenderer.GetEmojiTypeface() 
+                : LabelRenderer.GetChineseTypeface();
             
             using var textPaint = new SKPaint
             {

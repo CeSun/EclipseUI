@@ -11,16 +11,22 @@
 }
 
 <StackLayout Spacing="16" Padding="20">
-    <Label Text="Hello EclipseUI!1111" FontSize="32" FontWeight="Bold" />
-    <Label Text="SkiaSharp 渲染演示" FontSize="18" Color="#666" />
+    <Label Text="Hello EclipseUI! 🎉" FontSize="32" FontWeight="Bold" />
+    <Label Text="SkiaSharp 渲染演示 🚀" FontSize="18" Color="#666" />
+    
+    <Label Text="Emoji 测试:" FontSize="16" FontWeight="Bold" />
+    <Label Text="😀 😃 😄 😁 😆 😅 🤣 😂" FontSize="24" />
+    <Label Text="👍 👎 👏 🙏 💪 🎉 🔥 ⭐" FontSize="24" />
+    <Label Text="🍎 🍊 🍋 🍇 🍓 🍉 🍑 🍒" FontSize="24" />
+    <Label Text="🐱 🐶 🐼 🐨 🦊 🐯 🦁 🐮" FontSize="24" />
     
     @if (_clickCount > 0)
     {
-        <Label Text=$"点击次数: {_clickCount}" FontSize="16" Color="#007AFF" />
+        <Label Text=$"点击次数: {_clickCount} 🎯" FontSize="16" Color="#007AFF" />
     }
     
-    <Button Text="点击我" BackgroundColor="#007AFF" TextColor="White" FontSize="16" CornerRadius="8" OnClick="@OnButtonClick" />
-    <Button Text="次要按钮" BackgroundColor="#6C757D" TextColor="White" CornerRadius="8" />
+    <Button Text="点击我 👆" BackgroundColor="#007AFF" TextColor="White" FontSize="16" CornerRadius="8" OnClick="@OnButtonClick" />
+    <Button Text="❤️ 喜欢" BackgroundColor="#FF6B6B" TextColor="White" CornerRadius="8" />
     
-    <Label Text="这是一个使用 EUI 语法和 SkiaSharp 渲染的示例应用。" FontSize="14" Color="#333" />
+    <Label Text="这是一个使用 EUI 语法和 SkiaSharp 渲染的示例应用。✨" FontSize="14" Color="#333" />
 </StackLayout>
