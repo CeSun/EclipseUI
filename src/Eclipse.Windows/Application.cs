@@ -58,7 +58,7 @@ public static class Application
     private static IComponent BuildComponent(ComponentBase component)
     {
         var context = new BuildContext();
-        component.Render(context);
+        component.Build(context);
         return context.RootComponent ?? throw new InvalidOperationException("EUI component did not produce a root component");
     }
 }

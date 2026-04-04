@@ -81,7 +81,7 @@ public class BuildContextTests
 internal class TestComponent : ComponentBase
 {
     public string? Value { get; set; }
-    public override void Render(IBuildContext context) { }
+    public override void Build(IBuildContext context) { }
 }
 
 /// <summary>
@@ -89,5 +89,5 @@ internal class TestComponent : ComponentBase
 /// </summary>
 internal class TestContainer : ComponentBase
 {
-    public override void Render(IBuildContext context) { }
+    public override void Build(IBuildContext context) { }
 }

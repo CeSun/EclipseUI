@@ -23,7 +23,7 @@ public class StackLayout : ComponentBase
     /// </summary>
     public double GetPadding() => double.TryParse(Padding, out var padding) ? padding : 0;
     
-    public override void Render(IBuildContext context) { }
+    public override void Build(IBuildContext context) { }
 }
 
 public enum Orientation
@@ -56,7 +56,7 @@ public class Label : ComponentBase
     /// </summary>
     public double GetFontSize() => double.TryParse(FontSize, out var size) ? size : 14;
     
-    public override void Render(IBuildContext context) { }
+    public override void Build(IBuildContext context) { }
 }
 
 public enum TextAlignment
@@ -91,7 +91,7 @@ public class Button : ComponentBase
     
     public event EventHandler? OnClick;
     
-    public override void Render(IBuildContext context) { }
+    public override void Build(IBuildContext context) { }
 }
 
 /// <summary>
@@ -111,7 +111,7 @@ public class TextInput : ComponentBase
     
     public event EventHandler<ValueChangedEventArgs<string?>>? OnTextChanged;
     
-    public override void Render(IBuildContext context) { }
+    public override void Build(IBuildContext context) { }
 }
 
 public class ValueChangedEventArgs<T> : EventArgs
@@ -138,7 +138,7 @@ public class CheckBox : ComponentBase
     
     public event EventHandler<ValueChangedEventArgs<bool>>? OnCheckedChanged;
     
-    public override void Render(IBuildContext context) { }
+    public override void Build(IBuildContext context) { }
 }
 
 /// <summary>
@@ -151,7 +151,7 @@ public class Image : ComponentBase
     public double Height { get; set; } = -1;
     public Stretch Stretch { get; set; } = Stretch.Uniform;
     
-    public override void Render(IBuildContext context) { }
+    public override void Build(IBuildContext context) { }
 }
 
 public enum Stretch
@@ -171,5 +171,5 @@ public class Container : ComponentBase
     public double Padding { get; set; } = 0;
     public double CornerRadius { get; set; } = 0;
     
-    public override void Render(IBuildContext context) { }
+    public override void Build(IBuildContext context) { }
 }

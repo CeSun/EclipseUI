@@ -35,7 +35,7 @@ namespace Eclipse.Core
         public void RemoveChild(IComponent child) { if (child == null) return; _children.Remove(child); child.Parent = null; }
         protected void ClearChildren() { foreach (var child in _children) { child.Parent = null; child.Dispose(); } _children.Clear(); }
         
-        public abstract void Render(IBuildContext context);
+        public abstract void Build(IBuildContext context);
         
         public void Dispose()
         {

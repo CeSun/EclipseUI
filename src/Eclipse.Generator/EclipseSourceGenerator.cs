@@ -228,10 +228,10 @@ namespace Eclipse.Generator
                     WriteLine(line);
                 WriteLine();
             }
-            WriteLine("public override void Render(IBuildContext context)");
+            WriteLine("public override void Build(IBuildContext context)");
             WriteLine("{");
             indent++;
-            GenerateRenderBody(parsed.Markup, sb, ref indent, WriteLine);
+            GenerateBuildBody(parsed.Markup, sb, ref indent, WriteLine);
             indent--;
             WriteLine("}");
             indent--;
@@ -241,7 +241,7 @@ namespace Eclipse.Generator
             return sb.ToString();
         }
 
-        private void GenerateRenderBody(string markup, StringBuilder sb, ref int indent, Action<string> WriteLine)
+        private void GenerateBuildBody(string markup, StringBuilder sb, ref int indent, Action<string> WriteLine)
         {
             if (string.IsNullOrWhiteSpace(markup))
             {
@@ -362,24 +362,11 @@ namespace Eclipse.Generator
         }
         
         /// <summary>
-        /// 获取控件的完整类型名，避免与 WinForms 控件冲突
+        /// 获取控件的类型名
         /// </summary>
         private string GetFullTypeName(string tagName)
         {
-            // 内置控件使用 Eclipse.Controls 命名空间
-            var builtInControls = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-            {
-                "StackLayout", "HStack", "VStack",
-                "Label", "Button", "TextInput", "CheckBox", "Image", "Container",
-                "TextContent"
-            };
-            
-            if (builtInControls.Contains(tagName))
-            {
-                return $"Eclipse.Controls.{tagName}";
-            }
-            
-            // 其他控件保持原名称（可能是自定义控件）
+            // 直接返回标签名，用户需要通过 @using 导入命名空间
             return tagName;
         }
 

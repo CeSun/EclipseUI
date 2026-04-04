@@ -195,7 +195,7 @@ public class LifecycleTracker : ComponentBase
         OnMountedCalled = true;
     }
     
-    public override void Render(IBuildContext context) { }
+    public override void Build(IBuildContext context) { }
 }
 
 public class GeneratorTests

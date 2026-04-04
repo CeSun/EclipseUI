@@ -11,7 +11,7 @@ namespace Eclipse.Core.Abstractions
         ComponentId Id { get; }
         IComponent? Parent { get; set; }
         IReadOnlyList<IComponent> Children { get; }
-        void Render(IBuildContext context);
+        void Build(IBuildContext context);
         event EventHandler? StateChanged;
         void OnInitialized();
         void OnParametersSet();
