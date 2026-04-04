@@ -2,6 +2,7 @@ using Eclipse.Core;
 using Eclipse.Core.Abstractions;
 using Eclipse.Controls;
 using SkiaSharp;
+using Eclipse.Skia.Text;
 
 namespace Eclipse.Skia.Renderers;
 
@@ -89,11 +90,14 @@ public class StackLayoutRenderer : ISkiaControlRenderer
 }
 
 /// <summary>
-/// Label 渲染器
+/// Label 渲染器 - 使用 HarfBuzz 文本塑形
 /// </summary>
 public class LabelRenderer : ISkiaControlRenderer
 {
     public Type TargetType => typeof(Label);
+    
+    // 共享渲染器实例
+    private static readonly HarfBuzzTextRenderer _textRenderer = new();
     
     // 缓存字体
     private static SKTypeface? _chineseTypeface;
@@ -108,17 +112,19 @@ public class LabelRenderer : ISkiaControlRenderer
             return _chineseTypeface;
         
         var chineseFonts = new[] { 
-            "Microsoft YaHei", "SimSun", "SimHei", "PingFang SC", 
-            "Noto Sans CJK SC", "WenQuanYi Micro Hei", "Segoe UI", null
+            "Microsoft YaHei", "PingFang SC", "SimSun", 
+            "Noto Sans CJK SC", "Segoe UI"
         };
         
         foreach (var fontName in chineseFonts)
         {
-            var typeface = SKTypeface.FromFamilyName(fontName, SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);
-            if (typeface != null)
+            var typeface = SKTypeface.FromFamilyName(fontName, 
+                SKFontStyleWeight.Normal, 
+                SKFontStyleWidth.Normal, 
+                SKFontStyleSlant.Upright);
+            if (typeface != null && typeface.CountGlyphs("中") > 0)
             {
                 _chineseTypeface = typeface;
-                Console.WriteLine($"Using font: {typeface.FamilyName}");
                 return typeface;
             }
         }
@@ -135,165 +141,26 @@ public class LabelRenderer : ISkiaControlRenderer
         if (_emojiTypeface != null)
             return _emojiTypeface;
         
-        var emojiFonts = new[] { "Segoe UI Emoji", "Noto Color Emoji", "Apple Color Emoji", "Twemoji Mozilla", null };
+        var emojiFonts = new[] { 
+            "Segoe UI Emoji", "Noto Color Emoji", 
+            "Apple Color Emoji", "Twemoji Mozilla"
+        };
         
         foreach (var fontName in emojiFonts)
         {
-            var typeface = SKTypeface.FromFamilyName(fontName, SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);
-            if (typeface != null)
+            var typeface = SKTypeface.FromFamilyName(fontName, 
+                SKFontStyleWeight.Normal, 
+                SKFontStyleWidth.Normal, 
+                SKFontStyleSlant.Upright);
+            if (typeface != null && typeface.CountGlyphs("\U0001F600") > 0)
             {
                 _emojiTypeface = typeface;
-                Console.WriteLine($"Using emoji font: {typeface.FamilyName}");
                 return typeface;
             }
         }
         
         _emojiTypeface = SKTypeface.Default;
         return _emojiTypeface;
-    }
-    
-    /// <summary>
-    /// 检查字符是否是 Emoji
-    /// </summary>
-    private static bool IsEmoji(int codePoint)
-    {
-        // Emoji 范围
-        return (codePoint >= 0x1F300 && codePoint <= 0x1F9FF) ||  // 各种 Emoji
-               (codePoint >= 0x2600 && codePoint <= 0x26FF) ||    // 杂项符号
-               (codePoint >= 0x2700 && codePoint <= 0x27BF) ||    // Dingbats
-               (codePoint >= 0x1F600 && codePoint <= 0x1F64F) ||  // 表情
-               (codePoint >= 0x1F680 && codePoint <= 0x1F6FF) ||  // 交通
-               (codePoint >= 0x1F900 && codePoint <= 0x1F9FF);    // 补充符号
-    }
-    
-    /// <summary>
-    /// 使用字体 fallback 渲染文本
-    /// </summary>
-    public static void DrawTextWithFallback(
-        SKCanvas canvas, 
-        string text, 
-        float x, 
-        float y, 
-        SKFont baseFont, 
-        SKPaint paint)
-    {
-        if (string.IsNullOrEmpty(text)) return;
-        
-        var currentX = x;
-        var fontManager = SKFontManager.Default;
-        var baseTypeface = baseFont.Typeface ?? SKTypeface.Default;
-        var emojiTypeface = GetEmojiTypeface();
-        var bcp47 = new[] { "en", "zh", "ja", "kr" };
-        
-        var si = new System.Globalization.StringInfo(text);
-        for (int i = 0; i < si.LengthInTextElements; i++)
-        {
-            var str = si.SubstringByTextElements(i, 1);
-            var codePoint = char.ConvertToUtf32(str, 0);
-            
-            // 1. 优先检查是否是 Emoji
-            if (IsEmoji(codePoint))
-            {
-                using var emojiFont = new SKFont
-                {
-                    Typeface = emojiTypeface,
-                    Size = baseFont.Size,
-                    Edging = baseFont.Edging,
-                    Subpixel = baseFont.Subpixel
-                };
-                canvas.DrawText(str, currentX, y, emojiFont, paint);
-                currentX += emojiFont.MeasureText(str);
-                continue;
-            }
-            
-            // 2. 检查当前字体是否支持该字符
-            if (baseTypeface.CountGlyphs(str) == 0)
-            {
-                // 3. 使用 MatchCharacter 查找合适的字体
-                var matchedTypeface = fontManager.MatchCharacter(
-                    baseTypeface.FamilyName,
-                    baseTypeface.FontWeight,
-                    baseTypeface.FontWidth,
-                    baseTypeface.FontSlant,
-                    bcp47,
-                    str[0]);
-                
-                if (matchedTypeface != null)
-                {
-                    using var matchedFont = new SKFont
-                    {
-                        Typeface = matchedTypeface,
-                        Size = baseFont.Size,
-                        Edging = baseFont.Edging,
-                        Subpixel = baseFont.Subpixel
-                    };
-                    canvas.DrawText(str, currentX, y, matchedFont, paint);
-                    currentX += matchedFont.MeasureText(str);
-                }
-                else
-                {
-                    canvas.DrawText(str, currentX, y, baseFont, paint);
-                    currentX += baseFont.MeasureText(str);
-                }
-            }
-            else
-            {
-                canvas.DrawText(str, currentX, y, baseFont, paint);
-                currentX += baseFont.MeasureText(str);
-            }
-        }
-    }
-    
-    /// <summary>
-    /// 测量混合文本宽度
-    /// </summary>
-    public static float MeasureTextWithFallback(string text, SKFont baseFont)
-    {
-        if (string.IsNullOrEmpty(text)) return 0;
-        
-        float width = 0;
-        var fontManager = SKFontManager.Default;
-        var baseTypeface = baseFont.Typeface ?? SKTypeface.Default;
-        var emojiTypeface = GetEmojiTypeface();
-        var bcp47 = new[] { "en", "zh", "ja", "kr" };
-        
-        var si = new System.Globalization.StringInfo(text);
-        for (int i = 0; i < si.LengthInTextElements; i++)
-        {
-            var str = si.SubstringByTextElements(i, 1);
-            var codePoint = char.ConvertToUtf32(str, 0);
-            
-            // Emoji
-            if (IsEmoji(codePoint))
-            {
-                using var emojiFont = new SKFont { Typeface = emojiTypeface, Size = baseFont.Size };
-                width += emojiFont.MeasureText(str);
-                continue;
-            }
-            
-            if (baseTypeface.CountGlyphs(str) == 0)
-            {
-                var matchedTypeface = fontManager.MatchCharacter(
-                    baseTypeface.FamilyName, baseTypeface.FontWeight,
-                    baseTypeface.FontWidth, baseTypeface.FontSlant, bcp47, str[0]);
-                
-                if (matchedTypeface != null)
-                {
-                    using var matchedFont = new SKFont { Typeface = matchedTypeface, Size = baseFont.Size };
-                    width += matchedFont.MeasureText(str);
-                }
-                else
-                {
-                    width += baseFont.MeasureText(str);
-                }
-            }
-            else
-            {
-                width += baseFont.MeasureText(str);
-            }
-        }
-        
-        return width;
     }
     
     public void Render(
@@ -323,7 +190,10 @@ public class LabelRenderer : ISkiaControlRenderer
         }
         else if (label.FontWeight == "Bold")
         {
-            font.Typeface = SKTypeface.FromFamilyName(GetChineseTypeface().FamilyName, SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright) 
+            font.Typeface = SKTypeface.FromFamilyName(GetChineseTypeface().FamilyName, 
+                SKFontStyleWeight.Bold, 
+                SKFontStyleWidth.Normal, 
+                SKFontStyleSlant.Upright) 
                 ?? GetChineseTypeface();
         }
         else
@@ -340,8 +210,16 @@ public class LabelRenderer : ISkiaControlRenderer
         var x = bounds.Left;
         var y = bounds.Top + font.Spacing;
         
-        // 使用 fallback 渲染（支持中文 + emoji 混合）
-        DrawTextWithFallback(context.Canvas, label.Text, x, y, font, paint);
+        // 使用 HarfBuzz 渲染器（支持 emoji、复杂脚本、字体回退）
+        _textRenderer.DrawText(context.Canvas, label.Text, x, y, font, paint);
+    }
+    
+    /// <summary>
+    /// 测量文本宽度（使用 HarfBuzz 渲染器）
+    /// </summary>
+    public static float MeasureText(string text, SKFont font)
+    {
+        return _textRenderer.MeasureText(text, font);
     }
     
     protected static SKColor ParseColor(string? color, SKColor defaultColor)
@@ -359,6 +237,8 @@ public class LabelRenderer : ISkiaControlRenderer
 public class ButtonRenderer : ISkiaControlRenderer
 {
     public Type TargetType => typeof(Button);
+    
+    private static readonly HarfBuzzTextRenderer _textRenderer = new();
     
     public void Render(
         IComponent component, 
@@ -391,7 +271,10 @@ public class ButtonRenderer : ISkiaControlRenderer
             // 字体选择
             if (!string.IsNullOrEmpty(button.FontFamily))
             {
-                font.Typeface = SKTypeface.FromFamilyName(button.FontFamily, SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright)
+                font.Typeface = SKTypeface.FromFamilyName(button.FontFamily, 
+                    SKFontStyleWeight.Normal, 
+                    SKFontStyleWidth.Normal, 
+                    SKFontStyleSlant.Upright)
                     ?? LabelRenderer.GetChineseTypeface();
             }
             else
@@ -405,13 +288,12 @@ public class ButtonRenderer : ISkiaControlRenderer
                 Color = ParseColor(button.TextColor, SKColors.White)
             };
             
-            // 先计算总宽度以居中
-            var textWidth = LabelRenderer.MeasureTextWithFallback(button.Text, font);
+            // 使用 HarfBuzz 测量和渲染
+            var textWidth = _textRenderer.MeasureText(button.Text, font);
             var x = bounds.Left + (bounds.Width - textWidth) / 2;
             var y = bounds.Top + (bounds.Height + font.Spacing) / 2 - font.Metrics.Descent;
             
-            // 使用 fallback 渲染
-            LabelRenderer.DrawTextWithFallback(context.Canvas, button.Text, x, y, font, textPaint);
+            _textRenderer.DrawText(context.Canvas, button.Text, x, y, font, textPaint);
         }
     }
     
