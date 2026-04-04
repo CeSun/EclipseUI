@@ -14,11 +14,16 @@
     <Label Text="Hello EclipseUI! 🎉" FontSize="32" FontWeight="Bold" />
     <Label Text="SkiaSharp 渲染演示 🚀" FontSize="18" Color="#666" />
     
+    <Label Text="字体自定义测试:" FontSize="16" FontWeight="Bold" />
+    <Label Text="默认字体 (Microsoft YaHei)" FontSize="14" />
+    <Label Text="Arial 字体" FontSize="14" FontFamily="Arial" />
+    <Label Text="Times New Roman 字体" FontSize="14" FontFamily="Times New Roman" />
+    <Label Text="Courier New 等宽字体" FontSize="14" FontFamily="Courier New" />
+    <Label Text="Comic Sans MS 字体" FontSize="14" FontFamily="Comic Sans MS" />
+    
     <Label Text="Emoji 测试:" FontSize="16" FontWeight="Bold" />
     <Label Text="😀 😃 😄 😁 😆 😅 🤣 😂" FontSize="24" />
     <Label Text="👍 👎 👏 🙏 💪 🎉 🔥 ⭐" FontSize="24" />
-    <Label Text="🍎 🍊 🍋 🍇 🍓 🍉 🍑 🍒" FontSize="24" />
-    <Label Text="🐱 🐶 🐼 🐨 🦊 🐯 🦁 🐮" FontSize="24" />
     
     @if (_clickCount > 0)
     {
@@ -26,7 +31,7 @@
     }
     
     <Button Text="点击我 👆" BackgroundColor="#007AFF" TextColor="White" FontSize="16" CornerRadius="8" OnClick="@OnButtonClick" />
-    <Button Text="❤️ 喜欢" BackgroundColor="#FF6B6B" TextColor="White" CornerRadius="8" />
+    <Button Text="Arial 字体按钮" FontFamily="Arial" BackgroundColor="#6C757D" TextColor="White" CornerRadius="8" />
     
     <Label Text="这是一个使用 EUI 语法和 SkiaSharp 渲染的示例应用。✨" FontSize="14" Color="#333" />
 </StackLayout>

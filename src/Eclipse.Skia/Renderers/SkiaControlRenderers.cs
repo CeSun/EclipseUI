@@ -183,8 +183,15 @@ public class LabelRenderer : ISkiaControlRenderer
             Subpixel = true
         };
         
-        // 根据内容选择字体
-        if (ContainsEmoji(label.Text))
+        // 字体选择优先级：FontFamily > Emoji > Bold > 默认中文
+        if (!string.IsNullOrEmpty(label.FontFamily))
+        {
+            // 开发者指定的字体
+            var weight = label.FontWeight == "Bold" ? SKFontStyleWeight.Bold : SKFontStyleWeight.Normal;
+            font.Typeface = SKTypeface.FromFamilyName(label.FontFamily, weight, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright)
+                ?? GetChineseTypeface();
+        }
+        else if (ContainsEmoji(label.Text))
         {
             font.Typeface = GetEmojiTypeface();
         }
@@ -254,10 +261,20 @@ public class ButtonRenderer : ISkiaControlRenderer
                 Subpixel = true
             };
             
-            // 根据内容选择字体
-            font.Typeface = LabelRenderer.ContainsEmoji(button.Text) 
-                ? LabelRenderer.GetEmojiTypeface() 
-                : LabelRenderer.GetChineseTypeface();
+            // 字体选择优先级：FontFamily > Emoji > 默认中文
+            if (!string.IsNullOrEmpty(button.FontFamily))
+            {
+                font.Typeface = SKTypeface.FromFamilyName(button.FontFamily, SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright)
+                    ?? LabelRenderer.GetChineseTypeface();
+            }
+            else if (LabelRenderer.ContainsEmoji(button.Text))
+            {
+                font.Typeface = LabelRenderer.GetEmojiTypeface();
+            }
+            else
+            {
+                font.Typeface = LabelRenderer.GetChineseTypeface();
+            }
             
             using var textPaint = new SKPaint
             {

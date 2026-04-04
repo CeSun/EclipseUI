@@ -49,6 +49,7 @@ public class Label : ComponentBase
     public string? FontSize { get; set; } = "14";
     public string? Color { get; set; }
     public string? FontWeight { get; set; }
+    public string? FontFamily { get; set; }
     public TextAlignment TextAlignment { get; set; } = TextAlignment.Left;
     
     /// <summary>
@@ -75,6 +76,7 @@ public class Button : ComponentBase
     public string? BackgroundColor { get; set; } = "#007AFF";
     public string? TextColor { get; set; } = "White";
     public string? FontSize { get; set; } = "14";
+    public string? FontFamily { get; set; }
     public bool IsEnabled { get; set; } = true;
     public string? CornerRadius { get; set; } = "4";
     public string? Padding { get; set; } = "8";
