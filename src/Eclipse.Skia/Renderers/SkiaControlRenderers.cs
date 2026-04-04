@@ -95,6 +95,43 @@ public class LabelRenderer : ISkiaControlRenderer
 {
     public Type TargetType => typeof(Label);
     
+    // 缓存中文字体
+    private static SKTypeface? _chineseTypeface;
+    
+    /// <summary>
+    /// 获取支持中文的字体
+    /// </summary>
+    public static SKTypeface GetChineseTypeface()
+    {
+        if (_chineseTypeface != null)
+            return _chineseTypeface;
+        
+        // 尝试常见的中文字体
+        var chineseFonts = new[] { 
+            "Microsoft YaHei",      // 微软雅黑
+            "SimSun",               // 宋体
+            "SimHei",               // 黑体
+            "PingFang SC",          // 苹方 (macOS)
+            "Noto Sans CJK SC",     // 思源黑体
+            "WenQuanYi Micro Hei",  // 文泉驿 (Linux)
+            null                    // 默认字体
+        };
+        
+        foreach (var fontName in chineseFonts)
+        {
+            var typeface = SKTypeface.FromFamilyName(fontName, SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);
+            if (typeface != null)
+            {
+                _chineseTypeface = typeface;
+                Console.WriteLine($"Using font: {typeface.FamilyName}");
+                return typeface;
+            }
+        }
+        
+        _chineseTypeface = SKTypeface.Default;
+        return _chineseTypeface;
+    }
+    
     public void Render(
         IComponent component, 
         SkiaRenderContext context, 
@@ -106,24 +143,33 @@ public class LabelRenderer : ISkiaControlRenderer
         if (string.IsNullOrEmpty(label.Text))
             return;
         
+        // 使用 SKFont + SKPaint 组合 (SkiaSharp 3.x 推荐方式)
+        using var font = new SKFont
+        {
+            Size = (float)label.GetFontSize() * context.Scale,
+            Edging = SKFontEdging.SubpixelAntialias,
+            Subpixel = true
+        };
+        
+        // 设置字体 - 支持中文
+        if (label.FontWeight == "Bold")
+        {
+            font.Typeface = SKTypeface.FromFamilyName(GetChineseTypeface().FamilyName, SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright) 
+                ?? GetChineseTypeface();
+        }
+        else
+        {
+            font.Typeface = GetChineseTypeface();
+        }
+        
         using var paint = new SKPaint
         {
             IsAntialias = true,
             Color = ParseColor(label.Color, SKColors.Black)
         };
         
-        using var font = new SKFont
-        {
-            Size = (float)label.GetFontSize() * context.Scale
-        };
-        
-        if (label.FontWeight == "Bold")
-        {
-            font.Typeface = SKTypeface.FromFamilyName(null, SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);
-        }
-        
         var x = bounds.Left;
-        var y = bounds.Top + font.Size;
+        var y = bounds.Top + font.Spacing;
         
         context.Canvas.DrawText(label.Text, x, y, font, paint);
     }
@@ -165,20 +211,26 @@ public class ButtonRenderer : ISkiaControlRenderer
         
         if (!string.IsNullOrEmpty(button.Text))
         {
+            // 使用 SKFont + SKPaint 组合 (SkiaSharp 3.x 推荐方式)
+            using var font = new SKFont
+            {
+                Size = (float)button.GetFontSize() * context.Scale,
+                Edging = SKFontEdging.SubpixelAntialias,
+                Subpixel = true
+            };
+            
+            // 使用支持中文的字体
+            font.Typeface = LabelRenderer.GetChineseTypeface();
+            
             using var textPaint = new SKPaint
             {
                 IsAntialias = true,
                 Color = ParseColor(button.TextColor, SKColors.White)
             };
             
-            using var font = new SKFont
-            {
-                Size = (float)button.GetFontSize() * context.Scale
-            };
-            
             var textWidth = font.MeasureText(button.Text);
             var x = bounds.Left + (bounds.Width - textWidth) / 2;
-            var y = bounds.Top + (bounds.Height + font.Size) / 2 - font.Size * 0.2f;
+            var y = bounds.Top + (bounds.Height + font.Spacing) / 2 - font.Metrics.Descent;
             
             context.Canvas.DrawText(button.Text, x, y, font, textPaint);
         }
@@ -211,17 +263,23 @@ public class TextContentRenderer : ISkiaControlRenderer
         if (string.IsNullOrEmpty(textContent.Text))
             return;
         
+        // 使用 SKFont + SKPaint 组合 (SkiaSharp 3.x 推荐方式)
+        using var font = new SKFont
+        {
+            Size = 14f * context.Scale,
+            Edging = SKFontEdging.SubpixelAntialias,
+            Subpixel = true
+        };
+        
+        // 使用支持中文的字体
+        font.Typeface = LabelRenderer.GetChineseTypeface();
+        
         using var paint = new SKPaint
         {
             IsAntialias = true,
             Color = SKColors.Black
         };
         
-        using var font = new SKFont
-        {
-            Size = 14f * context.Scale
-        };
-        
-        context.Canvas.DrawText(textContent.Text, bounds.Left, bounds.Top + font.Size, font, paint);
+        context.Canvas.DrawText(textContent.Text, bounds.Left, bounds.Top + font.Spacing, font, paint);
     }
 }
