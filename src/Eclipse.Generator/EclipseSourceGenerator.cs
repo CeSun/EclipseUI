@@ -14,27 +14,27 @@ namespace Eclipse.Generator
     {
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
-            var eclFiles = context.AdditionalTextsProvider
+            var euiFiles = context.AdditionalTextsProvider
                 .Where(file => file.Path.EndsWith(".eui", StringComparison.OrdinalIgnoreCase))
                 .Select((file, cancellationToken) => (
                     Path: file.Path,
                     Content: file.GetText(cancellationToken)?.ToString() ?? string.Empty
                 ));
 
-            context.RegisterSourceOutput(eclFiles, GenerateSource);
+            context.RegisterSourceOutput(euiFiles, GenerateSource);
         }
 
-        private void GenerateSource(SourceProductionContext context, (string Path, string Content) eclFile)
+        private void GenerateSource(SourceProductionContext context, (string Path, string Content) euiFile)
         {
-            var (path, content) = eclFile;
+            var (path, content) = euiFile;
             
             try
             {
                 var className = Path.GetFileNameWithoutExtension(path);
                 var @namespace = InferNamespace(path);
-                var parsed = ParseEcl(content);
+                var parsed = ParseEui(content);
                 var generatedCode = GenerateComponentCode(@namespace, className, parsed);
-                var hintName = $"{className}.ecl.g.cs";
+                var hintName = $"{className}.eui.g.cs";
                 context.AddSource(hintName, SourceText.From(generatedCode, Encoding.UTF8));
             }
             catch (Exception ex)
@@ -69,16 +69,16 @@ namespace Eclipse.Generator
             return "Eclipse.Generated";
         }
 
-        private ParsedEcl ParseEcl(string content)
+        private ParsedEui ParseEui(string content)
         {
-            var result = new ParsedEcl();
+            var result = new ParsedEui();
             ExtractDirectives(content, result);
             result.CodeBlock = ExtractCodeBlock(content);
             result.Markup = ExtractMarkup(content);
             return result;
         }
 
-        private void ExtractDirectives(string content, ParsedEcl result)
+        private void ExtractDirectives(string content, ParsedEui result)
         {
             var lines = content.Split('\n');
             foreach (var line in lines)
@@ -191,7 +191,7 @@ namespace Eclipse.Generator
             return string.Join("\n", markupLines).Trim();
         }
 
-        private string GenerateComponentCode(string @namespace, string className, ParsedEcl parsed)
+        private string GenerateComponentCode(string @namespace, string className, ParsedEui parsed)
         {
             var sb = new StringBuilder();
             var indent = 0;
@@ -380,7 +380,7 @@ namespace Eclipse.Generator
                 .Replace("\t", "\\t");
         }
 
-        private class ParsedEcl
+        private class ParsedEui
         {
             public List<string> Usings { get; } = new();
             public List<(string Type, string Name)> Injections { get; } = new();
