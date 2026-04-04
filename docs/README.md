@@ -1,79 +1,55 @@
-# EclipseUI
+# EclipseUI 文档
 
-一个声明式 UI 框架，使用 `.eui` 文件定义用户界面。
+> 由 [OpenClaw](https://github.com/openclaw/openclaw) 开发的跨平台 .NET UI 框架
 
 ## 概述
 
-EclipseUI 是一个受 Blazor 启发的声明式 UI 框架，通过 Roslyn Source Generator 在编译时将 `.eui` 文件转换为高效的 C# 代码。框架提供：
+EclipseUI 是一个使用 **Skia 自绘渲染** 和 **类 Razor 语法** 的现代 UI 框架：
 
-- **声明式语法**：使用类似 HTML/JSX 的标签语法定义 UI
-- **强类型绑定**：属性和事件与 C# 代码直接绑定
-- **编译时生成**：无运行时反射开销
-- **控制流支持**：`@if`、`@foreach` 等控制流语句
-- **多平台潜力**：核心抽象与平台无关，可扩展到不同渲染后端
+- **SkiaSharp 渲染** - Google Skia 图形库，高质量矢量渲染
+- **EUI 语法** - 类似 Blazor/Razor 的声明式 UI
+- **Source Generator** - 编译时代码生成，零运行时反射
+- **HarfBuzz 文本** - 现代文本塑形，完整 Emoji 支持
 
-## 项目结构
+## 文档目录
 
-```
-EclipseUI/
-├── src/
-│   ├── Eclipse.Core/         # 核心抽象和组件基类
-│   ├── Eclipse.Generator/    # Roslyn Source Generator
-│   ├── Eclipse.Platform/     # 平台抽象接口（规划中）
-│   └── Eclipse.Windows/      # Windows 平台适配（规划中）
-└── test/
-    └── Eclipse.Demo/         # 示例和测试项目
-```
+| 文档 | 说明 |
+|------|------|
+| [快速入门](./getting-started.md) | 环境配置、项目创建、基础用法 |
+| [EUI 语法参考](./syntax.md) | 完整语法说明：指令、控件、绑定、控制流 |
+| [架构设计](./architecture.md) | 框架架构、核心组件、代码生成策略 |
+| [文本渲染系统](./text-rendering.md) | HarfBuzz、Emoji 检测、字体回退 |
 
-## 快速开始
-
-### 1. 创建 .eui 文件
+## 快速示例
 
 ```xml
-@using Eclipse.Demo.Controls
+<!-- HomePage.eui -->
+@using Eclipse.Controls
 
 @code {
-    private string name = "World";
-    private int counter = 0;
-
+    private int count = 0;
+    
     private void OnClick(object? sender, EventArgs e)
     {
-        counter++;
+        count++;
     }
 }
 
-<StackLayout Spacing=16 Padding=20>
-    <Label Text=$"Hello {name}!" FontSize=24 />
-    <Button Text="Click Me" OnClick=@OnClick />
-    <Label Text=@$"Counter: {counter}" />
+<StackLayout Spacing="16" Padding="20">
+    <Label Text="你好 EclipseUI! 🎉" FontSize="32" />
+    <Label Text=@$"点击次数: {count}" />
+    <Button Text="点击我" OnClick="@OnClick" />
 </StackLayout>
 ```
 
-### 2. 编译时生成
+## 项目状态
 
-Source Generator 自动将 `.eui` 文件转换为 C# 代码，生成 `Render` 方法：
-
-```csharp
-public override void Render(IBuildContext context)
-{
-    using (context.BeginComponent<StackLayout>(new ComponentId(1), out var __stacklayout_1))
-    {
-        __stacklayout_1.Spacing = 16;
-        __stacklayout_1.Padding = 20;
-        
-        using (context.BeginChildContent())
-        {
-            // ... 子组件渲染代码
-        }
-    }
-}
-```
-
-## 文档
-
-- [架构设计](./architecture.md)
-- [语法参考](./syntax.md)
-- [快速入门](./getting-started.md)
+- ✅ 核心组件系统
+- ✅ EUI 语法 + Source Generator
+- ✅ SkiaSharp 多后端渲染
+- ✅ HarfBuzz 文本塑形
+- 🚧 布局系统、事件处理
+- 📋 动画、样式、跨平台
 
 ## 许可证
 

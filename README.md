@@ -1,40 +1,26 @@
 # EclipseUI
 
-一个现代化的跨平台 .NET UI 框架，使用 SkiaSharp 渲染，支持 EUI 声明式语法。
+> 由 [OpenClaw](https://github.com/openclaw/openclaw) 开发的跨平台 .NET UI 框架
 
-## 特性
+一个现代化的跨平台 UI 框架，使用 **SkiaSharp 自绘渲染**，支持 **类 Razor 声明式语法 (EUI)**。
 
-- 🎨 **SkiaSharp 渲染** - 高质量矢量图形渲染
-- 🚀 **多后端支持** - CPU、OpenGL、ANGLE (D3D11)
-- 📝 **EUI 语法** - 类似 Razor 的声明式 UI 语法
-- 🔧 **Source Generator** - 编译时代码生成，零运行时开销
-- 🪟 **纯 Win32** - 无 WinForms/WPF 依赖
-- 🌐 **多语言文本** - HarfBuzz 塑形，Unicode Emoji 支持
+## 核心特性
 
-## 快速开始
+### 🎨 Skia 自绘渲染
 
-### 安装
+- 基于 Google Skia 图形库，高质量矢量渲染
+- 多渲染后端：ANGLE (D3D11)、OpenGL、CPU 软渲染
+- 纯 Win32 窗口，无 WinForms/WPF 依赖
+- 跨平台潜力 (Windows / macOS / Linux / Android / iOS)
 
-```bash
-dotnet add package EclipseUI
-```
-
-### Hello World
-
-```csharp
-using Eclipse.Windows;
-
-// Program.cs
-Eclipse.Windows.Application.Run<HomePage>();
-```
+### 📝 类 Razor 语法 (EUI)
 
 ```xml
 <!-- HomePage.eui -->
 @using Eclipse.Controls
 
 <StackLayout Spacing="16" Padding="20">
-    <Label Text="Hello EclipseUI! 🎉" FontSize="32" FontWeight="Bold" />
-    <Label Text="支持中文和 Emoji 混排 😀" FontSize="16" />
+    <Label Text="你好 EclipseUI! 🎉" FontSize="32" />
     <Button Text="点击我" OnClick="@OnButtonClick" />
 </StackLayout>
 
@@ -49,149 +35,129 @@ Eclipse.Windows.Application.Run<HomePage>();
 }
 ```
 
+**语法特性：**
+- `@using` - 引入命名空间
+- `@code { }` - C# 代码块
+- `@if` / `@foreach` - 控制流
+- `@变量` - 属性绑定
+- `OnClick="@方法"` - 事件绑定
+
+### 🌐 现代文本渲染
+
+- 基于 **HarfBuzz** 的文本塑形
+- Unicode TR#51 规范 Emoji 检测
+- 支持 Emoji 序列 (ZWJ 组合、肤色修饰、国旗)
+- 智能多语言字体回退
+
+```csharp
+// 支持：你好 🌍 World 👨‍👩‍👧‍👦
+```
+
+### 🔧 编译时代码生成
+
+- Roslyn Source Generator
+- 零反射、强类型
+- 编译时语法检查
+
+## 项目状态
+
+### ✅ 已完成
+
+| 模块 | 功能 | 状态 |
+|------|------|------|
+| **核心** | 组件系统、BuildContext | ✅ 完成 |
+| **语法** | EUI 解析、Source Generator | ✅ 完成 |
+| **渲染** | SkiaSharp 多后端 | ✅ 完成 |
+| **窗口** | Win32 原生窗口 | ✅ 完成 |
+| **文本** | HarfBuzz 塑形、Emoji | ✅ 完成 |
+| **控件** | Label, Button, StackLayout 等 | ✅ 基础完成 |
+
+### 🚧 进行中
+
+| 功能 | 说明 |
+|------|------|
+| 布局系统 | Measure/Arrange 机制 |
+| 事件处理 | 鼠标、键盘输入 |
+| TextInput | 光标、选择、IME 输入 |
+
+### 📋 计划中
+
+| 功能 | 说明 |
+|------|------|
+| 动画系统 | 属性动画、过渡效果 |
+| 样式系统 | CSS-like 样式 |
+| 数据绑定 | MVVM 支持 |
+| 更多控件 | ScrollView, ListView, Grid... |
+| 跨平台 | macOS, Linux, Android, iOS |
+| RTL 语言 | 阿拉伯语、希伯来语 |
+
+## 架构
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    .eui 文件                             │
+│              (类 Razor 声明式 UI)                        │
+└─────────────────────────────────────────────────────────┘
+                        ↓ 编译时
+┌─────────────────────────────────────────────────────────┐
+│              EclipseSourceGenerator                      │
+│           (Roslyn Source Generator)                      │
+│         生成强类型 Render() 方法                          │
+└─────────────────────────────────────────────────────────┘
+                        ↓ 运行时
+┌─────────────────────────────────────────────────────────┐
+│                    Eclipse.Core                          │
+│         IComponent, BuildContext, ComponentBase          │
+└─────────────────────────────────────────────────────────┘
+                        ↓
+┌─────────────────────────────────────────────────────────┐
+│                    Eclipse.Skia                          │
+│         SkiaSharp 渲染 + HarfBuzz 文本                   │
+└─────────────────────────────────────────────────────────┘
+                        ↓
+┌─────────────────────────────────────────────────────────┐
+│                   平台适配层                              │
+│     Windows (Win32) │ macOS (规划) │ Linux (规划)        │
+└─────────────────────────────────────────────────────────┘
+```
+
 ## 项目结构
 
 ```
 EclipseUI/
 ├── src/
-│   ├── Eclipse.Core/       # 核心抽象层 (IComponent, BuildContext)
-│   ├── Eclipse.Controls/   # UI 控件库 (Label, Button, StackLayout...)
+│   ├── Eclipse.Core/       # 核心抽象层
+│   ├── Eclipse.Controls/   # UI 控件库
 │   ├── Eclipse.Skia/       # SkiaSharp 渲染层
-│   │   └── Text/           # 文本渲染系统 (HarfBuzz, Emoji)
+│   │   └── Text/           # 文本系统 (HarfBuzz, Emoji)
 │   ├── Eclipse.Generator/  # EUI Source Generator
-│   └── Eclipse.Windows/    # Windows 平台支持 (Win32, ANGLE, OpenGL)
+│   └── Eclipse.Windows/    # Windows 平台支持
 ├── samples/
-│   └── SkiaDemo/           # Demo 应用
+│   └── SkiaDemo/           # 示例应用
 └── tests/
     └── Eclipse.Tests/      # 单元测试
 ```
 
-## 渲染后端
-
-| 后端 | 说明 | 性能 | 兼容性 |
-|------|------|------|--------|
-| **ANGLE** | D3D11 后端 (默认) | ⭐⭐⭐⭐⭐ | 最佳 |
-| **OpenGL** | 原生 WGL | ⭐⭐⭐⭐ | 需 GPU 驱动 |
-| **CPU** | 软件渲染 | ⭐⭐ | 兜底 |
-
-```csharp
-// 切换后端
-var window = new WindowImpl(RenderBackend.OpenGL);
-```
-
-## 文本渲染系统
-
-基于 **HarfBuzz** 的现代文本渲染，支持：
-
-- ✅ Emoji 序列 (ZWJ 组合、肤色修饰、国旗)
-- ✅ 多语言字体回退 (中文 → Emoji → 其他)
-- ✅ Unicode TR#51 规范 Emoji 检测
-- ✅ 中文 + Emoji 混排
-
-```csharp
-// EmojiDetector - Unicode 规范检测
-bool isEmoji = EmojiDetector.IsEmoji(codePoint);
-bool hasEmojiPresentation = EmojiDetector.HasEmojiPresentation(codePoint);
-
-// HarfBuzzTextRenderer - 智能渲染
-var renderer = new HarfBuzzTextRenderer();
-renderer.DrawText(canvas, "你好 🌍 世界 👨‍👩‍👧‍👦", x, y, font, paint);
-```
-
-## 内置控件
-
-| 控件 | 说明 |
-|------|------|
-| `StackLayout` | 垂直/水平堆叠布局 |
-| `HStack` | 水平堆叠布局 (简化版) |
-| `Label` | 文本标签 (支持 Emoji) |
-| `Button` | 按钮 |
-| `TextInput` | 文本输入框 |
-| `CheckBox` | 复选框 |
-| `Image` | 图片 |
-| `Container` | 容器 |
-
-## EUI 语法
-
-### 属性绑定
-
-```xml
-<Label Text="Hello" FontSize="24" Color="#333" />
-```
-
-### 事件绑定
-
-```xml
-<Button Text="Click" OnClick="@OnButtonClick" />
-```
-
-### 条件渲染
-
-```xml
-@if (_count > 0)
-{
-    <Label Text=$"Count: {_count}" />
-}
-```
-
-### 循环渲染
-
-```xml
-@foreach (var item in items)
-{
-    <Label Text=@item.Name />
-}
-```
-
-### 代码块
-
-```xml
-@code {
-    private int _count = 0;
-    
-    private void OnButtonClick(object? sender, EventArgs e)
-    {
-        _count++;
-        StateHasChanged();
-    }
-}
-```
-
-## 开发路线
-
-### 已完成 ✅
-
-- [x] 核心组件系统
-- [x] EUI 语法解析
-- [x] Source Generator
-- [x] SkiaSharp 渲染
-- [x] 多渲染后端 (CPU/OpenGL/ANGLE)
-- [x] Win32 窗口
-- [x] HarfBuzz 文本塑形
-- [x] Emoji 检测与渲染
-- [x] 多语言字体回退
-
-### 进行中 🚧
-
-- [ ] 布局系统 (测量/排列)
-- [ ] 事件处理 (鼠标/键盘)
-- [ ] TextInput 完整实现 (光标、IME)
-
-### 计划中 📋
-
-- [ ] 动画系统
-- [ ] 样式系统
-- [ ] 数据绑定 (MVVM)
-- [ ] 更多控件 (ScrollView, ListView...)
-- [ ] 跨平台支持 (macOS/Linux/Android/iOS)
-- [ ] RTL 语言支持 (阿拉伯语、希伯来语)
-
 ## 文档
 
 - [架构设计](docs/architecture.md)
+- [EUI 语法参考](docs/syntax.md)
 - [快速开始](docs/getting-started.md)
-- [EUI 语法](docs/syntax.md)
-- [文本渲染](docs/text-rendering.md)
+- [文本渲染系统](docs/text-rendering.md)
+
+## 开发
+
+```bash
+# 克隆项目
+git clone https://github.com/CeSun/EclipseUI.git
+
+# 构建
+cd EclipseUI
+dotnet build EclipseUI.sln
+
+# 运行示例
+dotnet run --project samples/SkiaDemo
+```
 
 ## 贡献
 
