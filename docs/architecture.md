@@ -236,3 +236,134 @@ foreach (var item in items)
 3. **零反射**：属性赋值直接通过强类型代码完成
 4. **可扩展**：平台抽象层允许适配不同的渲染后端
 5. **熟悉度**：语法借鉴 Blazor/Razor，降低学习成本
+
+## 文本渲染架构
+
+### 概览
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    用户文本输入                              │
+│              "你好 🌍 World 👨‍👩‍👧‍👦"                          │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│                 HarfBuzzTextRenderer                         │
+│                                                              │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  SegmentText() - 按字体需求分段                       │   │
+│  │                                                       │   │
+│  │  输入: "你好🌍World👨‍👩‍👧‍👦"                            │   │
+│  │                                                       │   │
+│  │  ┌─────────┬─────────┬─────────┬───────────────┐    │   │
+│  │  │ "你好"  │ "🌍"    │ "World" │ "👨‍👩‍👧‍👦"      │    │   │
+│  │  │ 中文    │ Emoji   │ 英文    │ ZWJ序列       │    │   │
+│  │  └─────────┴─────────┴─────────┴───────────────┘    │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                            │                                │
+│                            ▼                                │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  DetermineTypeface() - 智能字体选择                   │   │
+│  │                                                       │   │
+│  │  ┌─────────────────────────────────────────────────┐│   │
+│  │  │ EmojiDetector.IsEmoji() → Emoji 字体            ││   │
+│  │  │ 基础字体支持? → 基础字体                         ││   │
+│  │  │ SKFontManager.MatchCharacter() → 回退字体       ││   │
+│  │  └─────────────────────────────────────────────────┘│   │
+│  └─────────────────────────────────────────────────────┘   │
+│                            │                                │
+│                            ▼                                │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  DrawSegment() - 分段渲染                            │   │
+│  │                                                       │   │
+│  │  使用 HarfBuzzTextShaper 塑形 (可选)                 │   │
+│  │  SKCanvas.DrawText() 绘制                            │   │
+│  └─────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    渲染输出                                  │
+│         正确显示: 你好 🌍 World 👨‍👩‍👧‍👦                    │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### EmojiDetector
+
+基于 Unicode TR#51 规范：
+
+```csharp
+public static class EmojiDetector
+{
+    // 核心检测方法
+    bool IsEmoji(int codePoint);              // 是否是 Emoji
+    bool HasEmojiPresentation(int codePoint); // 是否默认彩色
+    bool IsEmojiModifier(int codePoint);      // 是否肤色修饰符
+    bool IsRegionalIndicator(int codePoint);  // 是否国旗字母
+    bool IsZWJ(int codePoint);                // 是否 Zero Width Joiner
+    
+    // 序列检测
+    List<(int Start, int Length)> FindEmojiSequences(string text);
+}
+```
+
+**支持的 Emoji 序列：**
+
+| 类型 | 示例 | 组成 |
+|------|------|------|
+| ZWJ 序列 | 👨‍👩‍👧‍👦 | U+1F468 + ZWJ + U+1F469 + ZWJ + U+1F467 + ZWJ + U+1F466 |
+| 肤色修饰 | 👍🏻 | U+1F44D + U+1F3FB |
+| 国旗 | 🇨🇳 | U+1F1E8 + U+1F1F1 |
+| 键帽 | 1️⃣ | U+0031 + VS16 + U+20E3 |
+
+### HarfBuzzTextShaper
+
+```csharp
+public class HarfBuzzTextShaper
+{
+    // 获取塑形器
+    static HarfBuzzTextShaper GetChineseShaper();
+    static HarfBuzzTextShaper GetEmojiShaper();
+    static HarfBuzzTextShaper GetOrCreate(SKTypeface typeface);
+    
+    // 塑形文本
+    ShapedGlyph[] Shape(string text, float fontSize, Direction direction);
+}
+```
+
+### 字体回退策略
+
+```
+请求顺序:
+1. Emoji 检测 → Emoji 专用字体 (Segoe UI Emoji / Noto Color Emoji)
+2. 基础字体检查 → 如果支持，使用基础字体
+3. SKFontManager.MatchCharacter → 查找系统字体
+4. 默认中文字体 → 最后兜底
+
+字体优先级:
+- Emoji: Segoe UI Emoji > Noto Color Emoji > Apple Color Emoji
+- 中文: Microsoft YaHei > PingFang SC > SimSun > Noto Sans CJK SC
+- 英文: 基础字体 > Segoe UI
+```
+
+### 集成到渲染器
+
+```csharp
+public class LabelRenderer : ISkiaControlRenderer
+{
+    private static readonly HarfBuzzTextRenderer _textRenderer = new();
+    
+    public void Render(IComponent component, ...)
+    {
+        var label = (Label)component;
+        
+        // 使用 HarfBuzz 渲染器
+        _textRenderer.DrawText(
+            canvas, 
+            label.Text, 
+            x, y, 
+            font, 
+            paint);
+    }
+}
