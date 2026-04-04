@@ -21,7 +21,7 @@
     
     <Label Text="Emoji 测试:" FontSize="16" FontWeight="Bold" />
     <Label Text="😀 😃 😄 😁 😆 😅 🤣 😂" FontSize="24" />
-    <Label Text="👍 👎 👏 🙏 💪 🎉 🔥 ⭐" FontSize="24" />
+    <Label Text="👍 👎 👏 🙏 💪 🎉 🔥 ⭐⭐" FontSize="24" />
     
     @if (_clickCount > 0)
     {
