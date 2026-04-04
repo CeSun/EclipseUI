@@ -97,6 +97,7 @@ public class LabelRenderer : ISkiaControlRenderer
     
     // 缓存字体
     private static SKTypeface? _chineseTypeface;
+    private static SKTypeface? _emojiTypeface;
     
     /// <summary>
     /// 获取支持中文的字体
@@ -127,7 +128,46 @@ public class LabelRenderer : ISkiaControlRenderer
     }
     
     /// <summary>
-    /// 使用字体 fallback 渲染文本（参考 CPF 的实现）
+    /// 获取 Emoji 字体
+    /// </summary>
+    public static SKTypeface GetEmojiTypeface()
+    {
+        if (_emojiTypeface != null)
+            return _emojiTypeface;
+        
+        var emojiFonts = new[] { "Segoe UI Emoji", "Noto Color Emoji", "Apple Color Emoji", "Twemoji Mozilla", null };
+        
+        foreach (var fontName in emojiFonts)
+        {
+            var typeface = SKTypeface.FromFamilyName(fontName, SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);
+            if (typeface != null)
+            {
+                _emojiTypeface = typeface;
+                Console.WriteLine($"Using emoji font: {typeface.FamilyName}");
+                return typeface;
+            }
+        }
+        
+        _emojiTypeface = SKTypeface.Default;
+        return _emojiTypeface;
+    }
+    
+    /// <summary>
+    /// 检查字符是否是 Emoji
+    /// </summary>
+    private static bool IsEmoji(int codePoint)
+    {
+        // Emoji 范围
+        return (codePoint >= 0x1F300 && codePoint <= 0x1F9FF) ||  // 各种 Emoji
+               (codePoint >= 0x2600 && codePoint <= 0x26FF) ||    // 杂项符号
+               (codePoint >= 0x2700 && codePoint <= 0x27BF) ||    // Dingbats
+               (codePoint >= 0x1F600 && codePoint <= 0x1F64F) ||  // 表情
+               (codePoint >= 0x1F680 && codePoint <= 0x1F6FF) ||  // 交通
+               (codePoint >= 0x1F900 && codePoint <= 0x1F9FF);    // 补充符号
+    }
+    
+    /// <summary>
+    /// 使用字体 fallback 渲染文本
     /// </summary>
     public static void DrawTextWithFallback(
         SKCanvas canvas, 
@@ -142,19 +182,34 @@ public class LabelRenderer : ISkiaControlRenderer
         var currentX = x;
         var fontManager = SKFontManager.Default;
         var baseTypeface = baseFont.Typeface ?? SKTypeface.Default;
-        
-        // BCP47 语言标签
+        var emojiTypeface = GetEmojiTypeface();
         var bcp47 = new[] { "en", "zh", "ja", "kr" };
         
         var si = new System.Globalization.StringInfo(text);
         for (int i = 0; i < si.LengthInTextElements; i++)
         {
             var str = si.SubstringByTextElements(i, 1);
+            var codePoint = char.ConvertToUtf32(str, 0);
             
-            // 检查当前字体是否支持该字符
+            // 1. 优先检查是否是 Emoji
+            if (IsEmoji(codePoint))
+            {
+                using var emojiFont = new SKFont
+                {
+                    Typeface = emojiTypeface,
+                    Size = baseFont.Size,
+                    Edging = baseFont.Edging,
+                    Subpixel = baseFont.Subpixel
+                };
+                canvas.DrawText(str, currentX, y, emojiFont, paint);
+                currentX += emojiFont.MeasureText(str);
+                continue;
+            }
+            
+            // 2. 检查当前字体是否支持该字符
             if (baseTypeface.CountGlyphs(str) == 0)
             {
-                // 当前字体不支持，使用 MatchCharacter 查找合适的字体
+                // 3. 使用 MatchCharacter 查找合适的字体
                 var matchedTypeface = fontManager.MatchCharacter(
                     baseTypeface.FamilyName,
                     baseTypeface.FontWeight,
@@ -177,14 +232,12 @@ public class LabelRenderer : ISkiaControlRenderer
                 }
                 else
                 {
-                    // 找不到合适的字体，使用默认字体
                     canvas.DrawText(str, currentX, y, baseFont, paint);
                     currentX += baseFont.MeasureText(str);
                 }
             }
             else
             {
-                // 当前字体支持该字符
                 canvas.DrawText(str, currentX, y, baseFont, paint);
                 currentX += baseFont.MeasureText(str);
             }
@@ -201,30 +254,32 @@ public class LabelRenderer : ISkiaControlRenderer
         float width = 0;
         var fontManager = SKFontManager.Default;
         var baseTypeface = baseFont.Typeface ?? SKTypeface.Default;
+        var emojiTypeface = GetEmojiTypeface();
         var bcp47 = new[] { "en", "zh", "ja", "kr" };
         
         var si = new System.Globalization.StringInfo(text);
         for (int i = 0; i < si.LengthInTextElements; i++)
         {
             var str = si.SubstringByTextElements(i, 1);
+            var codePoint = char.ConvertToUtf32(str, 0);
+            
+            // Emoji
+            if (IsEmoji(codePoint))
+            {
+                using var emojiFont = new SKFont { Typeface = emojiTypeface, Size = baseFont.Size };
+                width += emojiFont.MeasureText(str);
+                continue;
+            }
             
             if (baseTypeface.CountGlyphs(str) == 0)
             {
                 var matchedTypeface = fontManager.MatchCharacter(
-                    baseTypeface.FamilyName,
-                    baseTypeface.FontWeight,
-                    baseTypeface.FontWidth,
-                    baseTypeface.FontSlant,
-                    bcp47,
-                    str[0]);
+                    baseTypeface.FamilyName, baseTypeface.FontWeight,
+                    baseTypeface.FontWidth, baseTypeface.FontSlant, bcp47, str[0]);
                 
                 if (matchedTypeface != null)
                 {
-                    using var matchedFont = new SKFont
-                    {
-                        Typeface = matchedTypeface,
-                        Size = baseFont.Size
-                    };
+                    using var matchedFont = new SKFont { Typeface = matchedTypeface, Size = baseFont.Size };
                     width += matchedFont.MeasureText(str);
                 }
                 else
