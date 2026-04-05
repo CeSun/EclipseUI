@@ -319,31 +319,9 @@ namespace Eclipse.Generator
                 }
                 else
                 {
-                    // 字面量：Property="value"
-                    // 智能转换：数字/布尔去掉引号，字符串保留引号
-                    var value = attr.Value;
-                    
-                    if (value.StartsWith("\"") && value.EndsWith("\"") && value.Length >= 2)
-                    {
-                        var innerValue = value.Substring(1, value.Length - 2);
-                        
-                        // 纯数字 → 去掉引号
-                        if (double.TryParse(innerValue, out _))
-                        {
-                            value = innerValue;
-                        }
-                        // 布尔值 → 去掉引号
-                        else if (innerValue.Equals("true", StringComparison.OrdinalIgnoreCase))
-                        {
-                            value = "true";
-                        }
-                        else if (innerValue.Equals("false", StringComparison.OrdinalIgnoreCase))
-                        {
-                            value = "false";
-                        }
-                        // 其他字符串 → 保留引号
-                    }
-                    
+                    // 字面量：根据目标属性类型转换
+                    var targetType = GetPropertyType(control.TagName, attr.Name);
+                    var value = ConvertLiteralValue(attr.Value, targetType);
                     WriteLine($"{varName}.{attr.Name} = {value};");
                 }
             }
@@ -398,6 +376,106 @@ namespace Eclipse.Generator
         {
             // 直接返回标签名，用户需要通过 @using 导入命名空间
             return tagName;
+        }
+        
+        /// <summary>
+        /// 属性类型映射表：(控件名, 属性名) → 类型
+        /// </summary>
+        private static readonly Dictionary<(string Control, string Property), string> PropertyTypes = new()
+        {
+            // StackLayout
+            { ("StackLayout", "Spacing"), "double" },
+            { ("StackLayout", "Padding"), "double" },
+            { ("StackLayout", "Orientation"), "Orientation" },
+            
+            // Label
+            { ("Label", "FontSize"), "double" },
+            { ("Label", "TextAlignment"), "TextAlignment" },
+            
+            // Button
+            { ("Button", "FontSize"), "double" },
+            { ("Button", "CornerRadius"), "double" },
+            
+            // TextInput
+            { ("TextInput", "FontSize"), "double" },
+            { ("TextInput", "CornerRadius"), "double" },
+            { ("TextInput", "Padding"), "double" },
+            { ("TextInput", "IsPassword"), "bool" },
+            
+            // CheckBox
+            { ("CheckBox", "Size"), "double" },
+            { ("CheckBox", "IsChecked"), "bool" },
+            
+            // Image
+            { ("Image", "Width"), "double" },
+            { ("Image", "Height"), "double" },
+            { ("Image", "Stretch"), "Stretch" },
+            
+            // Container
+            { ("Container", "Padding"), "double" },
+            { ("Container", "CornerRadius"), "double" },
+            
+            // ScrollView
+            { ("ScrollView", "ScrollX"), "double" },
+            { ("ScrollView", "ScrollY"), "double" },
+            { ("ScrollView", "ScrollBarWidth"), "double" },
+            { ("ScrollView", "VerticalScrollBarVisible"), "bool" },
+            { ("ScrollView", "HorizontalScrollBarVisible"), "bool" },
+            
+            // Grid
+            { ("Grid", "RowCount"), "int" },
+            { ("Grid", "ColumnCount"), "int" },
+        };
+        
+        /// <summary>
+        /// 获取属性的目标类型
+        /// </summary>
+        private string? GetPropertyType(string controlName, string propertyName)
+        {
+            return PropertyTypes.TryGetValue((controlName, propertyName), out var type) ? type : null;
+        }
+        
+        /// <summary>
+        /// 根据目标类型转换字面量值
+        /// </summary>
+        private string ConvertLiteralValue(string value, string? targetType)
+        {
+            // 如果不是字符串字面量，直接返回
+            if (!value.StartsWith("\"") || !value.EndsWith("\"") || value.Length < 2)
+                return value;
+            
+            var innerValue = value.Substring(1, value.Length - 2);
+            
+            // 根据目标类型转换
+            switch (targetType)
+            {
+                case "double":
+                case "float":
+                case "int":
+                case "long":
+                    // 数字类型：去掉引号
+                    if (double.TryParse(innerValue, out _))
+                        return innerValue;
+                    break;
+                    
+                case "bool":
+                    // 布尔类型：去掉引号
+                    if (innerValue.Equals("true", StringComparison.OrdinalIgnoreCase) ||
+                        innerValue.Equals("false", StringComparison.OrdinalIgnoreCase))
+                        return innerValue.ToLower();
+                    break;
+                    
+                case "Orientation":
+                case "TextAlignment":
+                case "Stretch":
+                    // 枚举类型：添加枚举类型前缀
+                    if (!string.IsNullOrEmpty(innerValue) && char.IsLetter(innerValue[0]))
+                        return $"{targetType}.{innerValue}";
+                    break;
+            }
+            
+            // 其他情况保留字符串字面量
+            return value;
         }
 
         private string EscapeString(string text)
