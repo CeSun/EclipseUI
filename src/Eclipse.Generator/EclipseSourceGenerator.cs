@@ -22,32 +22,53 @@ namespace Eclipse.Generator
                     Content: file.GetText(cancellationToken)?.ToString() ?? string.Empty
                 ));
 
-            // 结合 Compilation 和 EUI 文件
-            var compilationAndFiles = context.CompilationProvider.Combine(euiFiles.Collect());
+            // 解析 EUI 文件（增量计算，带缓存）
+            var parsedFiles = euiFiles
+                .Select((file, ct) => new ParsedEuiFile
+                {
+                    Path = file.Path,
+                    ClassName = Path.GetFileNameWithoutExtension(file.Path),
+                    Content = file.Content,
+                    Parsed = ParseEui(file.Content)
+                })
+                .WithComparer(new ParsedEuiFileComparer());
+
+            // 结合 Compilation 和解析后的文件
+            var compilationAndFiles = context.CompilationProvider.Combine(parsedFiles.Collect());
 
             context.RegisterSourceOutput(compilationAndFiles, (spc, source) =>
             {
                 var (compilation, files) = source;
+                
+                // 缓存类型查找结果（跨文件共享）
+                var typeCache = new TypeLookupCache(compilation);
+                
                 foreach (var file in files)
                 {
-                    GenerateSource(spc, compilation, file.Path, file.Content);
+                    GenerateSource(spc, typeCache, file);
                 }
             });
         }
 
-        private void GenerateSource(SourceProductionContext context, Compilation compilation, string path, string content)
+        private void GenerateSource(SourceProductionContext context, TypeLookupCache typeCache, ParsedEuiFile file)
         {
             try
             {
-                var className = Path.GetFileNameWithoutExtension(path);
-                var @namespace = InferNamespace(path);
-                var parsed = ParseEui(content);
+                var className = file.ClassName;
+                var parsed = file.Parsed;
+                
+                // 优先使用 @namespace 指令，否则从路径推断
+                string @namespace = parsed.Namespace ?? InferNamespace(file.Path);
+                if (string.IsNullOrEmpty(@namespace))
+                {
+                    @namespace = "Eclipse.Generated";
+                }
                 
                 // 收集所有用到的控件类型
                 var controlTypes = CollectControlTypes(parsed.Markup);
                 
-                // 获取这些类型的属性信息（使用文件的 @using 列表）
-                var propertyTypes = GetPropertyTypes(compilation, controlTypes, parsed.Usings);
+                // 获取这些类型的属性信息（使用缓存的类型查找）
+                var propertyTypes = GetPropertyTypes(typeCache, controlTypes, parsed.Usings);
                 
                 var generatedCode = GenerateComponentCode(@namespace, className, parsed, propertyTypes);
                 var hintName = $"{className}.eui.g.cs";
@@ -63,7 +84,7 @@ namespace Eclipse.Generator
                     DiagnosticSeverity.Error,
                     true);
 
-                context.ReportDiagnostic(Diagnostic.Create(descriptor, Location.None, path, ex.Message));
+                context.ReportDiagnostic(Diagnostic.Create(descriptor, Location.None, file.Path, ex.Message));
             }
         }
 
@@ -112,17 +133,17 @@ namespace Eclipse.Generator
         }
 
         /// <summary>
-        /// 使用 Roslyn 获取控件类型的属性类型信息
+        /// 使用缓存的类型查找获取属性类型信息
         /// </summary>
         private Dictionary<(string Control, string Property), PropertyTypeInfo> GetPropertyTypes(
-            Compilation compilation, HashSet<string> controlTypes, List<string> usings)
+            TypeLookupCache cache, HashSet<string> controlTypes, List<string> usings)
         {
             var result = new Dictionary<(string, string), PropertyTypeInfo>();
             
             foreach (var typeName in controlTypes)
             {
-                // 使用文件的 @using 列表查找类型
-                var typeSymbol = FindTypeSymbol(compilation, typeName, usings);
+                // 使用缓存的类型查找
+                var typeSymbol = cache.FindTypeSymbol(typeName, usings);
                 if (typeSymbol == null) continue;
                 
                 // 遍历所有属性
@@ -149,69 +170,6 @@ namespace Eclipse.Generator
             }
             
             return result;
-        }
-
-        /// <summary>
-        /// 根据类型名和 using 列表查找类型符号
-        /// </summary>
-        private INamedTypeSymbol? FindTypeSymbol(Compilation compilation, string typeName, List<string> usings)
-        {
-            // 1. 先尝试完全限定名（如果类型名包含点）
-            if (typeName.Contains('.'))
-            {
-                var symbol = compilation.GetTypeByMetadataName(typeName);
-                if (symbol != null) return symbol;
-            }
-            
-            // 2. 遍历所有 @using 命名空间，拼接类型名查找
-            foreach (var ns in usings)
-            {
-                var fullName = $"{ns}.{typeName}";
-                var symbol = compilation.GetTypeByMetadataName(fullName);
-                if (symbol != null) return symbol;
-            }
-            
-            // 3. 尝试全局命名空间（无命名空间类型）
-            var globalSymbol = compilation.GetTypeByMetadataName(typeName);
-            if (globalSymbol != null) return globalSymbol;
-            
-            // 4. 最后在所有引用的程序集中搜索
-            foreach (var reference in compilation.References)
-            {
-                var assembly = compilation.GetAssemblyOrModuleSymbol(reference) as IAssemblySymbol;
-                if (assembly == null) continue;
-                
-                var type = FindTypeInAssembly(assembly, typeName);
-                if (type != null) return type;
-            }
-            
-            return null;
-        }
-
-        private INamedTypeSymbol? FindTypeInAssembly(IAssemblySymbol assembly, string typeName)
-        {
-            foreach (var ns in assembly.GlobalNamespace.GetNamespaceMembers())
-            {
-                var type = FindTypeInNamespace(ns, typeName);
-                if (type != null) return type;
-            }
-            return null;
-        }
-
-        private INamedTypeSymbol? FindTypeInNamespace(INamespaceSymbol ns, string typeName)
-        {
-            foreach (var type in ns.GetTypeMembers())
-            {
-                if (type.Name == typeName) return type;
-            }
-            
-            foreach (var childNs in ns.GetNamespaceMembers())
-            {
-                var found = FindTypeInNamespace(childNs, typeName);
-                if (found != null) return found;
-            }
-            
-            return null;
         }
 
         private bool IsNumericType(ITypeSymbol type)
@@ -268,6 +226,8 @@ namespace Eclipse.Generator
                 var trimmed = line.Trim();
                 if (trimmed.StartsWith("@using "))
                     result.Usings.Add(trimmed.Substring(7).Trim());
+                else if (trimmed.StartsWith("@namespace "))
+                    result.Namespace = trimmed.Substring(11).Trim();
                 else if (trimmed.StartsWith("@inject "))
                 {
                     var inject = trimmed.Substring(8).Trim();
@@ -355,6 +315,7 @@ namespace Eclipse.Generator
                 if (string.IsNullOrWhiteSpace(trimmed))
                     continue;
                 if (trimmed.StartsWith("@using ") ||
+                    trimmed.StartsWith("@namespace ") ||
                     trimmed.StartsWith("@inject ") ||
                     trimmed.StartsWith("@inherits ") ||
                     trimmed.StartsWith("@attribute ") ||
@@ -602,6 +563,131 @@ namespace Eclipse.Generator
                 .Replace("\t", "\\t");
         }
 
+        // === 增量生成缓存支持 ===
+
+        /// <summary>
+        /// 解析后的 EUI 文件信息
+        /// </summary>
+        private class ParsedEuiFile
+        {
+            public string Path { get; set; } = "";
+            public string ClassName { get; set; } = "";
+            public string Content { get; set; } = "";
+            public ParsedEui Parsed { get; set; } = new();
+        }
+
+        /// <summary>
+        /// ParsedEuiFile 的比较器，用于增量生成缓存
+        /// </summary>
+        private class ParsedEuiFileComparer : IEqualityComparer<ParsedEuiFile>
+        {
+            public bool Equals(ParsedEuiFile? x, ParsedEuiFile? y)
+            {
+                if (x == null || y == null) return x == y;
+                return x.Path == y.Path && x.Content == y.Content;
+            }
+
+            public int GetHashCode(ParsedEuiFile obj)
+            {
+                // netstandard2.0 不支持 HashCode.Combine，手动计算
+                unchecked
+                {
+                    int hash = 17;
+                    hash = hash * 31 + (obj.Path?.GetHashCode() ?? 0);
+                    hash = hash * 31 + (obj.Content?.GetHashCode() ?? 0);
+                    return hash;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 类型查找缓存，跨文件共享
+        /// </summary>
+        private class TypeLookupCache
+        {
+            private readonly Compilation _compilation;
+            private readonly Dictionary<string, INamedTypeSymbol?> _typeCache = new();
+            private readonly Dictionary<(string TypeName, string UsingList), INamedTypeSymbol?> _typeWithUsingsCache = new();
+
+            public TypeLookupCache(Compilation compilation)
+            {
+                _compilation = compilation;
+            }
+
+            public INamedTypeSymbol? FindTypeSymbol(string typeName, List<string> usings)
+            {
+                // 缓存键：类型名 + using 列表的组合
+                var cacheKey = (typeName, string.Join("|", usings));
+                
+                if (_typeWithUsingsCache.TryGetValue(cacheKey, out var cached))
+                    return cached;
+                
+                var result = FindTypeSymbolInternal(typeName, usings);
+                _typeWithUsingsCache[cacheKey] = result;
+                return result;
+            }
+
+            private INamedTypeSymbol? FindTypeSymbolInternal(string typeName, List<string> usings)
+            {
+                // 1. 先尝试完全限定名（如果类型名包含点）
+                if (typeName.Contains('.'))
+                {
+                    var symbol = _compilation.GetTypeByMetadataName(typeName);
+                    if (symbol != null) return symbol;
+                }
+                
+                // 2. 遍历所有 @using 命名空间，拼接类型名查找
+                foreach (var ns in usings)
+                {
+                    var fullName = $"{ns}.{typeName}";
+                    var symbol = _compilation.GetTypeByMetadataName(fullName);
+                    if (symbol != null) return symbol;
+                }
+                
+                // 3. 尝试全局命名空间（无命名空间类型）
+                var globalSymbol = _compilation.GetTypeByMetadataName(typeName);
+                if (globalSymbol != null) return globalSymbol;
+                
+                // 4. 最后在所有引用的程序集中搜索
+                foreach (var reference in _compilation.References)
+                {
+                    var assembly = _compilation.GetAssemblyOrModuleSymbol(reference) as IAssemblySymbol;
+                    if (assembly == null) continue;
+                    
+                    var type = FindTypeInAssembly(assembly, typeName);
+                    if (type != null) return type;
+                }
+                
+                return null;
+            }
+
+            private INamedTypeSymbol? FindTypeInAssembly(IAssemblySymbol assembly, string typeName)
+            {
+                foreach (var ns in assembly.GlobalNamespace.GetNamespaceMembers())
+                {
+                    var type = FindTypeInNamespace(ns, typeName);
+                    if (type != null) return type;
+                }
+                return null;
+            }
+
+            private INamedTypeSymbol? FindTypeInNamespace(INamespaceSymbol ns, string typeName)
+            {
+                foreach (var type in ns.GetTypeMembers())
+                {
+                    if (type.Name == typeName) return type;
+                }
+                
+                foreach (var childNs in ns.GetNamespaceMembers())
+                {
+                    var found = FindTypeInNamespace(childNs, typeName);
+                    if (found != null) return found;
+                }
+                
+                return null;
+            }
+        }
+
         private class PropertyTypeInfo
         {
             public string TypeName { get; set; } = "";
@@ -615,6 +701,7 @@ namespace Eclipse.Generator
         private class ParsedEui
         {
             public List<string> Usings { get; } = new();
+            public string? Namespace { get; set; }
             public List<(string Type, string Name)> Injections { get; } = new();
             public string? BaseClass { get; set; }
             public List<string> Attributes { get; } = new();
