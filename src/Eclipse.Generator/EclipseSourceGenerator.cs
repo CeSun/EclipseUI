@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Text;
 
 namespace Eclipse.Generator
@@ -16,49 +17,47 @@ namespace Eclipse.Generator
         {
             // 获取 EUI 文件
             var euiFiles = context.AdditionalTextsProvider
-                .Where(file => file.Path.EndsWith(".eui", StringComparison.OrdinalIgnoreCase))
-                .Select((file, cancellationToken) => (
-                    Path: file.Path,
-                    Content: file.GetText(cancellationToken)?.ToString() ?? string.Empty
-                ));
+                .Where(file => file.Path.EndsWith(".eui", StringComparison.OrdinalIgnoreCase));
 
             // 解析 EUI 文件（增量计算，带缓存）
             var parsedFiles = euiFiles
-                .Select((file, ct) => new ParsedEuiFile
+                .Select((file, cancellationToken) => new ParsedEuiFile
                 {
+                    AdditionalText = file,
                     Path = file.Path,
                     ClassName = Path.GetFileNameWithoutExtension(file.Path),
-                    Content = file.Content,
-                    Parsed = ParseEui(file.Content)
+                    Content = file.GetText(cancellationToken)?.ToString() ?? string.Empty,
+                    Parsed = ParseEui(file.GetText(cancellationToken)?.ToString() ?? string.Empty)
                 })
                 .WithComparer(new ParsedEuiFileComparer());
 
-            // 结合 Compilation 和解析后的文件
-            var compilationAndFiles = context.CompilationProvider.Combine(parsedFiles.Collect());
-
-            context.RegisterSourceOutput(compilationAndFiles, (spc, source) =>
+            // 结合 Compilation、配置和解析后的文件
+            var withCompilation = parsedFiles.Combine(context.CompilationProvider);
+            var withConfig = withCompilation.Combine(context.AnalyzerConfigOptionsProvider);
+            
+            context.RegisterSourceOutput(withConfig, (spc, source) =>
             {
-                var (compilation, files) = source;
+                var ((file, compilation), optionsProvider) = source;
                 
-                // 缓存类型查找结果（跨文件共享）
+                // 缓存类型查找结果
                 var typeCache = new TypeLookupCache(compilation);
                 
-                foreach (var file in files)
-                {
-                    GenerateSource(spc, typeCache, file);
-                }
+                GenerateSource(spc, optionsProvider, typeCache, file);
             });
         }
 
-        private void GenerateSource(SourceProductionContext context, TypeLookupCache typeCache, ParsedEuiFile file)
+        private void GenerateSource(SourceProductionContext context, 
+            AnalyzerConfigOptionsProvider optionsProvider, 
+            TypeLookupCache typeCache, 
+            ParsedEuiFile file)
         {
             try
             {
                 var className = file.ClassName;
                 var parsed = file.Parsed;
                 
-                // 优先使用 @namespace 指令，否则从路径推断
-                string @namespace = parsed.Namespace ?? InferNamespace(file.Path);
+                // 优先使用 @namespace 指令，否则从 MSBuild 配置获取
+                string @namespace = parsed.Namespace ?? InferNamespace(file.Path, file.AdditionalText, optionsProvider);
                 if (string.IsNullOrEmpty(@namespace))
                 {
                     @namespace = "Eclipse.Generated";
@@ -191,8 +190,39 @@ namespace Eclipse.Generator
             };
         }
 
-        private string InferNamespace(string filePath)
+        private string InferNamespace(string filePath, AdditionalText additionalText, AnalyzerConfigOptionsProvider optionsProvider)
         {
+            // 获取文件级别的配置选项
+            var options = optionsProvider.GetOptions(additionalText);
+            
+            // 1. 尝试从 MSBuild 获取 RootNamespace
+            if (options.TryGetValue("build_property.rootnamespace", out var rootNamespace) 
+                && !string.IsNullOrEmpty(rootNamespace))
+            {
+                // 获取项目目录和文件目录
+                if (options.TryGetValue("build_property.projectdir", out var projectDir) 
+                    && !string.IsNullOrEmpty(projectDir))
+                {
+                    var fileDir = Path.GetDirectoryName(filePath) ?? "";
+                    var relativePath = GetRelativePath(projectDir, fileDir);
+                    
+                    if (!string.IsNullOrEmpty(relativePath))
+                    {
+                        var relativeNs = relativePath
+                            .Replace('/', '.')
+                            .Replace('\\', '.')
+                            .Trim('.');
+                        
+                        if (!string.IsNullOrEmpty(relativeNs))
+                        {
+                            return $"{rootNamespace}.{relativeNs}";
+                        }
+                    }
+                }
+                return rootNamespace;
+            }
+            
+            // 2. 回退到目录名推断
             var dir = Path.GetDirectoryName(filePath) ?? "";
             var segments = dir.Split(new[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries);
             var startIndex = Array.FindIndex(segments, s => 
@@ -207,6 +237,32 @@ namespace Eclipse.Generator
             }
             
             return "Eclipse.Generated";
+        }
+
+        /// <summary>
+        /// 获取相对路径
+        /// </summary>
+        private string GetRelativePath(string basePath, string targetPath)
+        {
+            if (string.IsNullOrEmpty(basePath) || string.IsNullOrEmpty(targetPath))
+                return "";
+            
+            try
+            {
+                var baseUri = new Uri(basePath.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar);
+                var targetUri = new Uri(targetPath.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar);
+                
+                if (!baseUri.IsBaseOf(targetUri))
+                    return "";
+                
+                return Uri.UnescapeDataString(baseUri.MakeRelativeUri(targetUri).ToString()
+                    .Replace('/', Path.DirectorySeparatorChar))
+                    .TrimEnd(Path.DirectorySeparatorChar);
+            }
+            catch
+            {
+                return "";
+            }
         }
 
         private ParsedEui ParseEui(string content)
@@ -570,6 +626,7 @@ namespace Eclipse.Generator
         /// </summary>
         private class ParsedEuiFile
         {
+            public AdditionalText AdditionalText { get; set; } = null!;
             public string Path { get; set; } = "";
             public string ClassName { get; set; } = "";
             public string Content { get; set; } = "";
