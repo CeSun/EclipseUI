@@ -190,7 +190,8 @@ internal sealed class WindowsInputAdapter
     
     private KeyModifiers GetKeyModifiers(IntPtr wParam)
     {
-        var keys = wParam.ToInt32();
+        // 使用 ToInt64 避免在 64 位系统上溢出
+        var keys = wParam.ToInt64() & 0xFFFF; // 只取低 16 位
         var modifiers = KeyModifiers.None;
         
         if ((keys & NativeMethods.MK_CONTROL) != 0) modifiers |= KeyModifiers.Control;
