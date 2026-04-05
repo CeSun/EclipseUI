@@ -1,6 +1,7 @@
 using Eclipse.Core;
 using Eclipse.Core.Abstractions;
 using Eclipse.Controls;
+using Eclipse.Input;
 using SkiaSharp;
 using Eclipse.Skia.Text;
 
@@ -20,6 +21,9 @@ public class StackLayoutRenderer : ISkiaControlRenderer
         Action<IComponent, SkiaRenderContext, SKRect> renderChild)
     {
         var stack = (StackLayout)component;
+        
+        // 更新 Bounds 用于 Hit Testing
+        stack.UpdateBounds(new Rect(bounds.Left, bounds.Top, bounds.Width, bounds.Height));
         
         var orientation = stack.Orientation;
         var spacing = (float)stack.GetSpacing() * context.Scale;
@@ -247,6 +251,9 @@ public class ButtonRenderer : ISkiaControlRenderer
         Action<IComponent, SkiaRenderContext, SKRect> renderChild)
     {
         var button = (Button)component;
+        
+        // 更新 Bounds 用于 Hit Testing
+        button.UpdateBounds(new Rect(bounds.Left, bounds.Top, bounds.Width, bounds.Height));
         
         var bgColor = ParseColor(button.BackgroundColor, new SKColor(0x00, 0x7A, 0xFF));
         using var bgPaint = new SKPaint

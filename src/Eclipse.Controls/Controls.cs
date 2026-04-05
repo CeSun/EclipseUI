@@ -10,7 +10,7 @@ namespace Eclipse.Controls;
 /// </summary>
 public abstract class InteractiveControl : InputElementBase
 {
-    private Rect _bounds;
+    protected Rect _bounds = new(0, 0, 100, 40); // 默认大小
     
     /// <summary>
     /// 是否启用
@@ -21,21 +21,57 @@ public abstract class InteractiveControl : InputElementBase
     public override bool IsVisible => true;
     public override Rect Bounds => _bounds;
     
-    internal void SetBounds(Rect bounds) => _bounds = bounds;
+    /// <summary>
+    /// 更新边界（供渲染器使用）
+    /// </summary>
+    public void UpdateBounds(Rect bounds) => _bounds = bounds;
+    
+    protected override IEnumerable<IInputElement> GetInputChildren()
+    {
+        // 返回所有 IInputElement 类型的子组件
+        foreach (var child in Children)
+        {
+            if (child is IInputElement inputElement)
+            {
+                yield return inputElement;
+            }
+        }
+    }
 }
 
 /// <summary>
-/// 垂直堆叠布局
+/// 垂直堆叠布局 - 也支持输入事件（作为容器）
 /// </summary>
-public class StackLayout : ComponentBase
+public class StackLayout : InputElementBase
 {
     public Orientation Orientation { get; set; } = Orientation.Vertical;
     public string? Spacing { get; set; } = "0";
     public string? BackgroundColor { get; set; }
     public string? Padding { get; set; } = "0";
     
+    private Rect _bounds;
+    
     public double GetSpacing() => double.TryParse(Spacing, out var spacing) ? spacing : 0;
     public double GetPadding() => double.TryParse(Padding, out var padding) ? padding : 0;
+    
+    public override bool IsVisible => true;
+    public override Rect Bounds => _bounds;
+    
+    /// <summary>
+    /// 更新边界（供渲染器使用）
+    /// </summary>
+    public void UpdateBounds(Rect bounds) => _bounds = bounds;
+    
+    protected override IEnumerable<IInputElement> GetInputChildren()
+    {
+        foreach (var child in Children)
+        {
+            if (child is IInputElement inputElement)
+            {
+                yield return inputElement;
+            }
+        }
+    }
     
     public override void Build(IBuildContext context) { }
 }
@@ -111,6 +147,7 @@ public class Button : InteractiveControl
     public Button()
     {
         IsFocusable = true;
+        _bounds = new Rect(0, 0, 100, 40); // 默认按钮大小
         
         Tapped += (s, e) =>
         {
@@ -143,6 +180,7 @@ public class TextInput : InteractiveControl
     public TextInput()
     {
         IsFocusable = true;
+        _bounds = new Rect(0, 0, 200, 30);
     }
     
     public void SetText(string? newText)
@@ -199,6 +237,7 @@ public class CheckBox : InteractiveControl
     public CheckBox()
     {
         IsFocusable = true;
+        _bounds = new Rect(0, 0, 20, 20);
         
         Tapped += (s, e) =>
         {
