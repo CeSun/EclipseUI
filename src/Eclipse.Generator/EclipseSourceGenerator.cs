@@ -580,12 +580,14 @@ namespace Eclipse.Generator
             if (typeInfo == null)
                 return value;
             
+            // 数字类型：去掉引号
             if (typeInfo.IsNumeric)
             {
                 if (double.TryParse(innerValue, out _))
                     return innerValue;
             }
             
+            // 布尔类型：去掉引号
             if (typeInfo.IsBoolean)
             {
                 if (innerValue.Equals("true", StringComparison.OrdinalIgnoreCase))
@@ -594,13 +596,180 @@ namespace Eclipse.Generator
                     return "false";
             }
             
+            // 枚举类型：添加枚举类型前缀
             if (typeInfo.IsEnum && !string.IsNullOrEmpty(typeInfo.EnumTypeName))
             {
                 if (!string.IsNullOrEmpty(innerValue) && char.IsLetter(innerValue[0]))
                     return $"{typeInfo.EnumTypeName}.{innerValue}";
             }
             
+            // 复杂类型转换
+            switch (typeInfo.TypeName)
+            {
+                // Color 类型：支持多种格式
+                // "#FF0000" → "Color.FromHex(\"#FF0000\")"
+                // "Red" → "Colors.Red"
+                case "Color":
+                case "SkiaSharp.SKColor":
+                    return ConvertColorValue(innerValue);
+                
+                // Thickness 类型：支持多种格式
+                // "10" → "new Thickness(10)"
+                // "10,20" → "new Thickness(10, 20)"
+                // "10,20,30,40" → "new Thickness(10, 20, 30, 40)"
+                case "Thickness":
+                    return ConvertThicknessValue(innerValue);
+                
+                // Point 类型："10,20" → "new Point(10, 20)"
+                case "Point":
+                    return ConvertPointValue(innerValue);
+                
+                // Size 类型："100,50" → "new Size(100, 50)"
+                case "Size":
+                    return ConvertSizeValue(innerValue);
+                
+                // Rect 类型："10,20,100,50" → "new Rect(10, 20, 100, 50)"
+                case "Rect":
+                    return ConvertRectValue(innerValue);
+                
+                // Vector 类型："10,20" → "new Vector(10, 20)"
+                case "Vector":
+                    return ConvertVectorValue(innerValue);
+                
+                // TimeSpan 类型："00:01:30" → "TimeSpan.Parse(\"00:01:30\")"
+                case "TimeSpan":
+                    return $"TimeSpan.Parse(\"{innerValue}\")";
+                
+                // DateTime 类型："2024-01-15" → "DateTime.Parse(\"2024-01-15\")"
+                case "DateTime":
+                case "DateTimeOffset":
+                    return $"{typeInfo.TypeName}.Parse(\"{innerValue}\")";
+                
+                // Guid 类型："..." → "Guid.Parse(\"...\")"
+                case "Guid":
+                    return $"Guid.Parse(\"{innerValue}\")";
+                
+                // Uri 类型："https://..." → "new Uri(\"https://...\")"
+                case "Uri":
+                    return $"new Uri(\"{innerValue}\")";
+            }
+            
+            // 保留字符串字面量
             return value;
+        }
+
+        /// <summary>
+        /// 转换颜色值
+        /// </summary>
+        private string ConvertColorValue(string value)
+        {
+            // Hex 格式: #RGB, #RRGGBB, #ARGB, #AARRGGBB
+            if (value.StartsWith("#"))
+            {
+                return $"Color.FromHex(\"{value}\")";
+            }
+            
+            // rgb/rgba 格式: rgb(255,0,0), rgba(255,0,0,0.5)
+            if (value.StartsWith("rgb", StringComparison.OrdinalIgnoreCase))
+            {
+                return $"Color.Parse(\"{value}\")";
+            }
+            
+            // 颜色名称: Red, Blue, Green 等
+            if (char.IsLetter(value[0]))
+            {
+                // 尝试作为 Colors 静态属性
+                return $"Colors.{value}";
+            }
+            
+            // 回退：作为字符串解析
+            return $"Color.Parse(\"{value}\")";
+        }
+
+        /// <summary>
+        /// 转换 Thickness 值
+        /// </summary>
+        private string ConvertThicknessValue(string value)
+        {
+            var parts = value.Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(p => p.Trim())
+                .ToArray();
+            
+            return parts.Length switch
+            {
+                1 => $"new Thickness({parts[0]})",
+                2 => $"new Thickness({parts[0]}, {parts[1]})",
+                4 => $"new Thickness({parts[0]}, {parts[1]}, {parts[2]}, {parts[3]})",
+                _ => $"Thickness.Parse(\"{value}\")"
+            };
+        }
+
+        /// <summary>
+        /// 转换 Point 值
+        /// </summary>
+        private string ConvertPointValue(string value)
+        {
+            var parts = value.Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(p => p.Trim())
+                .ToArray();
+            
+            if (parts.Length == 2)
+            {
+                return $"new Point({parts[0]}, {parts[1]})";
+            }
+            
+            return $"Point.Parse(\"{value}\")";
+        }
+
+        /// <summary>
+        /// 转换 Size 值
+        /// </summary>
+        private string ConvertSizeValue(string value)
+        {
+            var parts = value.Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(p => p.Trim())
+                .ToArray();
+            
+            if (parts.Length == 2)
+            {
+                return $"new Size({parts[0]}, {parts[1]})";
+            }
+            
+            return $"Size.Parse(\"{value}\")";
+        }
+
+        /// <summary>
+        /// 转换 Rect 值
+        /// </summary>
+        private string ConvertRectValue(string value)
+        {
+            var parts = value.Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(p => p.Trim())
+                .ToArray();
+            
+            if (parts.Length == 4)
+            {
+                return $"new Rect({parts[0]}, {parts[1]}, {parts[2]}, {parts[3]})";
+            }
+            
+            return $"Rect.Parse(\"{value}\")";
+        }
+
+        /// <summary>
+        /// 转换 Vector 值
+        /// </summary>
+        private string ConvertVectorValue(string value)
+        {
+            var parts = value.Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(p => p.Trim())
+                .ToArray();
+            
+            if (parts.Length == 2)
+            {
+                return $"new Vector({parts[0]}, {parts[1]})";
+            }
+            
+            return $"Vector.Parse(\"{value}\")";
         }
 
         private string EscapeString(string text)
