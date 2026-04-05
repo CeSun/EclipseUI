@@ -54,6 +54,20 @@ internal sealed class WindowsInputAdapter
             case NativeMethods.WM_TOUCH:
                 OnTouch(wParam, lParam);
                 break;
+                
+            case NativeMethods.WM_KEYDOWN:
+            case NativeMethods.WM_SYSKEYDOWN:
+                OnKeyDown(wParam, lParam);
+                break;
+                
+            case NativeMethods.WM_KEYUP:
+            case NativeMethods.WM_SYSKEYUP:
+                OnKeyUp(wParam, lParam);
+                break;
+                
+            case NativeMethods.WM_CHAR:
+                OnChar(wParam, lParam);
+                break;
         }
     }
     
@@ -208,6 +222,55 @@ internal sealed class WindowsInputAdapter
         
         return _clickCount;
     }
+    
+    // === 键盘处理 ===
+    
+    private void OnKeyDown(IntPtr wParam, IntPtr lParam)
+    {
+        var keyCode = wParam.ToInt32();
+        var key = (Key)keyCode;
+        var modifiers = GetKeyboardModifiers();
+        
+        // 检查是否重复按键
+        var isRepeat = ((lParam.ToInt64() >> 30) & 0x1) != 0;
+        
+        _inputManager.ProcessKeyDown(key, keyCode, modifiers, isRepeat);
+    }
+    
+    private void OnKeyUp(IntPtr wParam, IntPtr lParam)
+    {
+        var keyCode = wParam.ToInt32();
+        var key = (Key)keyCode;
+        var modifiers = GetKeyboardModifiers();
+        
+        _inputManager.ProcessKeyUp(key, keyCode, modifiers);
+    }
+    
+    private void OnChar(IntPtr wParam, IntPtr lParam)
+    {
+        var charCode = wParam.ToInt32();
+        
+        // 忽略控制字符
+        if (charCode < 32)
+            return;
+        
+        var text = char.ConvertFromUtf32(charCode);
+        _inputManager.ProcessTextInput(text);
+    }
+    
+    private KeyModifiers GetKeyboardModifiers()
+    {
+        var modifiers = KeyModifiers.None;
+        
+        if ((NativeMethods.GetKeyState(NativeMethods.VK_SHIFT) & 0x8000) != 0)
+            modifiers |= KeyModifiers.Shift;
+        if ((NativeMethods.GetKeyState(NativeMethods.VK_CONTROL) & 0x8000) != 0)
+            modifiers |= KeyModifiers.Control;
+        if ((NativeMethods.GetKeyState(NativeMethods.VK_MENU) & 0x8000) != 0)
+            modifiers |= KeyModifiers.Alt;
+        
+        return modifiers;
+    }
 }
 
 internal static class NativeMethods
@@ -225,6 +288,13 @@ internal static class NativeMethods
     public const uint WM_MOUSEHWHEEL = 0x020E;
     public const uint WM_TOUCH = 0x0240;
     
+    // 键盘消息
+    public const uint WM_KEYDOWN = 0x0100;
+    public const uint WM_KEYUP = 0x0101;
+    public const uint WM_CHAR = 0x0102;
+    public const uint WM_SYSKEYDOWN = 0x0104;
+    public const uint WM_SYSKEYUP = 0x0105;
+    
     public const int MK_CONTROL = 0x0008;
     public const int MK_SHIFT = 0x0004;
     
@@ -232,6 +302,8 @@ internal static class NativeMethods
     public const int VK_RBUTTON = 0x02;
     public const int VK_MBUTTON = 0x04;
     public const int VK_MENU = 0x12;
+    public const int VK_SHIFT = 0x10;
+    public const int VK_CONTROL = 0x11;
     
     public const int TOUCHEVENTF_DOWN = 0x0001;
     public const int TOUCHEVENTF_UP = 0x0002;

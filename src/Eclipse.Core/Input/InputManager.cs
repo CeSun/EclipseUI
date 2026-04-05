@@ -8,6 +8,9 @@ namespace Eclipse.Input;
 /// </summary>
 public sealed class InputManager
 {
+    // 焦点管理器
+    public FocusManager FocusManager { get; } = new();
+    
     // 当前指针状态
     private readonly Dictionary<int, PointerState> _pointerStates = new();
     
@@ -22,6 +25,11 @@ public sealed class InputManager
     public event EventHandler<PointerEventArgs>? PointerMoved;
     public event EventHandler<PointerReleasedEventArgs>? PointerReleased;
     public event EventHandler<PointerWheelEventArgs>? PointerWheel;
+    
+    // 键盘事件
+    public event EventHandler<KeyEventArgs>? KeyDown;
+    public event EventHandler<KeyEventArgs>? KeyUp;
+    public event EventHandler<TextInputEventArgs>? TextInput;
     
     /// <summary>
     /// 处理指针按下
@@ -149,6 +157,47 @@ public sealed class InputManager
         if (targetElement != null)
         {
             RaisePointerWheel(targetElement, pointer, position, delta, modifiers);
+        }
+    }
+    
+    // === 键盘处理 ===
+    
+    /// <summary>
+    /// 处理按键按下
+    /// </summary>
+    public void ProcessKeyDown(Key key, int keyCode, KeyModifiers modifiers = KeyModifiers.None, bool isRepeat = false)
+    {
+        var focusedElement = FocusManager.FocusedElement ?? RootElement;
+        
+        if (focusedElement != null)
+        {
+            RaiseKeyDown(focusedElement, key, keyCode, modifiers, isRepeat);
+        }
+    }
+    
+    /// <summary>
+    /// 处理按键释放
+    /// </summary>
+    public void ProcessKeyUp(Key key, int keyCode, KeyModifiers modifiers = KeyModifiers.None)
+    {
+        var focusedElement = FocusManager.FocusedElement ?? RootElement;
+        
+        if (focusedElement != null)
+        {
+            RaiseKeyUp(focusedElement, key, keyCode, modifiers);
+        }
+    }
+    
+    /// <summary>
+    /// 处理文本输入
+    /// </summary>
+    public void ProcessTextInput(string text)
+    {
+        var focusedElement = FocusManager.FocusedElement;
+        
+        if (focusedElement != null)
+        {
+            RaiseTextInput(focusedElement, text);
         }
     }
     
@@ -333,6 +382,44 @@ public sealed class InputManager
         
         args.RoutedEvent = InputElementBase.TappedEvent;
         target.RaiseEvent(args);
+    }
+    
+    // === 键盘事件触发 ===
+    
+    private void RaiseKeyDown(IInputElement target, Key key, int keyCode, KeyModifiers modifiers, bool isRepeat)
+    {
+        // Tunnel
+        var previewArgs = new KeyEventArgs(key, keyCode, modifiers) { IsRepeat = isRepeat };
+        previewArgs.RoutedEvent = InputElementBase.PreviewKeyDownEvent;
+        target.RaiseEvent(previewArgs);
+        
+        if (previewArgs.Handled)
+            return;
+        
+        // Bubble
+        var args = new KeyEventArgs(key, keyCode, modifiers) { IsRepeat = isRepeat };
+        args.RoutedEvent = InputElementBase.KeyDownEvent;
+        target.RaiseEvent(args);
+        
+        KeyDown?.Invoke(this, args);
+    }
+    
+    private void RaiseKeyUp(IInputElement target, Key key, int keyCode, KeyModifiers modifiers)
+    {
+        var args = new KeyEventArgs(key, keyCode, modifiers);
+        args.RoutedEvent = InputElementBase.KeyUpEvent;
+        target.RaiseEvent(args);
+        
+        KeyUp?.Invoke(this, args);
+    }
+    
+    private void RaiseTextInput(IInputElement target, string text)
+    {
+        var args = new TextInputEventArgs(text);
+        args.RoutedEvent = InputElementBase.TextInputEvent;
+        target.RaiseEvent(args);
+        
+        TextInput?.Invoke(this, args);
     }
     
     // === 辅助方法 ===

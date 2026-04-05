@@ -61,6 +61,28 @@ public abstract class InputElementBase : Core.ComponentBase, IInputElement
             nameof(Tapped),
             RoutingStrategy.Bubble);
     
+    // === 键盘事件 ===
+    
+    public static readonly RoutedEvent<KeyEventArgs> KeyDownEvent =
+        RoutedEvent<KeyEventArgs>.Register<InputElementBase>(
+            nameof(KeyDown),
+            RoutingStrategy.Bubble);
+    
+    public static readonly RoutedEvent<KeyEventArgs> PreviewKeyDownEvent =
+        RoutedEvent<KeyEventArgs>.Register<InputElementBase>(
+            nameof(PreviewKeyDown),
+            RoutingStrategy.Tunnel);
+    
+    public static readonly RoutedEvent<KeyEventArgs> KeyUpEvent =
+        RoutedEvent<KeyEventArgs>.Register<InputElementBase>(
+            nameof(KeyUp),
+            RoutingStrategy.Bubble);
+    
+    public static readonly RoutedEvent<TextInputEventArgs> TextInputEvent =
+        RoutedEvent<TextInputEventArgs>.Register<InputElementBase>(
+            nameof(TextInput),
+            RoutingStrategy.Bubble);
+    
     // === CLR 事件包装 ===
     
     public event EventHandler<PointerPressedEventArgs> PointerPressed
@@ -123,6 +145,32 @@ public abstract class InputElementBase : Core.ComponentBase, IInputElement
         remove => RemoveHandler(TappedEvent, value);
     }
     
+    // === 键盘事件 CLR 包装 ===
+    
+    public event EventHandler<KeyEventArgs> KeyDown
+    {
+        add => AddHandler(KeyDownEvent, value);
+        remove => RemoveHandler(KeyDownEvent, value);
+    }
+    
+    public event EventHandler<KeyEventArgs> PreviewKeyDown
+    {
+        add => AddHandler(PreviewKeyDownEvent, value);
+        remove => RemoveHandler(PreviewKeyDownEvent, value);
+    }
+    
+    public event EventHandler<KeyEventArgs> KeyUp
+    {
+        add => AddHandler(KeyUpEvent, value);
+        remove => RemoveHandler(KeyUpEvent, value);
+    }
+    
+    public event EventHandler<TextInputEventArgs> TextInput
+    {
+        add => AddHandler(TextInputEvent, value);
+        remove => RemoveHandler(TextInputEvent, value);
+    }
+    
     // === 属性 ===
     
     public virtual bool IsInputEnabled { get; set; } = true;
@@ -161,6 +209,22 @@ public abstract class InputElementBase : Core.ComponentBase, IInputElement
     
     protected virtual void OnGotFocus() => IsFocused = true;
     protected virtual void OnLostFocus() => IsFocused = false;
+    
+    /// <summary>
+    /// 设置聚焦状态 (由 FocusManager 调用)
+    /// </summary>
+    internal void SetIsFocused(bool focused)
+    {
+        if (IsFocused == focused)
+            return;
+        
+        IsFocused = focused;
+        
+        if (focused)
+            OnGotFocus();
+        else
+            OnLostFocus();
+    }
     
     // === 指针捕获 ===
     
