@@ -46,8 +46,8 @@ namespace Eclipse.Generator
                 // 收集所有用到的控件类型
                 var controlTypes = CollectControlTypes(parsed.Markup);
                 
-                // 获取这些类型的属性信息
-                var propertyTypes = GetPropertyTypes(compilation, controlTypes);
+                // 获取这些类型的属性信息（使用文件的 @using 列表）
+                var propertyTypes = GetPropertyTypes(compilation, controlTypes, parsed.Usings);
                 
                 var generatedCode = GenerateComponentCode(@namespace, className, parsed, propertyTypes);
                 var hintName = $"{className}.eui.g.cs";
@@ -115,14 +115,14 @@ namespace Eclipse.Generator
         /// 使用 Roslyn 获取控件类型的属性类型信息
         /// </summary>
         private Dictionary<(string Control, string Property), PropertyTypeInfo> GetPropertyTypes(
-            Compilation compilation, HashSet<string> controlTypes)
+            Compilation compilation, HashSet<string> controlTypes, List<string> usings)
         {
             var result = new Dictionary<(string, string), PropertyTypeInfo>();
             
             foreach (var typeName in controlTypes)
             {
-                // 尝试找到类型
-                var typeSymbol = FindTypeSymbol(compilation, typeName);
+                // 使用文件的 @using 列表查找类型
+                var typeSymbol = FindTypeSymbol(compilation, typeName, usings);
                 if (typeSymbol == null) continue;
                 
                 // 遍历所有属性
@@ -151,23 +151,31 @@ namespace Eclipse.Generator
             return result;
         }
 
-        private INamedTypeSymbol? FindTypeSymbol(Compilation compilation, string typeName)
+        /// <summary>
+        /// 根据类型名和 using 列表查找类型符号
+        /// </summary>
+        private INamedTypeSymbol? FindTypeSymbol(Compilation compilation, string typeName, List<string> usings)
         {
-            // 尝试多种可能的完全限定名
-            var possibleNames = new[]
+            // 1. 先尝试完全限定名（如果类型名包含点）
+            if (typeName.Contains('.'))
             {
-                $"Eclipse.Controls.{typeName}",
-                $"Eclipse.Core.{typeName}",
-                typeName
-            };
-            
-            foreach (var name in possibleNames)
-            {
-                var symbol = compilation.GetTypeByMetadataName(name);
+                var symbol = compilation.GetTypeByMetadataName(typeName);
                 if (symbol != null) return symbol;
             }
             
-            // 全局搜索
+            // 2. 遍历所有 @using 命名空间，拼接类型名查找
+            foreach (var ns in usings)
+            {
+                var fullName = $"{ns}.{typeName}";
+                var symbol = compilation.GetTypeByMetadataName(fullName);
+                if (symbol != null) return symbol;
+            }
+            
+            // 3. 尝试全局命名空间（无命名空间类型）
+            var globalSymbol = compilation.GetTypeByMetadataName(typeName);
+            if (globalSymbol != null) return globalSymbol;
+            
+            // 4. 最后在所有引用的程序集中搜索
             foreach (var reference in compilation.References)
             {
                 var assembly = compilation.GetAssemblyOrModuleSymbol(reference) as IAssemblySymbol;
