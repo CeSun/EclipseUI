@@ -40,7 +40,8 @@ public class TextContent : ComponentBase
         if (!string.IsNullOrEmpty(Text))
         {
             var scaledFontSize = FontSize * context.Scale;
-            context.DrawText(Text, bounds.X, bounds.Y, scaledFontSize, FontFamily);
+            var y = bounds.Y + scaledFontSize * 0.5; // 视觉中心
+            context.DrawText(Text, bounds.X, y, scaledFontSize, FontFamily);
         }
     }
 }

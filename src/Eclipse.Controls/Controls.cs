@@ -403,7 +403,9 @@ public class Label : ComponentBase
                 x = bounds.X + bounds.Width - textWidth;
             }
             
-            context.DrawText(Text, x, bounds.Y, scaledFontSize, FontFamily, FontWeight, Color);
+            // y 是文本视觉中心，文本从顶部开始
+            var y = bounds.Y + scaledFontSize * 0.5;
+            context.DrawText(Text, x, y, scaledFontSize, FontFamily, FontWeight, Color);
         }
     }
 }
@@ -641,7 +643,7 @@ public class Button : InteractiveControl
             var scaledFontSize = FontSize * context.Scale;
             var textWidth = context.MeasureText(Text, scaledFontSize, FontFamily);
             var x = bounds.X + (bounds.Width - textWidth) / 2;
-            var y = bounds.Y + bounds.Height / 2 - scaledFontSize / 2;
+            var y = bounds.Y + bounds.Height / 2; // 视觉中心
             context.DrawText(Text, x, y, scaledFontSize, FontFamily, null, textColor);
         }
     }
@@ -918,7 +920,9 @@ public class TextInput : InteractiveControl
         
         if (!string.IsNullOrEmpty(displayText))
         {
-            context.DrawText(displayText, textBounds.X, textBounds.Y, scaledFontSize);
+            // y 是文本视觉中心
+            var textY = textBounds.Y + scaledFontSize * 0.5;
+            context.DrawText(displayText, textBounds.X, textY, scaledFontSize);
             
             // 绘制光标（聚焦时）
             if (IsFocused && ShouldShowCursor())
@@ -928,7 +932,8 @@ public class TextInput : InteractiveControl
         }
         else if (!string.IsNullOrEmpty(Placeholder))
         {
-            context.DrawText(Placeholder, textBounds.X, textBounds.Y, scaledFontSize, null, null, "#888888");
+            var textY = textBounds.Y + scaledFontSize * 0.5;
+            context.DrawText(Placeholder, textBounds.X, textY, scaledFontSize, null, null, "#888888");
             
             // 绘制光标（聚焦时，无文本时光标在开头）
             if (IsFocused && ShouldShowCursor())
@@ -1080,7 +1085,9 @@ public class CheckBox : InteractiveControl
         
         if (!string.IsNullOrEmpty(Label))
         {
-            context.DrawText(Label, bounds.X + scaledSize + 8 * context.Scale, bounds.Y, 14 * context.Scale);
+            var scaledFontSize = 14 * context.Scale;
+            var textY = bounds.Y + scaledFontSize * 0.5; // 视觉中心
+            context.DrawText(Label, bounds.X + scaledSize + 8 * context.Scale, textY, scaledFontSize);
         }
     }
 }

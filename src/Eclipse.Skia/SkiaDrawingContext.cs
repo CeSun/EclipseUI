@@ -120,7 +120,16 @@ public class SkiaDrawingContext : IDrawingContext
             Color = ParseColor(color, SKColors.Black)
         };
         
-        _textRenderer.DrawText(_canvas, text, (float)x, (float)(y + font.Spacing), font, paint);
+        // 获取字体度量信息
+        var metrics = font.Metrics;
+        
+        // y 参数表示文本视觉中心
+        // 视觉中心 = (Top + Bottom) / 2，Top 是负数
+        // 基线位置 = y - 视觉中心
+        var visualCenter = (metrics.Top + metrics.Bottom) / 2;
+        var baseline = (float)(y - visualCenter);
+        
+        _textRenderer.DrawText(_canvas, text, (float)x, baseline, font, paint);
     }
     
     public double MeasureText(string text, double fontSize, string? fontFamily = null)
