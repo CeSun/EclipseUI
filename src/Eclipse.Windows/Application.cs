@@ -3,6 +3,7 @@ using Eclipse.Core;
 using Eclipse.Core.Abstractions;
 using Eclipse.Input;
 using Eclipse.Skia;
+using Eclipse.Windows.Rendering;
 
 namespace Eclipse.Windows;
 

@@ -2,10 +2,11 @@ using Eclipse.Core;
 using Eclipse.Core.Abstractions;
 using Eclipse.Controls;
 using Eclipse.Input;
-using SkiaSharp;
+using Eclipse.Skia;
 using Eclipse.Skia.Text;
+using SkiaSharp;
 
-namespace Eclipse.Skia.Renderers;
+namespace Eclipse.Windows.Rendering;
 
 /// <summary>
 /// StackLayout 渲染器
@@ -100,16 +101,10 @@ public class LabelRenderer : ISkiaControlRenderer
 {
     public Type TargetType => typeof(Label);
     
-    // 共享渲染器实例
     private static readonly HarfBuzzTextRenderer _textRenderer = new();
-    
-    // 缓存字体
     private static SKTypeface? _chineseTypeface;
     private static SKTypeface? _emojiTypeface;
     
-    /// <summary>
-    /// 获取支持中文的字体
-    /// </summary>
     public static SKTypeface GetChineseTypeface()
     {
         if (_chineseTypeface != null)
@@ -137,9 +132,6 @@ public class LabelRenderer : ISkiaControlRenderer
         return _chineseTypeface;
     }
     
-    /// <summary>
-    /// 获取 Emoji 字体
-    /// </summary>
     public static SKTypeface GetEmojiTypeface()
     {
         if (_emojiTypeface != null)
@@ -185,7 +177,6 @@ public class LabelRenderer : ISkiaControlRenderer
             Subpixel = true
         };
         
-        // 字体选择优先级：FontFamily > 默认中文
         if (!string.IsNullOrEmpty(label.FontFamily))
         {
             var weight = label.FontWeight == "Bold" ? SKFontStyleWeight.Bold : SKFontStyleWeight.Normal;
@@ -214,13 +205,9 @@ public class LabelRenderer : ISkiaControlRenderer
         var x = bounds.Left;
         var y = bounds.Top + font.Spacing;
         
-        // 使用 HarfBuzz 渲染器（支持 emoji、复杂脚本、字体回退）
         _textRenderer.DrawText(context.Canvas, label.Text, x, y, font, paint);
     }
     
-    /// <summary>
-    /// 测量文本宽度（使用 HarfBuzz 渲染器）
-    /// </summary>
     public static float MeasureText(string text, SKFont font)
     {
         return _textRenderer.MeasureText(text, font);
@@ -275,7 +262,6 @@ public class ButtonRenderer : ISkiaControlRenderer
                 Subpixel = true
             };
             
-            // 字体选择
             if (!string.IsNullOrEmpty(button.FontFamily))
             {
                 font.Typeface = SKTypeface.FromFamilyName(button.FontFamily, 
@@ -295,7 +281,6 @@ public class ButtonRenderer : ISkiaControlRenderer
                 Color = ParseColor(button.TextColor, SKColors.White)
             };
             
-            // 使用 HarfBuzz 测量和渲染
             var textWidth = _textRenderer.MeasureText(button.Text, font);
             var x = bounds.Left + (bounds.Width - textWidth) / 2;
             var y = bounds.Top + (bounds.Height + font.Spacing) / 2 - font.Metrics.Descent;
@@ -331,7 +316,6 @@ public class TextContentRenderer : ISkiaControlRenderer
         if (string.IsNullOrEmpty(textContent.Text))
             return;
         
-        // 使用 SKFont + SKPaint 组合 (SkiaSharp 3.x 推荐方式)
         using var font = new SKFont
         {
             Size = 14f * context.Scale,
@@ -339,7 +323,6 @@ public class TextContentRenderer : ISkiaControlRenderer
             Subpixel = true
         };
         
-        // 使用支持中文的字体
         font.Typeface = LabelRenderer.GetChineseTypeface();
         
         using var paint = new SKPaint

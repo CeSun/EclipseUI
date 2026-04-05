@@ -5,6 +5,7 @@ using Eclipse.Core.Abstractions;
 using Eclipse.Input;
 using Eclipse.Windows.Input;
 using Eclipse.Skia;
+using Eclipse.Windows.Rendering;
 using Eclipse.Windows.OpenGL;
 using Eclipse.Windows.Angle;
 using SkiaSharp;

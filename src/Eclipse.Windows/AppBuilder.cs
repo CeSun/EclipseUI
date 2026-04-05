@@ -2,6 +2,7 @@ using Eclipse.Core;
 using Eclipse.Core.Abstractions;
 using Eclipse.Input;
 using Eclipse.Skia;
+using Eclipse.Windows.Rendering;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Eclipse.Windows;

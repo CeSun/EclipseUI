@@ -2,10 +2,10 @@ using Eclipse.Core;
 using Eclipse.Core.Abstractions;
 using Eclipse.Controls;
 using Eclipse.Input;
-using Eclipse.Skia.Renderers;
+using Eclipse.Skia;
 using SkiaSharp;
 
-namespace Eclipse.Skia;
+namespace Eclipse.Windows.Rendering;
 
 /// <summary>
 /// 默认 Skia 渲染器 - 遍历组件树并渲染
@@ -67,34 +67,9 @@ public class DefaultSkiaRenderer : ISkiaRenderer
         }
     }
     
-    /// <summary>
-    /// 渲染子组件 - 由容器渲染器调用，用于渲染单个子组件
-    /// </summary>
     private void RenderChild(IComponent child, SkiaRenderContext context, SKRect bounds)
     {
         RenderComponent(child, context, bounds);
-    }
-    
-    private float EstimateChildHeight(IComponent component, SkiaRenderContext context)
-    {
-        return component switch
-        {
-            Label => 24f * context.Scale,
-            Button => 44f * context.Scale,
-            StackLayout stack => EstimateStackHeight(stack, context),
-            _ => 40f * context.Scale
-        };
-    }
-    
-    private float EstimateStackHeight(StackLayout stack, SkiaRenderContext context)
-    {
-        float height = 0;
-        foreach (var child in stack.Children)
-        {
-            height += EstimateChildHeight(child, context);
-        }
-        height += (float)stack.GetSpacing() * Math.Max(0, stack.Children.Count - 1);
-        return height;
     }
     
     private void RegisterRenderer<TRenderer>() where TRenderer : ISkiaControlRenderer, new()
@@ -102,18 +77,4 @@ public class DefaultSkiaRenderer : ISkiaRenderer
         var renderer = new TRenderer();
         _renderers[renderer.TargetType] = renderer;
     }
-}
-
-/// <summary>
-/// 控件渲染器接口
-/// </summary>
-public interface ISkiaControlRenderer
-{
-    Type TargetType { get; }
-    
-    void Render(
-        IComponent component, 
-        SkiaRenderContext context, 
-        SKRect bounds,
-        Action<IComponent, SkiaRenderContext, SKRect> renderChild);
 }
