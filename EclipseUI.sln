@@ -15,9 +15,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Eclipse.Windows", "src\Ecli
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{5D20AA90-6969-D8BD-9DCD-8634F4692FDA}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SkiaDemo", "SkiaDemo", "{DA750371-E994-23A9-8AE9-AF63AB9931F0}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Demo", "Demo", "{DA750371-E994-23A9-8AE9-AF63AB9931F0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Eclipse.SkiaDemo", "samples\SkiaDemo\Eclipse.SkiaDemo.csproj", "{8BE0CC6B-9889-48BE-9216-DD0112B03A22}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Eclipse.Demo", "samples\Demo\Eclipse.Demo.csproj", "{8BE0CC6B-9889-48BE-9216-DD0112B03A22}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Eclipse.Controls", "src\Eclipse.Controls\Eclipse.Controls.csproj", "{4EBEF388-8BCD-45A6-8717-47A395421B13}"
 EndProject

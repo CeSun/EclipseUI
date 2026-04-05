@@ -1,4 +1,4 @@
-namespace Eclipse.SkiaDemo;
+namespace Eclipse.Demo;
 
 static class Program
 {
