@@ -308,25 +308,31 @@ namespace Eclipse.Generator
             {
                 if (attr.IsEvent)
                 {
-                    // 事件绑定：OnClick=@Method
+                    // 事件绑定：OnClick=@Method 或 OnClick=@(x => ...)
                     WriteLine($"{varName}.{attr.Name} += {attr.Value};");
+                }
+                else if (attr.IsBinding)
+                {
+                    // C# 表达式绑定：Property=@value
+                    // 直接使用表达式值，不加引号
+                    WriteLine($"{varName}.{attr.Name} = {attr.Value};");
                 }
                 else
                 {
-                    // 属性赋值（包括绑定和字面量）
+                    // 字面量：Property="value"
+                    // 智能转换：数字/布尔去掉引号，字符串保留引号
                     var value = attr.Value;
                     
-                    // 智能转换：如果值是字符串字面量且内容是数字，自动转换为数字字面量
                     if (value.StartsWith("\"") && value.EndsWith("\"") && value.Length >= 2)
                     {
                         var innerValue = value.Substring(1, value.Length - 2);
                         
-                        // 检查是否是纯数字（整数或小数）
+                        // 纯数字 → 去掉引号
                         if (double.TryParse(innerValue, out _))
                         {
-                            value = innerValue; // 去掉引号
+                            value = innerValue;
                         }
-                        // 检查是否是布尔值
+                        // 布尔值 → 去掉引号
                         else if (innerValue.Equals("true", StringComparison.OrdinalIgnoreCase))
                         {
                             value = "true";
@@ -335,6 +341,7 @@ namespace Eclipse.Generator
                         {
                             value = "false";
                         }
+                        // 其他字符串 → 保留引号
                     }
                     
                     WriteLine($"{varName}.{attr.Name} = {value};");
