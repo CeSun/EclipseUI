@@ -133,7 +133,7 @@ EclipseUI/
 │   ├── Eclipse.Generator/  # EUI Source Generator
 │   └── Eclipse.Windows/    # Windows 平台支持
 ├── samples/
-│   └── SkiaDemo/           # 示例应用
+│   └── Demo/             # 示例应用
 └── tests/
     └── Eclipse.Tests/      # 单元测试
 ```
@@ -156,7 +156,7 @@ cd EclipseUI
 dotnet build EclipseUI.sln
 
 # 运行示例
-dotnet run --project samples/SkiaDemo
+dotnet run --project samples/Demo
 ```
 
 ## 贡献

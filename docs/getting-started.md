@@ -292,7 +292,7 @@ EclipseUI/
 │   └── Eclipse.Windows/    # Windows 平台支持
 │
 ├── samples/
-│   └── SkiaDemo/           # 示例应用
+│   └── Demo/             # 示例应用
 │
 ├── tests/
 │   └── Eclipse.Tests/      # 单元测试（137 个测试）
@@ -390,7 +390,7 @@ EclipseUI 提供完整的输入事件系统：
 
 ### 探索示例代码
 
-查看 `samples/SkiaDemo` 目录：
+查看 `samples/Demo` 目录：
 
 - `Components/HomePage.eui` - 主页面
 - `Components/DemoControls.eui` - 控件演示
