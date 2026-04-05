@@ -206,15 +206,23 @@ public sealed class InputManager
     private IInputElement? HitTest(Point point)
     {
         if (RootElement == null)
+        {
+            Console.WriteLine("[InputManager] HitTest: RootElement is null");
             return null;
+        }
         
-        return HitTestRecursive(RootElement, point);
+        var result = HitTestRecursive(RootElement, point);
+        Console.WriteLine($"[InputManager] HitTest at {point}: {(result?.GetType().Name ?? "null")}");
+        return result;
     }
     
     private IInputElement? HitTestRecursive(IInputElement element, Point point)
     {
         if (!element.IsVisible || !element.IsHitTestVisible || !element.IsInputEnabled)
             return null;
+        
+        var bounds = element.Bounds;
+        Console.WriteLine($"[InputManager] HitTestRecursive: {element.GetType().Name} bounds={bounds}");
         
         // 先检查子元素 (后渲染的在上面)
         foreach (var child in element.Children)
