@@ -492,10 +492,13 @@ public class WindowImpl : IDisposable
         // 清空画布
         canvas.Clear(SKColors.White);
         
-        // 重建组件树
+        // 仅在组件标记为脏时才重建
         if (_content is ComponentBase componentBase)
         {
-            componentBase.Rebuild();
+            if (componentBase.IsDirty)
+            {
+                componentBase.Rebuild();
+            }
         }
         
         // 更新 InputManager 的 RootElement

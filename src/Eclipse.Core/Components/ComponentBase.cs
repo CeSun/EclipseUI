@@ -16,6 +16,7 @@ namespace Eclipse.Core
         private bool _isInitialized;
         private bool _isMounted;
         private bool _isDisposed;
+        private bool _isDirty = true; // 脏标记，初始为 true 以确保首次渲染
         
         protected ComponentBase() => _id = Interlocked.Increment(ref _nextId);
         
@@ -24,9 +25,38 @@ namespace Eclipse.Core
         public IReadOnlyList<IComponent> Children => _children;
         public event EventHandler? StateChanged;
         
+        /// <summary>
+        /// 是否需要重建（脏标记）
+        /// </summary>
+        public bool IsDirty => _isDirty;
+        
+        /// <summary>
+        /// 标记组件为脏，需要重建
+        /// </summary>
+        public void MarkDirty()
+        {
+            _isDirty = true;
+            StateChanged?.Invoke(this, EventArgs.Empty);
+        }
+        
+        /// <summary>
+        /// 清除脏标记（重建完成后调用）
+        /// </summary>
+        public void ClearDirty()
+        {
+            _isDirty = false;
+        }
+        
         IComponent? IComponent.Parent { get => _parent; set => _parent = value; }
         
-        protected void StateHasChanged() => StateChanged?.Invoke(this, EventArgs.Empty);
+        /// <summary>
+        /// 触发状态改变并标记为脏
+        /// </summary>
+        protected void StateHasChanged()
+        {
+            _isDirty = true;
+            StateChanged?.Invoke(this, EventArgs.Empty);
+        }
         
         public virtual void OnInitialized() { if (_isInitialized) return; _isInitialized = true; }
         public virtual void OnParametersSet() { }
@@ -38,13 +68,30 @@ namespace Eclipse.Core
         public void ClearChildren() { foreach (var child in _children) { child.Parent = null; child.Dispose(); } _children.Clear(); }
         
         /// <summary>
-        /// 重建组件树 - 清除旧的子组件并重新调用 Build
+        /// 重建组件树 - 仅在脏标记为 true 时才执行
         /// </summary>
         public void Rebuild()
+        {
+            if (!_isDirty)
+                return; // 不是脏的，跳过重建
+            
+            ClearChildren();
+            var context = new BuildContext(this);
+            Build(context);
+            
+            // 清除脏标记
+            ClearDirty();
+        }
+        
+        /// <summary>
+        /// 强制重建组件树（忽略脏标记）
+        /// </summary>
+        public void ForceRebuild()
         {
             ClearChildren();
             var context = new BuildContext(this);
             Build(context);
+            ClearDirty();
         }
         
         public abstract void Build(IBuildContext context);

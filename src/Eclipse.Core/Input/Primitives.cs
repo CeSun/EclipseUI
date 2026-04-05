@@ -48,6 +48,28 @@ public readonly struct Vector
 }
 
 /// <summary>
+/// 尺寸结构
+/// </summary>
+public readonly struct Size
+{
+    public double Width { get; init; }
+    public double Height { get; init; }
+    
+    public Size(double width, double height)
+    {
+        Width = width;
+        Height = height;
+    }
+    
+    public static Size Empty => new(double.PositiveInfinity, double.PositiveInfinity);
+    public static Size Zero => new(0, 0);
+    
+    public bool IsEmpty => Width == double.PositiveInfinity || Height == double.PositiveInfinity;
+    
+    public override string ToString() => $"({Width:F1}, {Height:F1})";
+}
+
+/// <summary>
 /// 矩形
 /// </summary>
 public readonly struct Rect
