@@ -1,5 +1,8 @@
 using System;
 using System.Collections.Generic;
+using Eclipse.Input;
+using Eclipse.Rendering;
+using Eclipse.Rendering;
 
 namespace Eclipse.Core.Abstractions
 {
@@ -17,6 +20,11 @@ namespace Eclipse.Core.Abstractions
         void OnParametersSet();
         void OnMounted();
         void OnUnmounted();
+        
+        /// <summary>
+        /// 渲染组件
+        /// </summary>
+        void Render(DrawingContext context, Rect bounds);
         
         /// <summary>
         /// 添加子组件

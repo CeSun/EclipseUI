@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Eclipse.Core.Abstractions;
+using Eclipse.Input;
+using Eclipse.Rendering;
 
 namespace Eclipse.Core
 {
@@ -41,11 +43,23 @@ namespace Eclipse.Core
         public void Rebuild()
         {
             ClearChildren();
-            var context = new BuildContext(this);  // 传递 this 作为根组件
+            var context = new BuildContext(this);
             Build(context);
         }
         
         public abstract void Build(IBuildContext context);
+        
+        /// <summary>
+        /// 渲染组件 - 默认实现：渲染所有子组件
+        /// </summary>
+        public virtual void Render(DrawingContext context, Rect bounds)
+        {
+            // 默认行为：渲染所有子组件
+            foreach (var child in Children)
+            {
+                context.DrawChild(child, bounds);
+            }
+        }
         
         public void Dispose()
         {

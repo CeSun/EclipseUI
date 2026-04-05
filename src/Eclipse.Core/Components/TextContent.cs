@@ -1,4 +1,6 @@
 using Eclipse.Core.Abstractions;
+using Eclipse.Input;
+using Eclipse.Rendering;
 
 namespace Eclipse.Core;
 
@@ -12,6 +14,13 @@ public class TextContent : ComponentBase
     public override void Build(IBuildContext context)
     {
         // Build 空实现 - 属性由生成代码通过 BeginComponent(out var component) 设置
-        // 实际文本渲染由具体渲染器处理
+    }
+    
+    public override void Render(DrawingContext context, Rect bounds)
+    {
+        if (!string.IsNullOrEmpty(Text))
+        {
+            context.DrawText(Text, bounds.X, bounds.Y, 14.0 * context.Scale);
+        }
     }
 }

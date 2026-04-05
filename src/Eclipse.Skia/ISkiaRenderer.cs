@@ -32,23 +32,3 @@ public class SkiaRenderContext
         Scale = scale;
     }
 }
-
-/// <summary>
-/// 控件渲染器接口 - 由平台层实现具体控件的渲染
-/// </summary>
-public interface ISkiaControlRenderer
-{
-    /// <summary>
-    /// 目标控件类型
-    /// </summary>
-    Type TargetType { get; }
-    
-    /// <summary>
-    /// 渲染控件
-    /// </summary>
-    void Render(
-        IComponent component, 
-        SkiaRenderContext context, 
-        SKRect bounds,
-        Action<IComponent, SkiaRenderContext, SKRect> renderChild);
-}

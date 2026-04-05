@@ -43,7 +43,7 @@ public static class Application
     public static void Run(IComponent rootComponent)
     {
         var inputManager = new InputManager();
-        var renderer = new DefaultSkiaRenderer(inputManager);
+        var renderer = new ComponentRenderer(inputManager);
         
         using var window = new WindowImpl(WindowImpl.RenderBackend.Angle, inputManager, renderer)
         {

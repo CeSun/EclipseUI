@@ -196,7 +196,7 @@ public class WindowImpl : IDisposable
     private void InitializeRenderer(InputManager? inputManager, ISkiaRenderer? renderer)
     {
         // 使用注入的 renderer 或创建默认的
-        _renderer = renderer as DefaultSkiaRenderer ?? new DefaultSkiaRenderer();
+        _renderer = renderer ?? new ComponentRenderer();
         
         // 使用注入的 InputManager，如果没有则创建新的
         _inputManager = inputManager ?? new InputManager();

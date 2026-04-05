@@ -37,7 +37,7 @@ public class AppBuilder : AppBuilderBase
         
         // Windows 平台服务
         services.AddSingleton<ISkiaRenderer>(sp => 
-            new DefaultSkiaRenderer(sp.GetRequiredService<InputManager>()));
+            new ComponentRenderer(sp.GetRequiredService<InputManager>()));
         
         // 后端配置
         services.AddSingleton(new BackendConfig { Backend = _backend });

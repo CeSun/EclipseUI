@@ -1,33 +1,24 @@
 using Eclipse.Core;
 using Eclipse.Core.Abstractions;
-using Eclipse.Controls;
 using Eclipse.Input;
+using Eclipse.Rendering;
 using Eclipse.Skia;
 using SkiaSharp;
 
 namespace Eclipse.Windows.Rendering;
 
 /// <summary>
-/// 默认 Skia 渲染器 - 遍历组件树并渲染
+/// 组件树渲染器 - 遍历组件树并调用 Render
 /// </summary>
-public class DefaultSkiaRenderer : ISkiaRenderer
+public class ComponentRenderer : ISkiaRenderer
 {
-    private readonly Dictionary<Type, ISkiaControlRenderer> _renderers = new();
     private readonly InputManager? _inputManager;
     
-    public DefaultSkiaRenderer() : this(null)
-    {
-    }
+    public ComponentRenderer() : this(null) { }
     
-    public DefaultSkiaRenderer(InputManager? inputManager)
+    public ComponentRenderer(InputManager? inputManager)
     {
         _inputManager = inputManager;
-        
-        // 注册内置渲染器
-        RegisterRenderer<StackLayoutRenderer>();
-        RegisterRenderer<LabelRenderer>();
-        RegisterRenderer<ButtonRenderer>();
-        RegisterRenderer<TextContentRenderer>();
     }
     
     public void Render(IComponent root, SkiaRenderContext context)
@@ -40,41 +31,22 @@ public class DefaultSkiaRenderer : ISkiaRenderer
             componentBase.Rebuild();
         }
         
-        // 更新 InputManager 的 RootElement（因为 Rebuild 创建了新实例）
+        // 更新 InputManager 的 RootElement
         if (_inputManager != null && root?.Children.Count > 0 && root.Children[0] is IInputElement firstChild)
         {
             _inputManager.SetRootElementForRender(firstChild);
         }
         
-        RenderComponent(root, context, new SKRect(0, 0, context.Width, context.Height));
-    }
-    
-    private void RenderComponent(IComponent component, SkiaRenderContext context, SKRect bounds)
-    {
-        var type = component.GetType();
+        // 创建 DrawingContext 并渲染
+        var drawingContext = new SkiaDrawingContext(context.Canvas, context.Width, context.Height, context.Scale);
+        drawingContext.SetDrawChildCallback((child, bounds) => RenderChild(child, drawingContext, bounds));
         
-        if (_renderers.TryGetValue(type, out var renderer))
-        {
-            renderer.Render(component, context, bounds, RenderChild);
-        }
-        else
-        {
-            // 没有注册渲染器，直接渲染子组件
-            foreach (var child in component.Children)
-            {
-                RenderChild(child, context, bounds);
-            }
-        }
+        var bounds = new Rect(0, 0, context.Width, context.Height);
+        root.Render(drawingContext, bounds);
     }
     
-    private void RenderChild(IComponent child, SkiaRenderContext context, SKRect bounds)
+    private void RenderChild(IComponent component, DrawingContext context, Rect bounds)
     {
-        RenderComponent(child, context, bounds);
-    }
-    
-    private void RegisterRenderer<TRenderer>() where TRenderer : ISkiaControlRenderer, new()
-    {
-        var renderer = new TRenderer();
-        _renderers[renderer.TargetType] = renderer;
+        component.Render(context, bounds);
     }
 }
