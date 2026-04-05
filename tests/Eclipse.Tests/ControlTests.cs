@@ -1,4 +1,5 @@
 using Eclipse.Controls;
+using Eclipse.Rendering;
 using Xunit;
 
 namespace Eclipse.Tests;

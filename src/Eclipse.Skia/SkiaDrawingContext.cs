@@ -3,6 +3,9 @@ using Eclipse.Input;
 using Eclipse.Rendering;
 using Eclipse.Skia.Text;
 using SkiaSharp;
+using System;
+using System.Collections.Concurrent;
+using System.IO;
 
 namespace Eclipse.Skia;
 
@@ -14,6 +17,9 @@ public class SkiaDrawingContext : IDrawingContext
     private readonly SKCanvas _canvas;
     private static readonly HarfBuzzTextRenderer _textRenderer = new();
     private static SKTypeface? _chineseTypeface;
+    
+    // 图片缓存
+    private static readonly ConcurrentDictionary<string, SKImage> _imageCache = new();
     
     public double Scale { get; }
     public double Width { get; }
@@ -55,6 +61,28 @@ public class SkiaDrawingContext : IDrawingContext
             else
             {
                 _canvas.DrawRect(rect, paint);
+            }
+        }
+        
+        if (!string.IsNullOrEmpty(strokeColor) && strokeWidth > 0)
+        {
+            using var strokePaint = new SKPaint
+            {
+                IsAntialias = true,
+                Color = SKColor.TryParse(strokeColor, out var c) ? c : SKColors.Transparent,
+                Style = SKPaintStyle.Stroke,
+                StrokeWidth = (float)strokeWidth
+            };
+            
+            var rect = new SKRect((float)bounds.X, (float)bounds.Y, (float)(bounds.X + bounds.Width), (float)(bounds.Y + bounds.Height));
+            
+            if (cornerRadius > 0)
+            {
+                _canvas.DrawRoundRect(rect, (float)cornerRadius, (float)cornerRadius, strokePaint);
+            }
+            else
+            {
+                _canvas.DrawRect(rect, strokePaint);
             }
         }
     }
@@ -105,6 +133,148 @@ public class SkiaDrawingContext : IDrawingContext
         return _textRenderer.MeasureText(text, font);
     }
     
+    /// <summary>
+    /// 加载图片并返回缓存键
+    /// </summary>
+    public string? LoadImage(string source)
+    {
+        if (string.IsNullOrEmpty(source))
+            return null;
+        
+        // 使用路径作为缓存键
+        var cacheKey = source;
+        
+        // 如果已缓存，直接返回
+        if (_imageCache.ContainsKey(cacheKey))
+            return cacheKey;
+        
+        // 尝试加载图片
+        try
+        {
+            SKImage? image = null;
+            
+            // 检查是否是文件路径
+            if (File.Exists(source))
+            {
+                using var stream = File.OpenRead(source);
+                using var codec = SKCodec.Create(stream);
+                if (codec != null)
+                {
+                    var info = new SKImageInfo(codec.Info.Width, codec.Info.Height);
+                    using var bitmap = SKBitmap.Decode(codec, info);
+                    if (bitmap != null)
+                    {
+                        image = SKImage.FromBitmap(bitmap);
+                    }
+                }
+            }
+            // 检查是否是 HTTP URL（未来扩展）
+            else if (source.StartsWith("http://") || source.StartsWith("https://"))
+            {
+                // 暂不支持 HTTP 加载
+                return null;
+            }
+            // 检查是否是资源路径（未来扩展）
+            else if (source.StartsWith("res://"))
+            {
+                // 暂不支持资源加载
+                return null;
+            }
+            
+            if (image != null)
+            {
+                _imageCache[cacheKey] = image;
+                return cacheKey;
+            }
+        }
+        catch (Exception)
+        {
+            // 加载失败
+            return null;
+        }
+        
+        return null;
+    }
+    
+    /// <summary>
+    /// 获取图片原始尺寸
+    /// </summary>
+    public Size GetImageSize(string imageKey)
+    {
+        if (string.IsNullOrEmpty(imageKey) || !_imageCache.TryGetValue(imageKey, out var image))
+            return Size.Zero;
+        
+        return new Size(image.Width, image.Height);
+    }
+    
+    /// <summary>
+    /// 绘制图片
+    /// </summary>
+    public void DrawImage(string imageKey, Rect bounds, Stretch stretch = Stretch.Uniform)
+    {
+        if (string.IsNullOrEmpty(imageKey) || !_imageCache.TryGetValue(imageKey, out var image))
+            return;
+        
+        // 计算绘制区域
+        var destRect = CalculateStretchRect(
+            new Size(image.Width, image.Height),
+            bounds,
+            stretch);
+        
+        // 绘制图片
+        _canvas.DrawImage(image, destRect);
+    }
+    
+    /// <summary>
+    /// 根据拉伸模式计算绘制区域
+    /// </summary>
+    private static SKRect CalculateStretchRect(Size imageSize, Rect bounds, Stretch stretch)
+    {
+        var imageWidth = imageSize.Width;
+        var imageHeight = imageSize.Height;
+        var boundsWidth = bounds.Width;
+        var boundsHeight = bounds.Height;
+        
+        if (imageWidth <= 0 || imageHeight <= 0 || boundsWidth <= 0 || boundsHeight <= 0)
+        {
+            return new SKRect((float)bounds.X, (float)bounds.Y, (float)(bounds.X + boundsWidth), (float)(bounds.Y + boundsHeight));
+        }
+        
+        switch (stretch)
+        {
+            case Stretch.None:
+                // 不拉伸，居中显示
+                var x = bounds.X + (boundsWidth - imageWidth) / 2;
+                var y = bounds.Y + (boundsHeight - imageHeight) / 2;
+                return new SKRect((float)x, (float)y, (float)(x + imageWidth), (float)(y + imageHeight));
+            
+            case Stretch.Fill:
+                // 填充整个区域，可能改变比例
+                return new SKRect((float)bounds.X, (float)bounds.Y, (float)(bounds.X + boundsWidth), (float)(bounds.Y + boundsHeight));
+            
+            case Stretch.Uniform:
+                // 保持比例，适应区域（可能留空白）
+                var uniformScale = Math.Min(boundsWidth / imageWidth, boundsHeight / imageHeight);
+                var uniformWidth = imageWidth * uniformScale;
+                var uniformHeight = imageHeight * uniformScale;
+                var uniformX = bounds.X + (boundsWidth - uniformWidth) / 2;
+                var uniformY = bounds.Y + (boundsHeight - uniformHeight) / 2;
+                return new SKRect((float)uniformX, (float)uniformY, (float)(uniformX + uniformWidth), (float)(uniformY + uniformHeight));
+            
+            case Stretch.UniformToFill:
+                // 保持比例，填充区域（可能裁剪）
+                var fillScale = Math.Max(boundsWidth / imageWidth, boundsHeight / imageHeight);
+                var fillWidth = imageWidth * fillScale;
+                var fillHeight = imageHeight * fillScale;
+                var fillX = bounds.X + (boundsWidth - fillWidth) / 2;
+                var fillY = bounds.Y + (boundsHeight - fillHeight) / 2;
+                return new SKRect((float)fillX, (float)fillY, (float)(fillX + fillWidth), (float)(fillY + fillHeight));
+            
+            default:
+                return new SKRect((float)bounds.X, (float)bounds.Y, (float)(bounds.X + boundsWidth), (float)(bounds.Y + boundsHeight));
+        }
+    }
+    
     private static SKTypeface GetTypeface(string? fontFamily, string? fontWeight)
     {
         if (!string.IsNullOrEmpty(fontFamily))
@@ -150,5 +320,17 @@ public class SkiaDrawingContext : IDrawingContext
         if (string.IsNullOrEmpty(color))
             return defaultColor;
         return SKColor.TryParse(color, out var result) ? result : defaultColor;
+    }
+    
+    /// <summary>
+    /// 清除图片缓存
+    /// </summary>
+    public static void ClearImageCache()
+    {
+        foreach (var image in _imageCache.Values)
+        {
+            image.Dispose();
+        }
+        _imageCache.Clear();
     }
 }

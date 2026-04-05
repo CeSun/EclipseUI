@@ -1030,27 +1030,60 @@ public class CheckBox : InteractiveControl
     }
 }
 
+/// <summary>
+/// 图片控件 - 支持从文件加载图片并显示
+/// </summary>
 public class Image : ComponentBase
 {
+    private string? _loadedImageKey;
+    
+    /// <summary>
+    /// 图片源路径
+    /// </summary>
     public string? Source { get; set; }
+    
+    /// <summary>
+    /// 宽度（-1 表示自动）
+    /// </summary>
     public double Width { get; set; } = -1;
+    
+    /// <summary>
+    /// 高度（-1 表示自动）
+    /// </summary>
     public double Height { get; set; } = -1;
+    
+    /// <summary>
+    /// 拉伸模式
+    /// </summary>
     public Stretch Stretch { get; set; } = Stretch.Uniform;
     
     public override void Build(IBuildContext context) { }
     
     public override void Render(IDrawingContext context, Rect bounds)
     {
-        context.DrawRectangle(bounds, "#EEEEEE");
+        // 如果没有图片源，显示占位符
+        if (string.IsNullOrEmpty(Source))
+        {
+            context.DrawRectangle(bounds, "#EEEEEE");
+            return;
+        }
+        
+        // 加载图片（如果尚未加载）
+        if (_loadedImageKey == null || !string.Equals(_loadedImageKey, Source, StringComparison.OrdinalIgnoreCase))
+        {
+            _loadedImageKey = context.LoadImage(Source);
+        }
+        
+        // 如果加载失败，显示占位符
+        if (_loadedImageKey == null)
+        {
+            context.DrawRectangle(bounds, "#EEEEEE");
+            return;
+        }
+        
+        // 绘制图片
+        context.DrawImage(_loadedImageKey, bounds, Stretch);
     }
-}
-
-public enum Stretch
-{
-    None,
-    Fill,
-    Uniform,
-    UniformToFill
 }
 
 public class Container : ComponentBase

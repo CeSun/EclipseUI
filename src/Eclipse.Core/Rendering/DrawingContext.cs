@@ -47,4 +47,26 @@ public interface IDrawingContext
     /// 测量文本宽度
     /// </summary>
     double MeasureText(string text, double fontSize, string? fontFamily = null);
+    
+    /// <summary>
+    /// 绘制图片
+    /// </summary>
+    /// <param name="imageKey">图片缓存键</param>
+    /// <param name="bounds">绘制区域</param>
+    /// <param name="stretch">拉伸模式</param>
+    void DrawImage(string imageKey, Rect bounds, Stretch stretch = Stretch.Uniform);
+    
+    /// <summary>
+    /// 加载图片并返回缓存键
+    /// </summary>
+    /// <param name="source">图片路径或 URI</param>
+    /// <returns>图片缓存键，加载失败返回 null</returns>
+    string? LoadImage(string source);
+    
+    /// <summary>
+    /// 获取图片原始尺寸
+    /// </summary>
+    /// <param name="imageKey">图片缓存键</param>
+    /// <returns>图片尺寸，无效键返回 Size.Zero</returns>
+    Size GetImageSize(string imageKey);
 }
