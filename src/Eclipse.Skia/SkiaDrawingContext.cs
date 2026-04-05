@@ -7,13 +7,17 @@ using SkiaSharp;
 namespace Eclipse.Skia;
 
 /// <summary>
-/// Skia 渲染上下文实现
+/// Skia 绘制上下文实现
 /// </summary>
-public class SkiaDrawingContext : DrawingContext
+public class SkiaDrawingContext : IDrawingContext
 {
     private readonly SKCanvas _canvas;
     private static readonly HarfBuzzTextRenderer _textRenderer = new();
     private static SKTypeface? _chineseTypeface;
+    
+    public double Scale { get; }
+    public double Width { get; }
+    public double Height { get; }
     
     public SkiaDrawingContext(SKCanvas canvas, double width, double height, double scale = 1.0)
     {
@@ -23,7 +27,7 @@ public class SkiaDrawingContext : DrawingContext
         Scale = scale;
     }
     
-    public override void Clear(string? color = null)
+    public void Clear(string? color = null)
     {
         var bgColor = string.IsNullOrEmpty(color) 
             ? SKColors.White 
@@ -31,7 +35,7 @@ public class SkiaDrawingContext : DrawingContext
         _canvas.Clear(bgColor);
     }
     
-    public override void DrawRectangle(Rect bounds, string? fillColor, string? strokeColor = null, double strokeWidth = 0, double cornerRadius = 0)
+    public void DrawRectangle(Rect bounds, string? fillColor, string? strokeColor = null, double strokeWidth = 0, double cornerRadius = 0)
     {
         if (!string.IsNullOrEmpty(fillColor))
         {
@@ -55,7 +59,7 @@ public class SkiaDrawingContext : DrawingContext
         }
     }
     
-    public override void DrawRoundRect(Rect bounds, string fillColor, double cornerRadius)
+    public void DrawRoundRect(Rect bounds, string fillColor, double cornerRadius)
     {
         using var paint = new SKPaint
         {
@@ -68,7 +72,7 @@ public class SkiaDrawingContext : DrawingContext
         _canvas.DrawRoundRect(rect, (float)cornerRadius, (float)cornerRadius, paint);
     }
     
-    public override void DrawText(string text, double x, double y, double fontSize, string? fontFamily = null, string? fontWeight = null, string? color = null)
+    public void DrawText(string text, double x, double y, double fontSize, string? fontFamily = null, string? fontWeight = null, string? color = null)
     {
         if (string.IsNullOrEmpty(text))
             return;
@@ -91,7 +95,7 @@ public class SkiaDrawingContext : DrawingContext
         _textRenderer.DrawText(_canvas, text, (float)x, (float)(y + font.Spacing), font, paint);
     }
     
-    public override double MeasureText(string text, double fontSize, string? fontFamily = null)
+    public double MeasureText(string text, double fontSize, string? fontFamily = null)
     {
         if (string.IsNullOrEmpty(text))
             return 0;
@@ -99,11 +103,6 @@ public class SkiaDrawingContext : DrawingContext
         using var font = new SKFont { Size = (float)fontSize };
         font.Typeface = GetTypeface(fontFamily, null);
         return _textRenderer.MeasureText(text, font);
-    }
-    
-    public override void DrawChild(IComponent child, Rect bounds)
-    {
-        DrawChildCallback?.Invoke(child, bounds);
     }
     
     private static SKTypeface GetTypeface(string? fontFamily, string? fontWeight)

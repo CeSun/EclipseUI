@@ -52,12 +52,12 @@ namespace Eclipse.Core
         /// <summary>
         /// 渲染组件 - 默认实现：渲染所有子组件
         /// </summary>
-        public virtual void Render(DrawingContext context, Rect bounds)
+        public virtual void Render(IDrawingContext context, Rect bounds)
         {
             // 默认行为：渲染所有子组件
             foreach (var child in Children)
             {
-                context.DrawChild(child, bounds);
+                child.Render(context, bounds);
             }
         }
         

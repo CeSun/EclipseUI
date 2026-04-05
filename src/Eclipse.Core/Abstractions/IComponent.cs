@@ -23,7 +23,7 @@ namespace Eclipse.Core.Abstractions
         /// <summary>
         /// 渲染组件
         /// </summary>
-        void Render(DrawingContext context, Rect bounds);
+        void Render(IDrawingContext context, Rect bounds);
         
         /// <summary>
         /// 添加子组件

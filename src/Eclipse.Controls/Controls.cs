@@ -11,20 +11,14 @@ namespace Eclipse.Controls;
 /// </summary>
 public abstract class InteractiveControl : InputElementBase
 {
-    protected Rect _bounds = new(0, 0, 100, 40); // 默认大小
+    protected Rect _bounds = new(0, 0, 100, 40);
     
-    /// <summary>
-    /// 是否启用
-    /// </summary>
     public bool IsEnabled { get; set; } = true;
     
     public override bool IsInputEnabled => IsEnabled;
     public override bool IsVisible => true;
     public override Rect Bounds => _bounds;
     
-    /// <summary>
-    /// 更新边界（供渲染使用）
-    /// </summary>
     public void UpdateBounds(Rect bounds) => _bounds = bounds;
     
     protected override IEnumerable<IInputElement> GetInputChildren()
@@ -38,7 +32,7 @@ public abstract class InteractiveControl : InputElementBase
         }
     }
     
-    public override void Render(DrawingContext context, Rect bounds)
+    public override void Render(IDrawingContext context, Rect bounds)
     {
         UpdateBounds(bounds);
         base.Render(context, bounds);
@@ -46,7 +40,7 @@ public abstract class InteractiveControl : InputElementBase
 }
 
 /// <summary>
-/// 垂直堆叠布局 - 也支持输入事件（作为容器）
+/// 垂直堆叠布局
 /// </summary>
 public class StackLayout : InputElementBase
 {
@@ -78,14 +72,13 @@ public class StackLayout : InputElementBase
     
     public override void Build(IBuildContext context) { }
     
-    public override void Render(DrawingContext context, Rect bounds)
+    public override void Render(IDrawingContext context, Rect bounds)
     {
         UpdateBounds(bounds);
         
         var spacing = GetSpacing() * context.Scale;
         var padding = GetPadding() * context.Scale;
         
-        // 绘制背景
         if (!string.IsNullOrEmpty(BackgroundColor))
         {
             context.DrawRectangle(bounds, BackgroundColor);
@@ -104,7 +97,7 @@ public class StackLayout : InputElementBase
             {
                 var childHeight = EstimateHeight(child, context);
                 var childBounds = new Rect(contentBounds.X, y, contentBounds.Width, childHeight);
-                context.DrawChild(child, childBounds);
+                child.Render(context, childBounds);
                 y += childHeight + spacing;
             }
         }
@@ -115,19 +108,19 @@ public class StackLayout : InputElementBase
             foreach (var child in Children)
             {
                 var childBounds = new Rect(x, contentBounds.Y, childWidth, contentBounds.Height);
-                context.DrawChild(child, childBounds);
+                child.Render(context, childBounds);
                 x += childWidth + spacing;
             }
         }
     }
     
-    private double EstimateHeight(IComponent component, DrawingContext context)
+    private double EstimateHeight(IComponent component, IDrawingContext context)
     {
         return component switch
         {
-            Label label => 24.0 * context.Scale,
-            Button button => 44.0 * context.Scale,
-            TextContent text => 20.0 * context.Scale,
+            Label => 24.0 * context.Scale,
+            Button => 44.0 * context.Scale,
+            TextContent => 20.0 * context.Scale,
             _ => 40.0 * context.Scale
         };
     }
@@ -139,17 +132,11 @@ public enum Orientation
     Horizontal
 }
 
-/// <summary>
-/// 水平堆叠布局
-/// </summary>
 public class HStack : StackLayout
 {
     public HStack() => Orientation = Orientation.Horizontal;
 }
 
-/// <summary>
-/// 文本标签
-/// </summary>
 public class Label : ComponentBase
 {
     public string? Text { get; set; }
@@ -163,7 +150,7 @@ public class Label : ComponentBase
     
     public override void Build(IBuildContext context) { }
     
-    public override void Render(DrawingContext context, Rect bounds)
+    public override void Render(IDrawingContext context, Rect bounds)
     {
         if (!string.IsNullOrEmpty(Text))
         {
@@ -179,9 +166,6 @@ public enum TextAlignment
     Right
 }
 
-/// <summary>
-/// 按钮 - 支持输入事件
-/// </summary>
 public class Button : InteractiveControl
 {
     public string? Text { get; set; }
@@ -190,7 +174,6 @@ public class Button : InteractiveControl
     public string? FontSize { get; set; } = "14";
     public string? FontFamily { get; set; }
     public string? CornerRadius { get; set; } = "4";
-    public string? Padding { get; set; } = "8";
     
     public double GetFontSize() => double.TryParse(FontSize, out var size) ? size : 14;
     public double GetCornerRadius() => double.TryParse(CornerRadius, out var radius) ? radius : 4;
@@ -219,14 +202,12 @@ public class Button : InteractiveControl
     
     public override void Build(IBuildContext context) { }
     
-    public override void Render(DrawingContext context, Rect bounds)
+    public override void Render(IDrawingContext context, Rect bounds)
     {
         UpdateBounds(bounds);
         
-        // 绘制圆角矩形背景
         context.DrawRoundRect(bounds, BackgroundColor ?? "#007AFF", GetCornerRadius() * context.Scale);
         
-        // 绘制文本（居中）
         if (!string.IsNullOrEmpty(Text))
         {
             var fontSize = GetFontSize() * context.Scale;
@@ -238,16 +219,12 @@ public class Button : InteractiveControl
     }
 }
 
-/// <summary>
-/// 文本输入框
-/// </summary>
 public class TextInput : InteractiveControl
 {
     public string? Text { get; set; }
     public string? Placeholder { get; set; }
     public double FontSize { get; set; } = 14;
     public string? BackgroundColor { get; set; }
-    public string? BorderColor { get; set; }
     public double CornerRadius { get; set; } = 4;
     public double Padding { get; set; } = 8;
     public bool IsPassword { get; set; } = false;
@@ -272,17 +249,15 @@ public class TextInput : InteractiveControl
     
     public override void Build(IBuildContext context) { }
     
-    public override void Render(DrawingContext context, Rect bounds)
+    public override void Render(IDrawingContext context, Rect bounds)
     {
         UpdateBounds(bounds);
         
-        // 绘制背景和边框
         if (!string.IsNullOrEmpty(BackgroundColor))
         {
-            context.DrawRoundRect(bounds, BackgroundColor, (float)CornerRadius * context.Scale);
+            context.DrawRoundRect(bounds, BackgroundColor, CornerRadius * context.Scale);
         }
         
-        // 绘制文本
         if (!string.IsNullOrEmpty(Text))
         {
             context.DrawText(Text, bounds.X + Padding * context.Scale, bounds.Y, FontSize * context.Scale);
@@ -305,9 +280,6 @@ public class ValueChangedEventArgs<T> : EventArgs
     }
 }
 
-/// <summary>
-/// 复选框
-/// </summary>
 public class CheckBox : InteractiveControl
 {
     private bool _isChecked;
@@ -348,17 +320,15 @@ public class CheckBox : InteractiveControl
     
     public override void Build(IBuildContext context) { }
     
-    public override void Render(DrawingContext context, Rect bounds)
+    public override void Render(IDrawingContext context, Rect bounds)
     {
         UpdateBounds(bounds);
         
-        // 绘制复选框
         var size = Size * context.Scale;
         var checkBounds = new Rect(bounds.X, bounds.Y, size, size);
         var color = IsChecked ? (CheckedColor ?? "#007AFF") : "#CCCCCC";
         context.DrawRoundRect(checkBounds, color, 4 * context.Scale);
         
-        // 绘制标签
         if (!string.IsNullOrEmpty(Label))
         {
             context.DrawText(Label, bounds.X + size + 8 * context.Scale, bounds.Y, 14 * context.Scale);
@@ -366,9 +336,6 @@ public class CheckBox : InteractiveControl
     }
 }
 
-/// <summary>
-/// 图片
-/// </summary>
 public class Image : ComponentBase
 {
     public string? Source { get; set; }
@@ -377,6 +344,11 @@ public class Image : ComponentBase
     public Stretch Stretch { get; set; } = Stretch.Uniform;
     
     public override void Build(IBuildContext context) { }
+    
+    public override void Render(IDrawingContext context, Rect bounds)
+    {
+        context.DrawRectangle(bounds, "#EEEEEE");
+    }
 }
 
 public enum Stretch
@@ -387,9 +359,6 @@ public enum Stretch
     UniformToFill
 }
 
-/// <summary>
-/// 容器
-/// </summary>
 public class Container : ComponentBase
 {
     public string? BackgroundColor { get; set; }
@@ -398,14 +367,13 @@ public class Container : ComponentBase
     
     public override void Build(IBuildContext context) { }
     
-    public override void Render(DrawingContext context, Rect bounds)
+    public override void Render(IDrawingContext context, Rect bounds)
     {
         if (!string.IsNullOrEmpty(BackgroundColor))
         {
-            context.DrawRoundRect(bounds, BackgroundColor, (float)CornerRadius * context.Scale);
+            context.DrawRoundRect(bounds, BackgroundColor, CornerRadius * context.Scale);
         }
         
-        // 渲染子组件
         var contentBounds = new Rect(
             bounds.X + Padding * context.Scale,
             bounds.Y + Padding * context.Scale,
@@ -414,7 +382,7 @@ public class Container : ComponentBase
         
         foreach (var child in Children)
         {
-            context.DrawChild(child, contentBounds);
+            child.Render(context, contentBounds);
         }
     }
 }
