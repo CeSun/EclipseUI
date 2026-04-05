@@ -57,7 +57,7 @@ public static class Application
     /// </summary>
     private static IComponent BuildComponent(ComponentBase component)
     {
-        var context = new BuildContext();
+        var context = new BuildContext(component);  // 传递 component 作为根组件
         component.Build(context);
         // 返回 component 本身，而不是 context.RootComponent
         // 这样 Rebuild() 会调用 component.Build()，而不是子组件的 Build()

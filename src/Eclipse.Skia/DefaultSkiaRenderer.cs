@@ -45,8 +45,11 @@ public class DefaultSkiaRenderer : ISkiaRenderer
         }
         else
         {
-            // 没有注册渲染器，尝试渲染子组件
-            RenderChild(component, context, bounds);
+            // 没有注册渲染器，直接渲染子组件
+            foreach (var child in component.Children)
+            {
+                RenderChild(child, context, bounds);
+            }
         }
     }
     

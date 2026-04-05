@@ -41,7 +41,7 @@ namespace Eclipse.Core
         public void Rebuild()
         {
             ClearChildren();
-            var context = new BuildContext();
+            var context = new BuildContext(this);  // 传递 this 作为根组件
             Build(context);
         }
         

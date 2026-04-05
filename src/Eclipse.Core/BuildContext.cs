@@ -11,7 +11,7 @@ public sealed class BuildContext : IBuildContext
 {
     private readonly Stack<IComponent> _componentStack = new();
     private readonly List<ComponentId> _path = new();
-    private IComponent? _rootComponent;
+    private readonly IComponent _root;
     
     public int Depth => _componentStack.Count;
     public IReadOnlyList<ComponentId> ComponentPath => _path;
@@ -19,20 +19,28 @@ public sealed class BuildContext : IBuildContext
     /// <summary>
     /// 根组件
     /// </summary>
-    public IComponent? RootComponent => _rootComponent;
+    public IComponent? RootComponent => _root;
+    
+    /// <summary>
+    /// 创建构建上下文
+    /// </summary>
+    /// <param name="root">调用 Build 的根组件</param>
+    public BuildContext(IComponent? root = null)
+    {
+        _root = root!;
+    }
     
     public IDisposable BeginComponent<T>(ComponentId id, out T component) where T : IComponent, new()
     {
         component = new T();
         
-        // 第一个组件是根组件
-        if (_rootComponent == null)
+        // 如果栈是空的，添加到根组件
+        if (_componentStack.Count == 0 && _root != null)
         {
-            _rootComponent = component;
+            _root.AddChild(component);
         }
-        
-        // 设置父组件
-        if (_componentStack.TryPeek(out var parent))
+        // 否则添加到栈顶组件
+        else if (_componentStack.TryPeek(out var parent))
         {
             parent.AddChild(component);
         }
