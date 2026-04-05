@@ -3,7 +3,6 @@ using Eclipse.Core;
 using Eclipse.Core.Abstractions;
 using Eclipse.Input;
 using Eclipse.Skia;
-using Eclipse.Windows.Rendering;
 
 namespace Eclipse.Windows;
 
@@ -43,9 +42,8 @@ public static class Application
     public static void Run(IComponent rootComponent)
     {
         var inputManager = new InputManager();
-        var renderer = new ComponentRenderer(inputManager);
         
-        using var window = new WindowImpl(WindowImpl.RenderBackend.Angle, inputManager, renderer)
+        using var window = new WindowImpl(WindowImpl.RenderBackend.Angle, inputManager)
         {
             Content = rootComponent
         };

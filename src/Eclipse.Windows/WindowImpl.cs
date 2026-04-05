@@ -5,7 +5,6 @@ using Eclipse.Core.Abstractions;
 using Eclipse.Input;
 using Eclipse.Windows.Input;
 using Eclipse.Skia;
-using Eclipse.Windows.Rendering;
 using Eclipse.Windows.OpenGL;
 using Eclipse.Windows.Angle;
 using SkiaSharp;
@@ -22,7 +21,6 @@ public class WindowImpl : IDisposable
 
     private IntPtr _hwnd;
     private string _className = string.Empty;
-    private ISkiaRenderer? _renderer;
     private IComponent? _content;
     private float _scaling = 1.0f;
     private bool _isDisposed;
@@ -126,20 +124,20 @@ public class WindowImpl : IDisposable
         }
     }
 
-    public WindowImpl() : this(RenderBackend.Angle, null, null)
+    public WindowImpl() : this(RenderBackend.Angle, null)
     {
     }
 
-    public WindowImpl(RenderBackend backend) : this(backend, null, null)
+    public WindowImpl(RenderBackend backend) : this(backend, null)
     {
     }
 
-    public WindowImpl(RenderBackend backend, InputManager? inputManager, ISkiaRenderer? renderer)
+    public WindowImpl(RenderBackend backend, InputManager? inputManager)
     {
         _backend = backend;
         RegisterWindowClass();
         CreateWindow();
-        InitializeRenderer(inputManager, renderer);
+        InitializeRenderer(inputManager);
         InitializeBackend();
     }
 
@@ -193,11 +191,8 @@ public class WindowImpl : IDisposable
         _windowMap[_hwnd] = this;
     }
 
-    private void InitializeRenderer(InputManager? inputManager, ISkiaRenderer? renderer)
+    private void InitializeRenderer(InputManager? inputManager)
     {
-        // 使用注入的 renderer 或创建默认的
-        _renderer = renderer ?? new ComponentRenderer();
-        
         // 使用注入的 InputManager，如果没有则创建新的
         _inputManager = inputManager ?? new InputManager();
         _inputAdapter = new WindowsInputAdapter(_hwnd, _inputManager);
@@ -399,29 +394,22 @@ public class WindowImpl : IDisposable
 
     private void RenderAngle(NativeMethods.RECT rect)
     {
-        if (_angleContext == null || _renderer == null || _grContext == null) return;
+        if (_angleContext == null || _grContext == null || _content == null) return;
 
         _angleContext.MakeCurrent();
 
-        // 使用 SkiaSharp 的方式更新视口 - 通过在 canvas 上设置尺寸
-        // 创建渲染目标
         var framebufferInfo = new GRGlFramebufferInfo(0, SKColorType.Rgba8888.ToGlSizedFormat());
         using var backendRenderTarget = new GRBackendRenderTarget(rect.Width, rect.Height, 0, 8, framebufferInfo);
 
-        // 创建 Skia 表面
         using var surface = SKSurface.Create(_grContext, backendRenderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
         if (surface == null)
             return;
 
         var canvas = surface.Canvas;
-        
-        // 重置 canvas 矩阵以匹配新尺寸
         canvas.ResetMatrix();
         
-        canvas.Clear(SKColors.White);
-
-        var context = new SkiaRenderContext(canvas, rect.Width, rect.Height, _scaling);
-        _renderer.Render(_content!, context);
+        // 渲染组件树
+        RenderContent(canvas, rect.Width, rect.Height);
 
         canvas.Flush();
         _grContext.Flush();
@@ -431,7 +419,7 @@ public class WindowImpl : IDisposable
 
     private void RenderOpenGL(NativeMethods.RECT rect)
     {
-        if (_glContext == null || _renderer == null || _grContext == null) return;
+        if (_glContext == null || _grContext == null || _content == null) return;
 
         _glContext.MakeCurrent();
         _glContext.GetFramebufferInfo(out var framebuffer, out var samples, out var stencil);
@@ -448,10 +436,9 @@ public class WindowImpl : IDisposable
         }
 
         var canvas = surface.Canvas;
-        canvas.Clear(SKColors.White);
-
-        var context = new SkiaRenderContext(canvas, rect.Width, rect.Height, _scaling);
-        _renderer.Render(_content!, context);
+        
+        // 渲染组件树
+        RenderContent(canvas, rect.Width, rect.Height);
 
         canvas.Flush();
         _grContext.Flush();
@@ -461,7 +448,7 @@ public class WindowImpl : IDisposable
 
     private void RenderCPU(IntPtr hdc, NativeMethods.RECT rect)
     {
-        if (_renderer == null) return;
+        if (_content == null) return;
 
         EnsureBitmapBuffer(hdc, rect.Width, rect.Height);
 
@@ -482,7 +469,7 @@ public class WindowImpl : IDisposable
 
     private unsafe void RenderWithSkiaCpu(NativeMethods.RECT rect)
     {
-        if (_content == null || _renderer == null) return;
+        if (_content == null) return;
 
         var info = new SKImageInfo(rect.Width, rect.Height, SKColorType.Bgra8888, SKAlphaType.Premul);
 
@@ -490,12 +477,34 @@ public class WindowImpl : IDisposable
         if (surface == null) return;
 
         var canvas = surface.Canvas;
-        canvas.Clear(SKColors.White);
-
-        var context = new SkiaRenderContext(canvas, rect.Width, rect.Height, _scaling);
-        _renderer.Render(_content, context);
-
-        canvas.Flush();
+        
+        // 渲染组件树
+        RenderContent(canvas, rect.Width, rect.Height);
+    }
+    
+    /// <summary>
+    /// 渲染内容到 canvas
+    /// </summary>
+    private void RenderContent(SKCanvas canvas, int width, int height)
+    {
+        if (_content == null) return;
+        
+        // 重建组件树
+        if (_content is ComponentBase componentBase)
+        {
+            componentBase.Rebuild();
+        }
+        
+        // 更新 InputManager 的 RootElement
+        if (_inputManager != null && _content.Children.Count > 0 && _content.Children[0] is IInputElement firstChild)
+        {
+            _inputManager.SetRootElementForRender(firstChild);
+        }
+        
+        // 创建 DrawingContext 并渲染
+        var drawingContext = new SkiaDrawingContext(canvas, width, height, _scaling);
+        var bounds = new Rect(0, 0, width, height);
+        _content.Render(drawingContext, bounds);
     }
 
     private void EnsureBitmapBuffer(IntPtr hdc, int width, int height)

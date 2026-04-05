@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using Eclipse.Input;
 using Eclipse.Rendering;
-using Eclipse.Rendering;
 
 namespace Eclipse.Core.Abstractions
 {

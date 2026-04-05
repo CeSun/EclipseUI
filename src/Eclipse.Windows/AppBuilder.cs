@@ -1,8 +1,6 @@
 using Eclipse.Core;
 using Eclipse.Core.Abstractions;
 using Eclipse.Input;
-using Eclipse.Skia;
-using Eclipse.Windows.Rendering;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Eclipse.Windows;
@@ -34,10 +32,6 @@ public class AppBuilder : AppBuilderBase
     protected override void ConfigureDefaultServices(IServiceCollection services)
     {
         base.ConfigureDefaultServices(services);
-        
-        // Windows 平台服务
-        services.AddSingleton<ISkiaRenderer>(sp => 
-            new ComponentRenderer(sp.GetRequiredService<InputManager>()));
         
         // 后端配置
         services.AddSingleton(new BackendConfig { Backend = _backend });
@@ -83,10 +77,9 @@ public class App : IApp
         var rootComponent = BuildComponent(component);
         
         var inputManager = _services.GetRequiredService<InputManager>();
-        var renderer = _services.GetRequiredService<ISkiaRenderer>();
         var backendConfig = _services.GetRequiredService<BackendConfig>();
         
-        using var window = new WindowImpl(backendConfig.Backend, inputManager, renderer)
+        using var window = new WindowImpl(backendConfig.Backend, inputManager)
         {
             Content = rootComponent
         };
