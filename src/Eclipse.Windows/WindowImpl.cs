@@ -489,6 +489,9 @@ public class WindowImpl : IDisposable
     {
         if (_content == null) return;
         
+        // 清空画布
+        canvas.Clear(SKColors.White);
+        
         // 重建组件树
         if (_content is ComponentBase componentBase)
         {
@@ -505,6 +508,8 @@ public class WindowImpl : IDisposable
         var drawingContext = new SkiaDrawingContext(canvas, width, height, _scaling);
         var bounds = new Rect(0, 0, width, height);
         _content.Render(drawingContext, bounds);
+        
+        canvas.Flush();
     }
 
     private void EnsureBitmapBuffer(IntPtr hdc, int width, int height)
