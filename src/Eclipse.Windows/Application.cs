@@ -1,11 +1,13 @@
 using System;
 using Eclipse.Core;
 using Eclipse.Core.Abstractions;
+using Eclipse.Input;
+using Eclipse.Skia;
 
 namespace Eclipse.Windows;
 
 /// <summary>
-/// 应用程序入口
+/// 应用程序入口（简化模式）
 /// </summary>
 public static class Application
 {
@@ -15,8 +17,10 @@ public static class Application
     /// <typeparam name="T">EUI 组件类型</typeparam>
     public static void Run<T>() where T : ComponentBase, new()
     {
-        var rootComponent = BuildComponent<T>();
-        Run(rootComponent);
+        var app = AppBuilder.Create()
+            .UseBackend(WindowImpl.RenderBackend.Angle)
+            .Build();
+        app.Run<T>();
     }
 
     /// <summary>
@@ -25,8 +29,10 @@ public static class Application
     /// <param name="component">EUI 组件实例</param>
     public static void Run(ComponentBase component)
     {
-        var rootComponent = BuildComponent(component);
-        Run(rootComponent);
+        var app = AppBuilder.Create()
+            .UseBackend(WindowImpl.RenderBackend.Angle)
+            .Build();
+        app.Run(component);
     }
 
     /// <summary>
@@ -35,32 +41,14 @@ public static class Application
     /// <param name="rootComponent">根组件</param>
     public static void Run(IComponent rootComponent)
     {
-        using var window = new WindowImpl
+        var inputManager = new InputManager();
+        var renderer = new DefaultSkiaRenderer(inputManager);
+        
+        using var window = new WindowImpl(WindowImpl.RenderBackend.Angle, inputManager, renderer)
         {
             Content = rootComponent
         };
 
         window.ShowDialog();
-    }
-
-    /// <summary>
-    /// 构建 EUI 组件并返回根组件
-    /// </summary>
-    private static IComponent BuildComponent<T>() where T : ComponentBase, new()
-    {
-        var component = new T();
-        return BuildComponent(component);
-    }
-
-    /// <summary>
-    /// 构建 EUI 组件实例并返回根组件
-    /// </summary>
-    private static IComponent BuildComponent(ComponentBase component)
-    {
-        var context = new BuildContext(component);  // 传递 component 作为根组件
-        component.Build(context);
-        // 返回 component 本身，而不是 context.RootComponent
-        // 这样 Rebuild() 会调用 component.Build()，而不是子组件的 Build()
-        return component;
     }
 }

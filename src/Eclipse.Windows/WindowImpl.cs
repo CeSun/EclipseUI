@@ -21,7 +21,7 @@ public class WindowImpl : IDisposable
 
     private IntPtr _hwnd;
     private string _className = string.Empty;
-    private DefaultSkiaRenderer? _renderer;
+    private ISkiaRenderer? _renderer;
     private IComponent? _content;
     private float _scaling = 1.0f;
     private bool _isDisposed;
@@ -125,16 +125,20 @@ public class WindowImpl : IDisposable
         }
     }
 
-    public WindowImpl() : this(RenderBackend.Angle)
+    public WindowImpl() : this(RenderBackend.Angle, null, null)
     {
     }
 
-    public WindowImpl(RenderBackend backend)
+    public WindowImpl(RenderBackend backend) : this(backend, null, null)
+    {
+    }
+
+    public WindowImpl(RenderBackend backend, InputManager? inputManager, ISkiaRenderer? renderer)
     {
         _backend = backend;
         RegisterWindowClass();
         CreateWindow();
-        InitializeRenderer();
+        InitializeRenderer(inputManager, renderer);
         InitializeBackend();
     }
 
@@ -188,12 +192,13 @@ public class WindowImpl : IDisposable
         _windowMap[_hwnd] = this;
     }
 
-    private void InitializeRenderer()
+    private void InitializeRenderer(InputManager? inputManager, ISkiaRenderer? renderer)
     {
-        _renderer = new DefaultSkiaRenderer();
+        // 使用注入的 renderer 或创建默认的
+        _renderer = renderer as DefaultSkiaRenderer ?? new DefaultSkiaRenderer();
         
-        // 使用单例 InputManager
-        _inputManager = InputManager.Instance;
+        // 使用注入的 InputManager，如果没有则创建新的
+        _inputManager = inputManager ?? new InputManager();
         _inputAdapter = new WindowsInputAdapter(_hwnd, _inputManager);
     }
 

@@ -13,9 +13,16 @@ namespace Eclipse.Skia;
 public class DefaultSkiaRenderer : ISkiaRenderer
 {
     private readonly Dictionary<Type, ISkiaControlRenderer> _renderers = new();
+    private readonly InputManager? _inputManager;
     
-    public DefaultSkiaRenderer()
+    public DefaultSkiaRenderer() : this(null)
     {
+    }
+    
+    public DefaultSkiaRenderer(InputManager? inputManager)
+    {
+        _inputManager = inputManager;
+        
         // 注册内置渲染器
         RegisterRenderer<StackLayoutRenderer>();
         RegisterRenderer<LabelRenderer>();
@@ -34,9 +41,9 @@ public class DefaultSkiaRenderer : ISkiaRenderer
         }
         
         // 更新 InputManager 的 RootElement（因为 Rebuild 创建了新实例）
-        if (root?.Children.Count > 0 && root.Children[0] is IInputElement firstChild)
+        if (_inputManager != null && root?.Children.Count > 0 && root.Children[0] is IInputElement firstChild)
         {
-            InputManager.Instance.SetRootElementForRender(firstChild);
+            _inputManager.SetRootElementForRender(firstChild);
         }
         
         RenderComponent(root, context, new SKRect(0, 0, context.Width, context.Height));

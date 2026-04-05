@@ -4,15 +4,10 @@ using System.Collections.Generic;
 namespace Eclipse.Input;
 
 /// <summary>
-/// 输入管理器 - 核心输入处理（单例）
+/// 输入管理器 - 核心输入处理
 /// </summary>
 public sealed class InputManager
 {
-    /// <summary>
-    /// 全局唯一实例
-    /// </summary>
-    public static InputManager Instance { get; } = new();
-    
     // 焦点管理器
     public FocusManager FocusManager { get; } = new();
     

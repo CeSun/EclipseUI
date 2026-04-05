@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <PackageReference Include="Avalonia.Angle.Windows.Natives" Version="2.1.25547.20250602" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
     <PackageReference Include="SkiaSharp" Version="3.119.2" />
   </ItemGroup>
 
