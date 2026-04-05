@@ -88,7 +88,7 @@ public static class GestureEvents
     /// </summary>
     public static readonly RoutedEvent<HoldingRoutedEventArgs> HoldingEvent =
         RoutedEvent<HoldingRoutedEventArgs>.Register<InputElementBase>(
-            nameof(Holding),
+            "Holding",
             RoutingStrategy.Bubble);
     
     /// <summary>
@@ -96,7 +96,7 @@ public static class GestureEvents
     /// </summary>
     public static readonly RoutedEvent<RoutedEventArgs> DoubleTappedEvent =
         RoutedEvent<RoutedEventArgs>.Register<InputElementBase>(
-            nameof(DoubleTapped),
+            "DoubleTapped",
             RoutingStrategy.Bubble);
 }
 

@@ -2,6 +2,8 @@ using System;
 using System.Runtime.InteropServices;
 using Eclipse.Core;
 using Eclipse.Core.Abstractions;
+using Eclipse.Input;
+using Eclipse.Windows.Input;
 using Eclipse.Skia;
 using Eclipse.Windows.OpenGL;
 using Eclipse.Windows.Angle;
@@ -23,6 +25,10 @@ public class WindowImpl : IDisposable
     private IComponent? _content;
     private float _scaling = 1.0f;
     private bool _isDisposed;
+
+    // 输入系统
+    private InputManager? _inputManager;
+    private WindowsInputAdapter? _inputAdapter;
 
     // 渲染后端
     private RenderBackend _backend = RenderBackend.OpenGL; // 默认使用 OpenGL，ANGLE 有兼容性问题
@@ -61,6 +67,13 @@ public class WindowImpl : IDisposable
         set
         {
             _content = value;
+            
+            // 设置输入系统的根元素
+            if (_inputManager != null && _content is IInputElement inputElement)
+            {
+                _inputManager.RootElement = inputElement;
+            }
+            
             Invalidate();
         }
     }
@@ -152,6 +165,10 @@ public class WindowImpl : IDisposable
     private void InitializeRenderer()
     {
         _renderer = new DefaultSkiaRenderer();
+        
+        // 初始化输入系统
+        _inputManager = new InputManager();
+        _inputAdapter = new WindowsInputAdapter(_hwnd, _inputManager);
     }
 
     private void InitializeBackend()
@@ -258,6 +275,13 @@ public class WindowImpl : IDisposable
 
     private IntPtr HandleMessage(uint uMsg, IntPtr wParam, IntPtr lParam)
     {
+        // 输入消息优先处理
+        if (IsInputMessage(uMsg) && _inputAdapter != null)
+        {
+            _inputAdapter.ProcessMessage(uMsg, wParam, lParam);
+            return IntPtr.Zero;
+        }
+        
         switch (uMsg)
         {
             case NativeMethods.WM_PAINT:
@@ -269,6 +293,14 @@ public class WindowImpl : IDisposable
 
             case NativeMethods.WM_SIZE:
                 OnSize(wParam, lParam);
+                return IntPtr.Zero;
+                
+            case NativeMethods.WM_SETFOCUS:
+                OnGotFocus();
+                return IntPtr.Zero;
+                
+            case NativeMethods.WM_KILLFOCUS:
+                OnLostFocus();
                 return IntPtr.Zero;
 
             case NativeMethods.WM_CLOSE:
@@ -284,6 +316,17 @@ public class WindowImpl : IDisposable
             default:
                 return NativeMethods.DefWindowProc(_hwnd, uMsg, wParam, lParam);
         }
+    }
+    
+    private static bool IsInputMessage(uint uMsg)
+    {
+        return uMsg switch
+        {
+            >= 0x0200 and <= 0x020E => true,  // 鼠标消息
+            0x0100 or 0x0101 or 0x0102 or 0x0104 or 0x0105 => true,  // 键盘消息
+            0x0240 => true,  // 触摸消息
+            _ => false
+        };
     }
 
     private void OnPaint()
@@ -471,6 +514,16 @@ public class WindowImpl : IDisposable
         };
         NativeMethods.RedrawWindow(_hwnd, ref rect, IntPtr.Zero, 
             NativeMethods.RDW_INVALIDATE | NativeMethods.RDW_ERASE | NativeMethods.RDW_ALLCHILDREN);
+    }
+    
+    private void OnGotFocus()
+    {
+        // 窗口获得焦点
+    }
+    
+    private void OnLostFocus()
+    {
+        // 窗口失去焦点
     }
 
     private string GetWindowTitle() => string.Empty;

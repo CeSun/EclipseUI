@@ -256,6 +256,8 @@ internal static class NativeMethods
     public const uint WM_CLOSE = 0x0010;
     public const uint WM_SIZE = 0x0005;
     public const uint WM_ACTIVATE = 0x0006;
+    public const uint WM_SETFOCUS = 0x0007;
+    public const uint WM_KILLFOCUS = 0x0008;
     public const uint WM_ERASEBKGND = 0x0014;
     public const uint WM_DPICHANGED = 0x02E0;
 
