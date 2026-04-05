@@ -304,8 +304,6 @@ public class WindowImpl : IDisposable
         // 输入消息优先处理
         if (IsInputMessage(uMsg))
         {
-            Console.WriteLine($"[WindowImpl.HandleMessage] Input message: 0x{uMsg:X4}, inputAdapter={_inputAdapter != null}");
-            
             if (_inputAdapter != null)
             {
                 _inputAdapter.ProcessMessage(uMsg, wParam, lParam);
@@ -407,10 +405,7 @@ public class WindowImpl : IDisposable
         // 创建 Skia 表面
         using var surface = SKSurface.Create(_grContext, backendRenderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
         if (surface == null)
-        {
-            Console.WriteLine("Failed to create SKSurface with ANGLE");
             return;
-        }
 
         var canvas = surface.Canvas;
         
@@ -441,7 +436,6 @@ public class WindowImpl : IDisposable
         using var surface = SKSurface.Create(_grContext, backendRenderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
         if (surface == null)
         {
-            Console.WriteLine("Failed to create SKSurface, falling back to CPU");
             _backend = RenderBackend.CPU;
             Invalidate();
             return;

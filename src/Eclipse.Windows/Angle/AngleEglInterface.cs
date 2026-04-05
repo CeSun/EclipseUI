@@ -151,10 +151,7 @@ internal class AngleEglInterface
     {
         var ptr = EGL_GetProcAddress(name);
         if (ptr == IntPtr.Zero)
-        {
-            Console.WriteLine($"Failed to load EGL function: {name}");
             return null;
-        }
         return Marshal.GetDelegateForFunctionPointer<T>(ptr);
     }
 

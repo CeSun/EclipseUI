@@ -101,8 +101,6 @@ public class WglContext : IDisposable
         {
             throw new InvalidOperationException("Failed to create GRContext.");
         }
-
-        Console.WriteLine("OpenGL context created successfully.");
     }
 
     public void MakeCurrent()

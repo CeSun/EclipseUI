@@ -31,14 +31,7 @@ public sealed class InputManager
     public IInputElement? RootElement 
     { 
         get => _rootElement;
-        set 
-        {
-            if (_rootElement != value)
-            {
-                Console.WriteLine($"[InputManager] RootElement changed: {value?.GetType().Name ?? "null"}");
-                _rootElement = value;
-            }
-        }
+        set => _rootElement = value;
     }
     
     /// <summary>
@@ -404,8 +397,6 @@ public sealed class InputManager
     
     private void RaiseTapped(IInputElement target, Pointer pointer, Point position, int tapCount)
     {
-        Console.WriteLine($"[InputManager.RaiseTapped] target={target.GetType().Name}");
-        
         var args = new PointerPressedEventArgs(pointer, position)
         {
             ClickCount = tapCount
@@ -413,8 +404,6 @@ public sealed class InputManager
         
         args.RoutedEvent = InputElementBase.TappedEvent;
         target.RaiseEvent(args);
-        
-        Console.WriteLine($"[InputManager.RaiseTapped] done, handled={args.Handled}");
     }
     
     // === 键盘事件触发 ===

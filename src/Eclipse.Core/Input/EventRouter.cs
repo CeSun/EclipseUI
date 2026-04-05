@@ -16,8 +16,6 @@ internal static class EventRouter
         if (e.RoutedEvent == null)
             return;
         
-        Console.WriteLine($"[EventRouter.RaiseEvent] event={e.RoutedEvent.Name}, source={source.GetType().Name}, strategy={e.RoutedEvent.RoutingStrategy}");
-        
         var routedEvent = e.RoutedEvent;
         e.OriginalSource = source;
         

@@ -32,15 +32,11 @@ internal class AngleD3D11Context : IDisposable
 
     private void Initialize()
     {
-        // 直接使用 ANGLE 平台扩展创建 D3D11 后端
         if (_egl.GetPlatformDisplayExt == null)
         {
             throw new InvalidOperationException("eglGetPlatformDisplayEXT not available");
         }
 
-        Console.WriteLine("Creating ANGLE D3D11 display...");
-
-        // 使用 EGL_PLATFORM_ANGLE_ANGLE 和 D3D11 后端
         var displayAttribs = new int[]
         {
             EglConsts.EGL_PLATFORM_ANGLE_TYPE_ANGLE, EglConsts.EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE,
@@ -53,55 +49,37 @@ internal class AngleD3D11Context : IDisposable
             throw new InvalidOperationException($"Failed to get ANGLE display, error: {_egl.GetError?.Invoke()}");
         }
 
-        // 初始化 EGL
-        if (_egl.Initialize?.Invoke(_eglDisplay, out var major, out var minor) != true)
+        if (_egl.Initialize?.Invoke(_eglDisplay, out _, out _) != true)
         {
             throw new InvalidOperationException("Failed to initialize EGL");
         }
 
-        Console.WriteLine($"EGL initialized: version {major}.{minor}");
-
-        // 绑定 OpenGL ES API
         _egl.BindAPI?.Invoke(EglConsts.EGL_OPENGL_ES_API);
 
-        // 6. 获取并选择配置 - 直接获取所有配置
-        Console.WriteLine("Getting all EGL configs...");
-        
-        // 先获取配置数量
         int[] contextAttribs = new int[] { EglConsts.EGL_CONTEXT_MAJOR_VERSION, 2, EglConsts.EGL_NONE };
         var config = IntPtr.Zero;
         int totalConfigs = 0;
         
-        // 尝试获取所有配置
         var result = _egl.ChooseConfig?.Invoke(_eglDisplay, new int[] { EglConsts.EGL_NONE }, out config, 1, out totalConfigs);
-        Console.WriteLine($"ChooseConfig result={result}, totalConfigs={totalConfigs}, error={_egl.GetError?.Invoke()}");
         
         if (result != true || totalConfigs == 0)
         {
-            throw new InvalidOperationException($"No EGL configs available");
+            throw new InvalidOperationException("No EGL configs available");
         }
-        
-        Console.WriteLine($"Found {totalConfigs} EGL configs, using first: {config}");
         
         _config = config;
         _contextAttribs = contextAttribs;
 
-        // 7. 创建窗口 Surface
         CreateSurface();
 
-        // 8. 创建 OpenGL ES 上下文
         _eglContext = _egl.CreateContext?.Invoke(_eglDisplay, config, IntPtr.Zero, contextAttribs) ?? IntPtr.Zero;
         if (_eglContext == IntPtr.Zero)
         {
             throw new InvalidOperationException($"Failed to create EGL context, error: {_egl.GetError?.Invoke()}");
         }
-        
-        Console.WriteLine("EGL context created");
 
-        // 9. 激活上下文
         MakeCurrent();
 
-        // 10. 创建 SkiaSharp GRContext
         var glInterface = GRGlInterface.Create(name => _egl.GetProcAddressByName(name));
         if (glInterface == null)
         {
@@ -113,16 +91,10 @@ internal class AngleD3D11Context : IDisposable
         {
             throw new InvalidOperationException("Failed to create GRContext");
         }
-
-        Console.WriteLine("ANGLE D3D11 context created successfully");
     }
 
-    /// <summary>
-    /// 创建 EGL Surface
-    /// </summary>
     private void CreateSurface()
     {
-        Console.WriteLine($"Creating window surface for hwnd: {_hwnd}");
         var surfaceAttribs = new int[] { EglConsts.EGL_NONE, EglConsts.EGL_NONE };
         var surface = _egl.CreateWindowSurface?.Invoke(_eglDisplay, _config, _hwnd, surfaceAttribs);
         _eglSurface = surface ?? IntPtr.Zero;
@@ -132,29 +104,18 @@ internal class AngleD3D11Context : IDisposable
         {
             throw new InvalidOperationException($"Failed to create EGL window surface, error: {error}");
         }
-        
-        Console.WriteLine("EGL window surface created");
     }
 
-    /// <summary>
-    /// 调整 Surface 大小（窗口大小改变时调用）
-    /// </summary>
     public void ResizeSurface()
     {
         if (_eglSurface != IntPtr.Zero)
         {
-            // 先解除当前上下文绑定
             _egl.MakeCurrent?.Invoke(_eglDisplay, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
-            
-            // 销毁旧的 surface
             _egl.DestroySurface?.Invoke(_eglDisplay, _eglSurface);
             _eglSurface = IntPtr.Zero;
         }
         
-        // 重新创建 surface
         CreateSurface();
-        
-        // 重新绑定上下文
         MakeCurrent();
     }
 
@@ -173,7 +134,6 @@ internal class AngleD3D11Context : IDisposable
 
     public void GetFramebufferInfo(out int framebuffer, out int samples, out int stencil)
     {
-        // OpenGL ES 默认帧缓冲
         framebuffer = 0;
         samples = 0;
         stencil = 8;
