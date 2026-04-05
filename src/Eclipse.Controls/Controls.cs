@@ -417,22 +417,59 @@ public enum TextAlignment
 
 public class Button : InteractiveControl
 {
+    private bool _isPressed = false;
+    private bool _isHovered = false;
+    
+    // === 文本属性 ===
     public string? Text { get; set; }
-    public string? BackgroundColor { get; set; } = "#007AFF";
+    public double FontSize { get; set; } = 14;
+    public string? FontFamily { get; set; }
     public string? TextColor { get; set; } = "White";
     
+    // === 背景颜色（各状态） ===
     /// <summary>
-    /// 字体大小
+    /// 默认背景颜色
     /// </summary>
-    public double FontSize { get; set; } = 14;
+    public string? BackgroundColor { get; set; } = "#007AFF";
+    
+    /// <summary>
+    /// 鼠标悬停时的背景颜色
+    /// </summary>
+    public string? HoverBackgroundColor { get; set; }
+    
+    /// <summary>
+    /// 按下时的背景颜色
+    /// </summary>
+    public string? PressedBackgroundColor { get; set; }
+    
+    /// <summary>
+    /// 禁用时的背景颜色
+    /// </summary>
+    public string? DisabledBackgroundColor { get; set; } = "#CCCCCC";
+    
+    // === 文本颜色（各状态） ===
+    /// <summary>
+    /// 禁用时的文本颜色
+    /// </summary>
+    public string? DisabledTextColor { get; set; } = "#888888";
+    
+    // === 边框属性 ===
+    /// <summary>
+    /// 边框颜色
+    /// </summary>
+    public string? BorderColor { get; set; }
+    
+    /// <summary>
+    /// 边框宽度
+    /// </summary>
+    public double BorderWidth { get; set; } = 0;
     
     /// <summary>
     /// 圆角半径
     /// </summary>
     public double CornerRadius { get; set; } = 4;
     
-    public string? FontFamily { get; set; }
-    
+    // === 事件 ===
     public event EventHandler? Click;
     
     public event EventHandler? OnClick
@@ -447,6 +484,13 @@ public class Button : InteractiveControl
         _bounds = new Rect(0, 0, 100, 40);
         _desiredSize = new Size(100, 44);
         
+        // 指针事件
+        PointerEntered += OnPointerEntered;
+        PointerExited += OnPointerExited;
+        PointerPressed += OnPointerPressed;
+        PointerReleased += OnPointerReleased;
+        
+        // Tapped 事件
         Tapped += (s, e) =>
         {
             if (IsEnabled)
@@ -454,6 +498,89 @@ public class Button : InteractiveControl
                 Click?.Invoke(this, EventArgs.Empty);
             }
         };
+    }
+    
+    private void OnPointerEntered(object? sender, PointerEventArgs e)
+    {
+        if (!IsEnabled) return;
+        _isHovered = true;
+        StateHasChanged();
+    }
+    
+    private void OnPointerExited(object? sender, PointerEventArgs e)
+    {
+        _isHovered = false;
+        _isPressed = false;
+        StateHasChanged();
+    }
+    
+    private void OnPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (!IsEnabled) return;
+        _isPressed = true;
+        StateHasChanged();
+    }
+    
+    private void OnPointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        _isPressed = false;
+        StateHasChanged();
+    }
+    
+    /// <summary>
+    /// 获取当前状态的背景颜色
+    /// </summary>
+    private string GetCurrentBackgroundColor()
+    {
+        if (!IsEnabled)
+            return DisabledBackgroundColor ?? "#CCCCCC";
+        
+        if (_isPressed)
+            return PressedBackgroundColor ?? DarkenColor(BackgroundColor ?? "#007AFF", 0.2);
+        
+        if (_isHovered)
+            return HoverBackgroundColor ?? DarkenColor(BackgroundColor ?? "#007AFF", 0.1);
+        
+        return BackgroundColor ?? "#007AFF";
+    }
+    
+    /// <summary>
+    /// 获取当前状态的文本颜色
+    /// </summary>
+    private string GetCurrentTextColor()
+    {
+        if (!IsEnabled)
+            return DisabledTextColor ?? "#888888";
+        
+        return TextColor ?? "White";
+    }
+    
+    /// <summary>
+    /// 颜色加深（用于悬停和按下状态）
+    /// </summary>
+    private static string DarkenColor(string hexColor, double amount)
+    {
+        try
+        {
+            // 解析十六进制颜色
+            if (hexColor.StartsWith("#"))
+                hexColor = hexColor.Substring(1);
+            
+            int r = Convert.ToInt32(hexColor.Substring(0, 2), 16);
+            int g = Convert.ToInt32(hexColor.Substring(2, 2), 16);
+            int b = Convert.ToInt32(hexColor.Substring(4, 2), 16);
+            
+            // 加深
+            r = (int)(r * (1 - amount));
+            g = (int)(g * (1 - amount));
+            b = (int)(b * (1 - amount));
+            
+            return $"#{r:X2}{g:X2}{b:X2}";
+        }
+        catch
+        {
+            return hexColor;
+        }
     }
     
     /// <summary>
@@ -485,15 +612,37 @@ public class Button : InteractiveControl
         UpdateBounds(bounds);
         
         var scaledCornerRadius = CornerRadius * context.Scale;
-        context.DrawRoundRect(bounds, BackgroundColor ?? "#007AFF", scaledCornerRadius);
+        var bgColor = GetCurrentBackgroundColor();
+        var textColor = GetCurrentTextColor();
         
+        // 绘制背景
+        context.DrawRoundRect(bounds, bgColor, scaledCornerRadius);
+        
+        // 绘制边框
+        if (BorderWidth > 0 && !string.IsNullOrEmpty(BorderColor))
+        {
+            context.DrawRectangle(bounds, null, BorderColor, BorderWidth * context.Scale, scaledCornerRadius);
+        }
+        
+        // 绘制聚焦边框
+        if (IsFocused && IsEnabled)
+        {
+            var focusBounds = new Rect(
+                bounds.X - 2 * context.Scale,
+                bounds.Y - 2 * context.Scale,
+                bounds.Width + 4 * context.Scale,
+                bounds.Height + 4 * context.Scale);
+            context.DrawRectangle(focusBounds, null, "#007AFF", 2 * context.Scale, scaledCornerRadius + 2);
+        }
+        
+        // 绘制文本
         if (!string.IsNullOrEmpty(Text))
         {
             var scaledFontSize = FontSize * context.Scale;
             var textWidth = context.MeasureText(Text, scaledFontSize, FontFamily);
             var x = bounds.X + (bounds.Width - textWidth) / 2;
             var y = bounds.Y + bounds.Height / 2 - scaledFontSize / 2;
-            context.DrawText(Text, x, y, scaledFontSize, FontFamily, null, TextColor);
+            context.DrawText(Text, x, y, scaledFontSize, FontFamily, null, textColor);
         }
     }
 }
