@@ -195,47 +195,51 @@ namespace Eclipse.Generator
             // 获取文件级别的配置选项
             var options = optionsProvider.GetOptions(additionalText);
             
-            // 1. 尝试从 MSBuild 获取 RootNamespace
-            if (options.TryGetValue("build_property.rootnamespace", out var rootNamespace) 
-                && !string.IsNullOrEmpty(rootNamespace))
+            // 尝试从 MSBuild 获取 RootNamespace
+            string rootNamespace = "";
+            if (options.TryGetValue("build_property.rootnamespace", out var rn) && !string.IsNullOrEmpty(rn))
             {
-                // 获取项目目录和文件目录
-                if (options.TryGetValue("build_property.projectdir", out var projectDir) 
-                    && !string.IsNullOrEmpty(projectDir))
+                rootNamespace = rn;
+            }
+            
+            // 获取项目目录
+            string projectDir = "";
+            if (options.TryGetValue("build_property.projectdir", out var pd) && !string.IsNullOrEmpty(pd))
+            {
+                projectDir = pd;
+            }
+            
+            // 计算相对路径命名空间
+            var fileDir = Path.GetDirectoryName(filePath) ?? "";
+            string relativeNs = "";
+            
+            if (!string.IsNullOrEmpty(projectDir))
+            {
+                var relativePath = GetRelativePath(projectDir, fileDir);
+                if (!string.IsNullOrEmpty(relativePath))
                 {
-                    var fileDir = Path.GetDirectoryName(filePath) ?? "";
-                    var relativePath = GetRelativePath(projectDir, fileDir);
-                    
-                    if (!string.IsNullOrEmpty(relativePath))
-                    {
-                        var relativeNs = relativePath
-                            .Replace('/', '.')
-                            .Replace('\\', '.')
-                            .Trim('.');
-                        
-                        if (!string.IsNullOrEmpty(relativeNs))
-                        {
-                            return $"{rootNamespace}.{relativeNs}";
-                        }
-                    }
+                    relativeNs = relativePath
+                        .Replace('/', '.')
+                        .Replace('\\', '.')
+                        .Trim('.');
                 }
+            }
+            
+            // 组合命名空间
+            if (!string.IsNullOrEmpty(rootNamespace) && !string.IsNullOrEmpty(relativeNs))
+            {
+                return $"{rootNamespace}.{relativeNs}";
+            }
+            else if (!string.IsNullOrEmpty(rootNamespace))
+            {
                 return rootNamespace;
             }
-            
-            // 2. 回退到目录名推断
-            var dir = Path.GetDirectoryName(filePath) ?? "";
-            var segments = dir.Split(new[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries);
-            var startIndex = Array.FindIndex(segments, s => 
-                s.Equals("Components", StringComparison.OrdinalIgnoreCase) ||
-                s.Equals("Pages", StringComparison.OrdinalIgnoreCase) ||
-                s.Equals("Shared", StringComparison.OrdinalIgnoreCase) ||
-                s.Equals("Views", StringComparison.OrdinalIgnoreCase));
-            
-            if (startIndex >= 0)
+            else if (!string.IsNullOrEmpty(relativeNs))
             {
-                return string.Join(".", segments.Skip(startIndex));
+                return relativeNs;
             }
             
+            // 最后回退：使用默认命名空间
             return "Eclipse.Generated";
         }
 
@@ -255,9 +259,11 @@ namespace Eclipse.Generator
                 if (!baseUri.IsBaseOf(targetUri))
                     return "";
                 
-                return Uri.UnescapeDataString(baseUri.MakeRelativeUri(targetUri).ToString()
+                var result = Uri.UnescapeDataString(baseUri.MakeRelativeUri(targetUri).ToString()
                     .Replace('/', Path.DirectorySeparatorChar))
                     .TrimEnd(Path.DirectorySeparatorChar);
+                
+                return result ?? "";
             }
             catch
             {
