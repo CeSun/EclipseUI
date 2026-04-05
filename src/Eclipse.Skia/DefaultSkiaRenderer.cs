@@ -32,6 +32,12 @@ public class DefaultSkiaRenderer : ISkiaRenderer
             componentBase.Rebuild();
         }
         
+        // 更新 InputManager 的 RootElement（因为 Rebuild 创建了新实例）
+        if (root?.Children.Count > 0 && root.Children[0] is IInputElement firstChild)
+        {
+            Input.InputManager.SetRootElementForRender(firstChild);
+        }
+        
         RenderComponent(root, context, new SKRect(0, 0, context.Width, context.Height));
     }
     

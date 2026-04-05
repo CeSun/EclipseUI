@@ -151,6 +151,7 @@ public class Button : InteractiveControl
         
         Tapped += (s, e) =>
         {
+            Console.WriteLine($"[Button.Tapped] Button clicked! IsEnabled={IsEnabled}, Click handlers={Click?.GetInvocationList()?.Length ?? 0}");
             if (IsEnabled)
             {
                 Click?.Invoke(this, EventArgs.Empty);

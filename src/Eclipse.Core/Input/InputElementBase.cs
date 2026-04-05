@@ -271,7 +271,10 @@ public abstract class InputElementBase : Core.ComponentBase, IInputElement
     
     internal void InvokeHandlersInternal(RoutedEventArgs e)
     {
-        if (_handlers.TryGetValue(e.RoutedEvent, out var list))
+        var hasHandlers = _handlers.TryGetValue(e.RoutedEvent, out var list);
+        Console.WriteLine($"[InputElementBase.InvokeHandlersInternal] {GetType().Name}, event={e.RoutedEvent.Name}, hasHandlers={hasHandlers}, count={list?.Count ?? 0}");
+        
+        if (hasHandlers && list != null)
         {
             foreach (var handler in list)
             {

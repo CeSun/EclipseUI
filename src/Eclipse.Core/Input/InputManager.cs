@@ -18,7 +18,31 @@ public sealed class InputManager
     private IInputElement? _pointerOverElement;
     
     // 根元素
-    public IInputElement? RootElement { get; set; }
+    private IInputElement? _rootElement;
+    
+    /// <summary>
+    /// 根元素（用于 Hit Testing）
+    /// </summary>
+    public IInputElement? RootElement 
+    { 
+        get => _rootElement;
+        set 
+        {
+            if (_rootElement != value)
+            {
+                Console.WriteLine($"[InputManager] RootElement changed: {value?.GetType().Name ?? "null"}");
+                _rootElement = value;
+            }
+        }
+    }
+    
+    /// <summary>
+    /// 设置根元素（供渲染器在 Rebuild 后调用）
+    /// </summary>
+    public void SetRootElementForRender(IInputElement root)
+    {
+        _rootElement = root;
+    }
     
     // 事件
     public event EventHandler<PointerPressedEventArgs>? PointerPressed;
@@ -375,6 +399,8 @@ public sealed class InputManager
     
     private void RaiseTapped(IInputElement target, Pointer pointer, Point position, int tapCount)
     {
+        Console.WriteLine($"[InputManager.RaiseTapped] target={target.GetType().Name}");
+        
         var args = new PointerPressedEventArgs(pointer, position)
         {
             ClickCount = tapCount
@@ -382,6 +408,8 @@ public sealed class InputManager
         
         args.RoutedEvent = InputElementBase.TappedEvent;
         target.RaiseEvent(args);
+        
+        Console.WriteLine($"[InputManager.RaiseTapped] done, handled={args.Handled}");
     }
     
     // === 键盘事件触发 ===

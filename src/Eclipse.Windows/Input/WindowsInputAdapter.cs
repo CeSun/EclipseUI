@@ -23,6 +23,12 @@ internal sealed class WindowsInputAdapter
     /// </summary>
     public void ProcessMessage(uint msg, IntPtr wParam, IntPtr lParam)
     {
+        // 只记录输入相关的消息
+        if (msg is >= 0x0200 and <= 0x020E or 0x0240 or >= 0x0100 and <= 0x0105)
+        {
+            Console.WriteLine($"[WindowsInputAdapter] ProcessMessage: msg=0x{msg:X4}");
+        }
+        
         switch (msg)
         {
             case NativeMethods.WM_LBUTTONDOWN:
@@ -78,6 +84,8 @@ internal sealed class WindowsInputAdapter
         var keyModifiers = GetKeyModifiers(wParam);
         var button = GetButtonFromMsg(msg);
         
+        Console.WriteLine($"[WindowsInputAdapter.OnPointerPressed] pos=({x}, {y}), button={button}");
+        
         if (msg == NativeMethods.WM_XBUTTONDOWN)
         {
             var xButton = NativeMethods.HIWORD(wParam);
@@ -121,6 +129,8 @@ internal sealed class WindowsInputAdapter
         var y = NativeMethods.GET_Y_LPARAM(lParam);
         var keyModifiers = GetKeyModifiers(wParam);
         var button = GetButtonFromMsg(msg);
+        
+        Console.WriteLine($"[WindowsInputAdapter.OnPointerReleased] pos=({x}, {y}), button={button}");
         
         if (msg == NativeMethods.WM_XBUTTONUP)
         {

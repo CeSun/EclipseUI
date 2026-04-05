@@ -81,9 +81,17 @@ public class WindowImpl : IDisposable
             }
             
             // 设置输入系统的根元素
-            if (_inputManager != null && _content is IInputElement inputElement)
+            // 使用 Content 的第一个子元素（通常是布局容器）作为 RootElement
+            if (_inputManager != null)
             {
-                _inputManager.RootElement = inputElement;
+                if (_content is IInputElement inputElement)
+                {
+                    _inputManager.RootElement = inputElement;
+                }
+                else if (_content?.Children.Count > 0 && _content.Children[0] is IInputElement firstChild)
+                {
+                    _inputManager.RootElement = firstChild;
+                }
             }
             
             Invalidate();
@@ -294,10 +302,15 @@ public class WindowImpl : IDisposable
     private IntPtr HandleMessage(uint uMsg, IntPtr wParam, IntPtr lParam)
     {
         // 输入消息优先处理
-        if (IsInputMessage(uMsg) && _inputAdapter != null)
+        if (IsInputMessage(uMsg))
         {
-            _inputAdapter.ProcessMessage(uMsg, wParam, lParam);
-            return IntPtr.Zero;
+            Console.WriteLine($"[WindowImpl.HandleMessage] Input message: 0x{uMsg:X4}, inputAdapter={_inputAdapter != null}");
+            
+            if (_inputAdapter != null)
+            {
+                _inputAdapter.ProcessMessage(uMsg, wParam, lParam);
+                return IntPtr.Zero;
+            }
         }
         
         switch (uMsg)

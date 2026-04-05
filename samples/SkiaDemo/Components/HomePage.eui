@@ -6,6 +6,7 @@
     private void OnButtonClick(object? sender, EventArgs e)
     {
         _clickCount++;
+        Console.WriteLine($"_clickCount: {_clickCount}");
         StateHasChanged();
     }
 }
