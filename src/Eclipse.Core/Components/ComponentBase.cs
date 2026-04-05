@@ -33,7 +33,17 @@ namespace Eclipse.Core
         
         public void AddChild(IComponent child) { if (child == null) return; _children.Add(child); child.Parent = this; }
         public void RemoveChild(IComponent child) { if (child == null) return; _children.Remove(child); child.Parent = null; }
-        protected void ClearChildren() { foreach (var child in _children) { child.Parent = null; child.Dispose(); } _children.Clear(); }
+        public void ClearChildren() { foreach (var child in _children) { child.Parent = null; child.Dispose(); } _children.Clear(); }
+        
+        /// <summary>
+        /// 重建组件树 - 清除旧的子组件并重新调用 Build
+        /// </summary>
+        public void Rebuild()
+        {
+            ClearChildren();
+            var context = new BuildContext();
+            Build(context);
+        }
         
         public abstract void Build(IBuildContext context);
         

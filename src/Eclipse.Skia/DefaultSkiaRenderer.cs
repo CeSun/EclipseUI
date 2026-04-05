@@ -25,6 +25,13 @@ public class DefaultSkiaRenderer : ISkiaRenderer
     public void Render(IComponent root, SkiaRenderContext context)
     {
         context.Canvas.Clear(SKColors.White);
+        
+        // 重建组件树以反映状态变化
+        if (root is ComponentBase componentBase)
+        {
+            componentBase.Rebuild();
+        }
+        
         RenderComponent(root, context, new SKRect(0, 0, context.Width, context.Height));
     }
     
