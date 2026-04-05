@@ -83,7 +83,7 @@ namespace Eclipse.Generator
             }
             
             // 获取这些类型的属性信息
-            var propertyTypes = GetPropertyTypes(typeCache, controlTypes, parsed.Usings);
+            var propertyTypes = GetPropertyTypes(typeCache, controlTypes, parsed.Usings, file.Path, context);
             
             var generatedCode = GenerateComponentCode(@namespace, className, parsed, nodes, propertyTypes);
             var hintName = $"{className}.eui.g.cs";
@@ -148,14 +148,31 @@ namespace Eclipse.Generator
         /// 使用缓存的类型查找获取属性类型信息
         /// </summary>
         private Dictionary<(string Control, string Property), PropertyTypeInfo> GetPropertyTypes(
-            TypeLookupCache cache, HashSet<string> controlTypes, List<string> usings)
+            TypeLookupCache cache, 
+            HashSet<string> controlTypes, 
+            List<string> usings,
+            string filePath,
+            SourceProductionContext context)
         {
             var result = new Dictionary<(string, string), PropertyTypeInfo>();
             
             foreach (var typeName in controlTypes)
             {
                 var typeSymbol = cache.FindTypeSymbol(typeName, usings);
-                if (typeSymbol == null) continue;
+                if (typeSymbol == null)
+                {
+                    // 报告类型未找到警告
+                    var descriptor = new DiagnosticDescriptor(
+                        "ECGEN003",
+                        "EUI control type not found",
+                        "Control type '{0}' not found in '{1}'. Make sure the type exists and the namespace is imported via @using.",
+                        "Eclipse",
+                        DiagnosticSeverity.Warning,
+                        true);
+                    
+                    context.ReportDiagnostic(Diagnostic.Create(descriptor, Location.None, typeName, filePath));
+                    continue;
+                }
                 
                 foreach (var member in typeSymbol.GetMembers())
                 {
