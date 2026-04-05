@@ -56,6 +56,27 @@ namespace Eclipse.Core
         {
             _isDirty = true;
             StateChanged?.Invoke(this, EventArgs.Empty);
+            
+            // 事件冒泡到父元素
+            if (_parent is ComponentBase parentComponent)
+            {
+                parentComponent.OnChildStateChanged(this);
+            }
+        }
+        
+        /// <summary>
+        /// 子元素状态变化时的回调
+        /// </summary>
+        protected virtual void OnChildStateChanged(IComponent child)
+        {
+            // 触发自己的 StateChanged 事件（让 WindowImpl 能收到）
+            StateChanged?.Invoke(this, EventArgs.Empty);
+            
+            // 继续冒泡到父元素
+            if (_parent is ComponentBase parentComponent)
+            {
+                parentComponent.OnChildStateChanged(this);
+            }
         }
         
         public virtual void OnInitialized() { if (_isInitialized) return; _isInitialized = true; }
