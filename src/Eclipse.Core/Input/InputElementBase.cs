@@ -56,8 +56,8 @@ public abstract class InputElementBase : Core.ComponentBase, IInputElement
             nameof(PointerExited),
             RoutingStrategy.Direct);
     
-    public static readonly RoutedEvent<PointerPressedEventArgs> TappedEvent =
-        RoutedEvent<PointerPressedEventArgs>.Register<InputElementBase>(
+    public static readonly RoutedEvent<TappedEventArgs> TappedEvent =
+        RoutedEvent<TappedEventArgs>.Register<InputElementBase>(
             nameof(Tapped),
             RoutingStrategy.Bubble);
     
@@ -139,7 +139,7 @@ public abstract class InputElementBase : Core.ComponentBase, IInputElement
         remove => RemoveHandler(PointerExitedEvent, value);
     }
     
-    public event EventHandler<PointerPressedEventArgs> Tapped
+    public event EventHandler<TappedEventArgs> Tapped
     {
         add => AddHandler(TappedEvent, value);
         remove => RemoveHandler(TappedEvent, value);

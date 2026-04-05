@@ -392,9 +392,9 @@ public sealed class InputManager
     
     private void RaiseTapped(IInputElement target, Pointer pointer, Point position, int tapCount)
     {
-        var args = new PointerPressedEventArgs(pointer, position)
+        var args = new TappedEventArgs(pointer, position)
         {
-            ClickCount = tapCount
+            TapCount = tapCount
         };
         
         args.RoutedEvent = InputElementBase.TappedEvent;
