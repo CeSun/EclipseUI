@@ -59,6 +59,8 @@ public static class Application
     {
         var context = new BuildContext();
         component.Build(context);
-        return context.RootComponent ?? throw new InvalidOperationException("EUI component did not produce a root component");
+        // 返回 component 本身，而不是 context.RootComponent
+        // 这样 Rebuild() 会调用 component.Build()，而不是子组件的 Build()
+        return component;
     }
 }

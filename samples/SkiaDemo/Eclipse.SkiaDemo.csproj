@@ -6,6 +6,9 @@
     <Nullable>enable</Nullable>
     <RootNamespace>Eclipse.SkiaDemo</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
+    <!-- 生成源码文件到磁盘以便调试 -->
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)Generated</CompilerGeneratedFilesOutputPath>
   </PropertyGroup>
 
   <ItemGroup>
