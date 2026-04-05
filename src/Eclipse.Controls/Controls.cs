@@ -63,54 +63,20 @@ public class StackLayout : InputElementBase
 {
     public Orientation Orientation { get; set; } = Orientation.Vertical;
     
-    // 使用 double 作为主要类型，string setter 作为兼容层
-    private double _spacingValue = 0;
-    private double _paddingValue = 0;
+    /// <summary>
+    /// 子元素间距
+    /// </summary>
+    public double Spacing { get; set; } = 0;
     
     /// <summary>
-    /// 子元素间距（double 类型，推荐使用）
+    /// 内边距
     /// </summary>
-    public double SpacingValue
-    {
-        get => _spacingValue;
-        set => _spacingValue = value;
-    }
-    
-    /// <summary>
-    /// 子元素间距（string 类型，用于向后兼容）
-    /// </summary>
-    public string? Spacing
-    {
-        get => _spacingValue.ToString();
-        set => _spacingValue = double.TryParse(value, out var result) ? result : 0;
-    }
-    
-    /// <summary>
-    /// 内边距（double 类型，推荐使用）
-    /// </summary>
-    public double PaddingValue
-    {
-        get => _paddingValue;
-        set => _paddingValue = value;
-    }
-    
-    /// <summary>
-    /// 内边距（string 类型，用于向后兼容）
-    /// </summary>
-    public string? Padding
-    {
-        get => _paddingValue.ToString();
-        set => _paddingValue = double.TryParse(value, out var result) ? result : 0;
-    }
+    public double Padding { get; set; } = 0;
     
     public string? BackgroundColor { get; set; }
     
     private Rect _bounds;
     private Size _desiredSize = Size.Zero;
-    
-    // 保留原有的 GetSpacing/GetPadding 方法以向后兼容
-    public double GetSpacing() => _spacingValue;
-    public double GetPadding() => _paddingValue;
     
     public override bool IsVisible => true;
     public override Rect Bounds => _bounds;
@@ -137,12 +103,12 @@ public class StackLayout : InputElementBase
     {
         if (Children.Count == 0)
         {
-            _desiredSize = new Size(_paddingValue * 2, _paddingValue * 2);
+            _desiredSize = new Size(Padding * 2, Padding * 2);
             return _desiredSize;
         }
         
-        var spacingValue = _spacingValue * context.Scale;
-        var paddingValue = _paddingValue * context.Scale;
+        var spacingValue = Spacing * context.Scale;
+        var paddingValue = Padding * context.Scale;
         
         // 计算内容可用尺寸
         var contentAvailableSize = new Size(
@@ -224,8 +190,8 @@ public class StackLayout : InputElementBase
     {
         _bounds = finalBounds;
         
-        var spacingValue = _spacingValue * context.Scale;
-        var paddingValue = _paddingValue * context.Scale;
+        var spacingValue = Spacing * context.Scale;
+        var paddingValue = Padding * context.Scale;
         
         var contentBounds = new Rect(
             finalBounds.X + paddingValue,
@@ -300,8 +266,8 @@ public class StackLayout : InputElementBase
     {
         UpdateBounds(bounds);
         
-        var spacingValue = _spacingValue * context.Scale;
-        var paddingValue = _paddingValue * context.Scale;
+        var spacingValue = Spacing * context.Scale;
+        var paddingValue = Padding * context.Scale;
         
         if (!string.IsNullOrEmpty(BackgroundColor))
         {
@@ -366,13 +332,6 @@ public class StackLayout : InputElementBase
         // 默认高度
         return 40.0 * context.Scale;
     }
-    
-    // 保留旧的 EstimateHeight 方法以向后兼容（但标记为过时）
-    [Obsolete("Use MeasureChildHeight instead. This method uses hardcoded values.")]
-    private double EstimateHeight(IComponent component, IDrawingContext context)
-    {
-        return MeasureChildHeight(component, context);
-    }
 }
 
 public enum Orientation
@@ -390,34 +349,15 @@ public class Label : ComponentBase
 {
     public string? Text { get; set; }
     
-    // 使用 double 作为主要类型，string setter 作为兼容层
-    private double _fontSizeValue = 14;
-    
     /// <summary>
-    /// 字体大小（double 类型，推荐使用）
+    /// 字体大小
     /// </summary>
-    public double FontSizeValue
-    {
-        get => _fontSizeValue;
-        set => _fontSizeValue = value;
-    }
-    
-    /// <summary>
-    /// 字体大小（string 类型，用于向后兼容）
-    /// </summary>
-    public string? FontSize
-    {
-        get => _fontSizeValue.ToString();
-        set => _fontSizeValue = double.TryParse(value, out var result) ? result : 14;
-    }
+    public double FontSize { get; set; } = 14;
     
     public string? Color { get; set; }
     public string? FontWeight { get; set; }
     public string? FontFamily { get; set; }
     public TextAlignment TextAlignment { get; set; } = TextAlignment.Left;
-    
-    // 保留原有的 GetFontSize 方法
-    public double GetFontSize() => _fontSizeValue;
     
     private Size _desiredSize = Size.Zero;
     
@@ -432,7 +372,7 @@ public class Label : ComponentBase
             return _desiredSize;
         }
         
-        var scaledFontSize = _fontSizeValue * context.Scale;
+        var scaledFontSize = FontSize * context.Scale;
         var textWidth = context.MeasureText(Text, scaledFontSize, FontFamily);
         
         // 行高通常是字体大小的 1.2-1.5 倍
@@ -448,7 +388,7 @@ public class Label : ComponentBase
     {
         if (!string.IsNullOrEmpty(Text))
         {
-            var scaledFontSize = _fontSizeValue * context.Scale;
+            var scaledFontSize = FontSize * context.Scale;
             
             // 根据 TextAlignment 计算水平位置
             double x = bounds.X;
@@ -481,51 +421,17 @@ public class Button : InteractiveControl
     public string? BackgroundColor { get; set; } = "#007AFF";
     public string? TextColor { get; set; } = "White";
     
-    // 使用 double 作为主要类型，string setter 作为兼容层
-    private double _fontSizeValue = 14;
-    private double _cornerRadiusValue = 4;
+    /// <summary>
+    /// 字体大小
+    /// </summary>
+    public double FontSize { get; set; } = 14;
     
     /// <summary>
-    /// 字体大小（double 类型，推荐使用）
+    /// 圆角半径
     /// </summary>
-    public double FontSizeValue
-    {
-        get => _fontSizeValue;
-        set => _fontSizeValue = value;
-    }
-    
-    /// <summary>
-    /// 字体大小（string 类型，用于向后兼容）
-    /// </summary>
-    public string? FontSize
-    {
-        get => _fontSizeValue.ToString();
-        set => _fontSizeValue = double.TryParse(value, out var result) ? result : 14;
-    }
-    
-    /// <summary>
-    /// 圆角半径（double 类型，推荐使用）
-    /// </summary>
-    public double CornerRadiusValue
-    {
-        get => _cornerRadiusValue;
-        set => _cornerRadiusValue = value;
-    }
-    
-    /// <summary>
-    /// 圆角半径（string 类型，用于向后兼容）
-    /// </summary>
-    public string? CornerRadius
-    {
-        get => _cornerRadiusValue.ToString();
-        set => _cornerRadiusValue = double.TryParse(value, out var result) ? result : 4;
-    }
+    public double CornerRadius { get; set; } = 4;
     
     public string? FontFamily { get; set; }
-    
-    // 保留原有的方法
-    public double GetFontSize() => _fontSizeValue;
-    public double GetCornerRadius() => _cornerRadiusValue;
     
     public event EventHandler? Click;
     
@@ -561,7 +467,7 @@ public class Button : InteractiveControl
             return _desiredSize;
         }
         
-        var scaledFontSize = _fontSizeValue * context.Scale;
+        var scaledFontSize = FontSize * context.Scale;
         var textWidth = context.MeasureText(Text, scaledFontSize, FontFamily);
         
         // 添加内边距（水平各 20px）
@@ -578,12 +484,12 @@ public class Button : InteractiveControl
     {
         UpdateBounds(bounds);
         
-        var scaledCornerRadius = _cornerRadiusValue * context.Scale;
+        var scaledCornerRadius = CornerRadius * context.Scale;
         context.DrawRoundRect(bounds, BackgroundColor ?? "#007AFF", scaledCornerRadius);
         
         if (!string.IsNullOrEmpty(Text))
         {
-            var scaledFontSize = _fontSizeValue * context.Scale;
+            var scaledFontSize = FontSize * context.Scale;
             var textWidth = context.MeasureText(Text, scaledFontSize, FontFamily);
             var x = bounds.X + (bounds.Width - textWidth) / 2;
             var y = bounds.Y + bounds.Height / 2 - scaledFontSize / 2;

@@ -17,35 +17,20 @@ public class ControlTests
 
         // Assert
         Assert.Equal(Orientation.Vertical, stack.Orientation);
-        Assert.Equal("0", stack.Spacing);
-        Assert.Equal("0", stack.Padding);
+        Assert.Equal(0, stack.Spacing);
+        Assert.Equal(0, stack.Padding);
         Assert.Null(stack.BackgroundColor);
     }
 
     [Fact]
-    public void StackLayout_GetSpacing_ShouldParseValidString()
+    public void StackLayout_CanSetSpacingAndPadding()
     {
         // Arrange
-        var stack = new StackLayout { Spacing = "16.5" };
-
-        // Act
-        var spacing = stack.GetSpacing();
+        var stack = new StackLayout { Spacing = 16.5, Padding = 8 };
 
         // Assert
-        Assert.Equal(16.5, spacing);
-    }
-
-    [Fact]
-    public void StackLayout_GetSpacing_ShouldReturnZeroForInvalidString()
-    {
-        // Arrange
-        var stack = new StackLayout { Spacing = "invalid" };
-
-        // Act
-        var spacing = stack.GetSpacing();
-
-        // Assert
-        Assert.Equal(0, spacing);
+        Assert.Equal(16.5, stack.Spacing);
+        Assert.Equal(8, stack.Padding);
     }
 
     [Fact]
@@ -65,7 +50,7 @@ public class ControlTests
         var label = new Label();
 
         // Assert
-        Assert.Equal("14", label.FontSize);
+        Assert.Equal(14, label.FontSize);
         Assert.Equal(TextAlignment.Left, label.TextAlignment);
         Assert.Null(label.Text);
         Assert.Null(label.Color);
@@ -73,16 +58,13 @@ public class ControlTests
     }
 
     [Fact]
-    public void Label_GetFontSize_ShouldParseValidString()
+    public void Label_CanSetFontSize()
     {
         // Arrange
-        var label = new Label { FontSize = "24" };
-
-        // Act
-        var size = label.GetFontSize();
+        var label = new Label { FontSize = 24 };
 
         // Assert
-        Assert.Equal(24, size);
+        Assert.Equal(24, label.FontSize);
     }
 
     [Fact]
@@ -94,22 +76,19 @@ public class ControlTests
         // Assert
         Assert.Equal("#007AFF", button.BackgroundColor);
         Assert.Equal("White", button.TextColor);
-        Assert.Equal("14", button.FontSize);
-        Assert.Equal("4", button.CornerRadius);
+        Assert.Equal(14, button.FontSize);
+        Assert.Equal(4, button.CornerRadius);
         Assert.True(button.IsEnabled);
     }
 
     [Fact]
-    public void Button_GetCornerRadius_ShouldParseValidString()
+    public void Button_CanSetCornerRadius()
     {
         // Arrange
-        var button = new Button { CornerRadius = "12.5" };
-
-        // Act
-        var radius = button.GetCornerRadius();
+        var button = new Button { CornerRadius = 12.5 };
 
         // Assert
-        Assert.Equal(12.5, radius);
+        Assert.Equal(12.5, button.CornerRadius);
     }
 
     [Fact]

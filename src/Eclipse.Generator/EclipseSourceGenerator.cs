@@ -314,7 +314,30 @@ namespace Eclipse.Generator
                 else
                 {
                     // 属性赋值（包括绑定和字面量）
-                    WriteLine($"{varName}.{attr.Name} = {attr.Value};");
+                    var value = attr.Value;
+                    
+                    // 智能转换：如果值是字符串字面量且内容是数字，自动转换为数字字面量
+                    if (value.StartsWith("\"") && value.EndsWith("\"") && value.Length >= 2)
+                    {
+                        var innerValue = value.Substring(1, value.Length - 2);
+                        
+                        // 检查是否是纯数字（整数或小数）
+                        if (double.TryParse(innerValue, out _))
+                        {
+                            value = innerValue; // 去掉引号
+                        }
+                        // 检查是否是布尔值
+                        else if (innerValue.Equals("true", StringComparison.OrdinalIgnoreCase))
+                        {
+                            value = "true";
+                        }
+                        else if (innerValue.Equals("false", StringComparison.OrdinalIgnoreCase))
+                        {
+                            value = "false";
+                        }
+                    }
+                    
+                    WriteLine($"{varName}.{attr.Name} = {value};");
                 }
             }
             
