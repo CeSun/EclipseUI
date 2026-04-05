@@ -192,8 +192,8 @@ public class WindowImpl : IDisposable
     {
         _renderer = new DefaultSkiaRenderer();
         
-        // 初始化输入系统
-        _inputManager = new InputManager();
+        // 使用单例 InputManager
+        _inputManager = InputManager.Instance;
         _inputAdapter = new WindowsInputAdapter(_hwnd, _inputManager);
     }
 
