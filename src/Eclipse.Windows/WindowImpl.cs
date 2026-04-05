@@ -66,7 +66,19 @@ public class WindowImpl : IDisposable
         get => _content;
         set
         {
+            // 取消旧内容的订阅
+            if (_content != null)
+            {
+                _content.StateChanged -= OnContentStateChanged;
+            }
+            
             _content = value;
+            
+            // 订阅新内容的状态变化
+            if (_content != null)
+            {
+                _content.StateChanged += OnContentStateChanged;
+            }
             
             // 设置输入系统的根元素
             if (_inputManager != null && _content is IInputElement inputElement)
@@ -76,6 +88,12 @@ public class WindowImpl : IDisposable
             
             Invalidate();
         }
+    }
+    
+    private void OnContentStateChanged(object? sender, EventArgs e)
+    {
+        // 状态改变时触发重绘
+        Invalidate();
     }
 
     public IntPtr Handle => _hwnd;

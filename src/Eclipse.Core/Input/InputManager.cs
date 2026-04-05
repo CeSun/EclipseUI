@@ -206,23 +206,15 @@ public sealed class InputManager
     private IInputElement? HitTest(Point point)
     {
         if (RootElement == null)
-        {
-            Console.WriteLine("[InputManager] HitTest: RootElement is null");
             return null;
-        }
         
-        var result = HitTestRecursive(RootElement, point);
-        Console.WriteLine($"[InputManager] HitTest at {point}: {(result?.GetType().Name ?? "null")}");
-        return result;
+        return HitTestRecursive(RootElement, point);
     }
     
     private IInputElement? HitTestRecursive(IInputElement element, Point point)
     {
         if (!element.IsVisible || !element.IsHitTestVisible || !element.IsInputEnabled)
             return null;
-        
-        var bounds = element.Bounds;
-        Console.WriteLine($"[InputManager] HitTestRecursive: {element.GetType().Name} bounds={bounds}");
         
         // 先检查子元素 (后渲染的在上面)
         foreach (var child in element.Children)
@@ -434,8 +426,8 @@ public sealed class InputManager
     
     private bool IsTap(PointerState state, Point releasePosition)
     {
-        const double maxTapDistance = 10;
-        const ulong maxTapDuration = 500;
+        const double maxTapDistance = 50;
+        const ulong maxTapDuration = 1000;
         
         var distance = (releasePosition - state.PressPosition).Length;
         var now = (ulong)Environment.TickCount64;
