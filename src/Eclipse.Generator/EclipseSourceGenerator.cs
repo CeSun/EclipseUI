@@ -525,7 +525,7 @@ namespace Eclipse.Generator
             
             // 添加自定义组件的命名空间（如果有使用）
             var customComponentNamespaces = new HashSet<string>();
-            CollectCustomComponentNamespaces(nodes, typeCache, customComponentNamespaces);
+            CollectCustomComponentNamespaces(nodes, typeCache, customComponentNamespaces, @namespace);
             foreach (var customNs in customComponentNamespaces)
             {
                 if (customNs != @namespace) // 不添加自己的命名空间
@@ -571,7 +571,7 @@ namespace Eclipse.Generator
         /// <summary>
         /// 收集自定义组件的命名空间
         /// </summary>
-        private void CollectCustomComponentNamespaces(List<MarkupNode> nodes, TypeLookupCache typeCache, HashSet<string> namespaces)
+        private void CollectCustomComponentNamespaces(List<MarkupNode> nodes, TypeLookupCache typeCache, HashSet<string> namespaces, string currentNamespace)
         {
             foreach (var node in nodes)
             {
@@ -581,19 +581,28 @@ namespace Eclipse.Generator
                     {
                         var ns = typeCache.GetCustomComponentNamespace(control.TagName);
                         if (!string.IsNullOrEmpty(ns))
-                            namespaces.Add(ns);
+                        {
+                            // 如果是待解析的命名空间，使用当前文件的命名空间
+                            if (ns.StartsWith("__pending__:"))
+                            {
+                                // 同一目录下的组件使用相同命名空间
+                                ns = currentNamespace;
+                            }
+                            if (!string.IsNullOrEmpty(ns) && ns != currentNamespace)
+                                namespaces.Add(ns);
+                        }
                     }
-                    CollectCustomComponentNamespaces(control.Children, typeCache, namespaces);
+                    CollectCustomComponentNamespaces(control.Children, typeCache, namespaces, currentNamespace);
                 }
                 else if (node is IfNode ifNode)
                 {
-                    CollectCustomComponentNamespaces(ifNode.ThenBranch, typeCache, namespaces);
+                    CollectCustomComponentNamespaces(ifNode.ThenBranch, typeCache, namespaces, currentNamespace);
                     if (ifNode.ElseBranch != null)
-                        CollectCustomComponentNamespaces(ifNode.ElseBranch, typeCache, namespaces);
+                        CollectCustomComponentNamespaces(ifNode.ElseBranch, typeCache, namespaces, currentNamespace);
                 }
                 else if (node is ForeachNode foreachNode)
                 {
-                    CollectCustomComponentNamespaces(foreachNode.Body, typeCache, namespaces);
+                    CollectCustomComponentNamespaces(foreachNode.Body, typeCache, namespaces, currentNamespace);
                 }
             }
         }

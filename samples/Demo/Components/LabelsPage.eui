@@ -1,0 +1,24 @@
+@using Eclipse.Controls
+
+<StackLayout Spacing="16" Padding="20">
+    <Label Text="Label 标签" FontSize="20" FontWeight="Bold" />
+    
+    <Label Text="普通文本 - 默认样式" FontSize="14" />
+    
+    <Label Text="粗体文本" FontSize="14" FontWeight="Bold" />
+    
+    <Label Text="彩色文本 - 红色" FontSize="14" Color="#FF0000" />
+    
+    <Label Text="居中文本" FontSize="14" TextAlignment="Center" BackgroundColor="#E0E0E0" Padding="10" />
+    
+    <Label Text="大号字体" FontSize="24" FontWeight="Bold" Color="#007AFF" />
+    
+    <Label Text="" FontSize="8" />
+    
+    <Label Text="带背景的标签" FontSize="14" BackgroundColor="#007AFF" Color="White" Padding="10" />
+    
+    <Label Text="右对齐文本" FontSize="14" TextAlignment="Right" BackgroundColor="#F0F0F0" Padding="10" />
+</StackLayout>
+
+@code {
+}

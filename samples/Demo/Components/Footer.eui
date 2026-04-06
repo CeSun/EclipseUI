@@ -1,9 +1,9 @@
 @using Eclipse.Controls
 
-@code {
-    public string? FooterText { get; set; } = "© 2026 EclipseUI Demo";
-}
-
 <StackLayout Orientation="Horizontal" BackgroundColor="#F0F0F0" Padding="10">
-    <Label Text=@FooterText FontSize="10" Color="#888" TextAlignment="Center" />
+    <Label Text=@Text FontSize="10" Color="#888" TextAlignment="Center" />
 </StackLayout>
+
+@code {
+    public string? Text { get; set; } = "© 2026 EclipseUI";
+}

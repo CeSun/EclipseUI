@@ -1,10 +1,5 @@
 @using Eclipse.Controls
 
-@code {
-    public string? Title { get; set; }
-    public string? Subtitle { get; set; }
-}
-
 <StackLayout Orientation="Horizontal" Spacing="10" BackgroundColor="#FFFFFF" Padding="15">
     <Label Text=@Title FontSize="18" FontWeight="Bold" Color="#333" />
     @if (!string.IsNullOrEmpty(Subtitle))
@@ -12,3 +7,8 @@
         <Label Text=@Subtitle FontSize="12" Color="#666" />
     }
 </StackLayout>
+
+@code {
+    public string? Title { get; set; }
+    public string? Subtitle { get; set; }
+}

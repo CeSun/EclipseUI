@@ -1,0 +1,13 @@
+@using Eclipse.Controls
+
+<Button Text=@Text 
+        OnClick=@OnClick
+        BackgroundColor=@(IsActive ? "#007AFF" : "#EEEEEE")
+        TextColor=@(IsActive ? "White" : "#333") 
+        CornerRadius="4" />
+
+@code {
+    public string? Text { get; set; }
+    public bool IsActive { get; set; }
+    public EventHandler? OnClick { get; set; }
+}

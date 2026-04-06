@@ -1,0 +1,38 @@
+@using Eclipse.Controls
+@using Eclipse.Input
+
+<StackLayout Spacing="16" Padding="20">
+    <Label Text="输入控件" FontSize="20" FontWeight="Bold" />
+    
+    <Label Text="TextInput 文本输入:" FontSize="14" FontWeight="Bold" />
+    <Label Text="普通输入:" FontSize="12" Color="#666" />
+    <TextInput Text=@_inputText Placeholder="请输入文本..." />
+    
+    <Label Text="" FontSize="4" />
+    
+    <Label Text="密码输入:" FontSize="12" Color="#666" />
+    <TextInput IsPassword="true" Placeholder="请输入密码" />
+    
+    <Label Text="" FontSize="4" />
+    
+    <Label Text=@$"输入内容: {_inputText}" Color="#007AFF" FontSize="14" />
+    
+    <Label Text="" FontSize="8" />
+    
+    <Label Text="CheckBox 复选框:" FontSize="14" FontWeight="Bold" />
+    
+    <CheckBox Label=@$"选项 A (已选中: {_isChecked})" IsChecked=@_isChecked CheckedChanged=@OnCheckChanged />
+    <CheckBox Label="选项 B (默认选中)" IsChecked="true" />
+    <CheckBox Label="选项 C (禁用)" IsEnabled="false" />
+</StackLayout>
+
+@code {
+    private string _inputText = "";
+    private bool _isChecked = false;
+    
+    private void OnCheckChanged(object? sender, ValueChangedEventArgs<bool> e)
+    {
+        _isChecked = e.NewValue;
+        StateHasChanged();
+    }
+}

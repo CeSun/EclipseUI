@@ -1,0 +1,48 @@
+@using Eclipse.Controls
+
+<StackLayout Spacing="16" Padding="20">
+    <Label Text="布局示例" FontSize="20" FontWeight="Bold" />
+    
+    <Label Text="StackLayout 垂直堆叠:" FontSize="14" FontWeight="Bold" />
+    <StackLayout Spacing="8" Padding="10" BackgroundColor="#E8E8E8">
+        <Label Text="项目 1" BackgroundColor="#FFF" Padding="8" />
+        <Label Text="项目 2" BackgroundColor="#FFF" Padding="8" />
+        <Label Text="项目 3" BackgroundColor="#FFF" Padding="8" />
+    </StackLayout>
+    
+    <Label Text="" FontSize="8" />
+    
+    <Label Text="StackLayout 水平堆叠:" FontSize="14" FontWeight="Bold" />
+    <StackLayout Orientation="Horizontal" Spacing="8" Padding="10" BackgroundColor="#E8E8E8">
+        <Button Text="A" CornerRadius="4" />
+        <Button Text="B" CornerRadius="4" />
+        <Button Text="C" CornerRadius="4" />
+        <Button Text="D" CornerRadius="4" />
+    </StackLayout>
+    
+    <Label Text="" FontSize="8" />
+    
+    <Label Text="GridLayout 网格布局:" FontSize="14" FontWeight="Bold" />
+    <GridLayout RowSpacing="10" ColumnSpacing="10" Padding="10" BackgroundColor="#E8E8E8">
+        <Label Grid.Row="0" Grid.Column="0" Text="(0,0)" BackgroundColor="#FFB6C1" Padding="10" TextAlignment="Center" />
+        <Label Grid.Row="0" Grid.Column="1" Text="(0,1)" BackgroundColor="#98FB98" Padding="10" TextAlignment="Center" />
+        <Label Grid.Row="1" Grid.Column="0" Text="(1,0)" BackgroundColor="#87CEEB" Padding="10" TextAlignment="Center" />
+        <Label Grid.Row="1" Grid.Column="1" Text="(1,1)" BackgroundColor="#DDA0DD" Padding="10" TextAlignment="Center" />
+    </GridLayout>
+    
+    <Label Text="" FontSize="8" />
+    
+    <Label Text="ScrollView 滚动视图:" FontSize="14" FontWeight="Bold" />
+    <ScrollView BackgroundColor="#F0F0F0">
+        <StackLayout Spacing="8" Padding="10">
+            <Label Text="滚动项 1" BackgroundColor="#FFF" Padding="8" />
+            <Label Text="滚动项 2" BackgroundColor="#FFF" Padding="8" />
+            <Label Text="滚动项 3" BackgroundColor="#FFF" Padding="8" />
+            <Label Text="滚动项 4" BackgroundColor="#FFF" Padding="8" />
+            <Label Text="滚动项 5" BackgroundColor="#FFF" Padding="8" />
+        </StackLayout>
+    </ScrollView>
+</StackLayout>
+
+@code {
+}

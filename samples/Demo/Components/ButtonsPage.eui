@@ -1,0 +1,48 @@
+@using Eclipse.Controls
+
+<StackLayout Spacing="16" Padding="20">
+    <Label Text="Button 按钮" FontSize="20" FontWeight="Bold" />
+    
+    <Label Text="基础按钮:" FontSize="14" FontWeight="Bold" />
+    <Button Text="默认按钮" OnClick=@OnButtonClick />
+    
+    <Label Text=@$"点击次数: {_clickCount}" Color="#007AFF" FontSize="16" />
+    
+    <Label Text="" FontSize="8" />
+    
+    <Label Text="颜色按钮:" FontSize="14" FontWeight="Bold" />
+    <StackLayout Orientation="Horizontal" Spacing="8">
+        <Button Text="蓝色" BackgroundColor="#007AFF" CornerRadius="4" />
+        <Button Text="绿色" BackgroundColor="#28A745" CornerRadius="4" />
+        <Button Text="红色" BackgroundColor="#DC3545" CornerRadius="4" />
+        <Button Text="黄色" BackgroundColor="#FFC107" TextColor="#333" CornerRadius="4" />
+    </StackLayout>
+    
+    <Label Text="" FontSize="8" />
+    
+    <Label Text="圆角按钮:" FontSize="14" FontWeight="Bold" />
+    <StackLayout Orientation="Horizontal" Spacing="8">
+        <Button Text="圆角4" BackgroundColor="#007AFF" CornerRadius="4" />
+        <Button Text="圆角10" BackgroundColor="#007AFF" CornerRadius="10" />
+        <Button Text="圆角20" BackgroundColor="#007AFF" CornerRadius="20" />
+        <Button Text="圆形" BackgroundColor="#007AFF" CornerRadius="50" />
+    </StackLayout>
+    
+    <Label Text="" FontSize="8" />
+    
+    <Label Text="状态按钮:" FontSize="14" FontWeight="Bold" />
+    <StackLayout Orientation="Horizontal" Spacing="8">
+        <Button Text="正常" BackgroundColor="#007AFF" />
+        <Button Text="禁用" BackgroundColor="#CCCCCC" IsEnabled="false" />
+    </StackLayout>
+</StackLayout>
+
+@code {
+    private int _clickCount = 0;
+    
+    private void OnButtonClick(object? sender, EventArgs e)
+    {
+        _clickCount++;
+        StateHasChanged();
+    }
+}

@@ -1,13 +1,43 @@
 @using Eclipse.Controls
-@using Eclipse.Input
 
 <StackLayout Spacing="0" BackgroundColor="#F5F5F5">
-    <Header Title="EclipseUI Demo" Subtitle="一个现代的声明式 UI 框架" />
-
-    <Label Text="你好"></Label>
-    <Footer FooterText="© 2026 EclipseUI Demo - 声明式 UI 框架" />
+    <Header Title="EclipseUI Demo" Subtitle="声明式 UI 框架" />
+    
+    <StackLayout Orientation="Horizontal" Spacing="4" BackgroundColor="#FFFFFF" Padding="8">
+        <TabButton Text="标签" IsActive=@(_currentTab == 0) OnClick=@((s, e) => SwitchTab(0)) />
+        <TabButton Text="按钮" IsActive=@(_currentTab == 1) OnClick=@((s, e) => SwitchTab(1)) />
+        <TabButton Text="布局" IsActive=@(_currentTab == 2) OnClick=@((s, e) => SwitchTab(2)) />
+        <TabButton Text="输入" IsActive=@(_currentTab == 3) OnClick=@((s, e) => SwitchTab(3)) />
+    </StackLayout>
+    
+    <ScrollView BackgroundColor="#FFFFFF">
+        @if (_currentTab == 0)
+        {
+            <LabelsPage />
+        }
+        @if (_currentTab == 1)
+        {
+            <ButtonsPage />
+        }
+        @if (_currentTab == 2)
+        {
+            <LayoutsPage />
+        }
+        @if (_currentTab == 3)
+        {
+            <InputsPage />
+        }
+    </ScrollView>
+    
+    <Footer Text="© 2026 EclipseUI Demo - 声明式 UI 框架" />
 </StackLayout>
 
-
 @code {
+    private int _currentTab = 0;
+    
+    private void SwitchTab(int tab)
+    {
+        _currentTab = tab;
+        StateHasChanged();
+    }
 }
