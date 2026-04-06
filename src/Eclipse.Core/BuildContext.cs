@@ -10,6 +10,7 @@ namespace Eclipse.Core;
 public sealed class BuildContext : IBuildContext
 {
     private readonly Stack<IComponent> _componentStack = new();
+    private readonly Stack<bool> _needsBuildStack = new(); // 跟踪是否需要调用 Build
     private readonly List<ComponentId> _path = new();
     private readonly IComponent _root;
     
@@ -48,6 +49,9 @@ public sealed class BuildContext : IBuildContext
         _componentStack.Push(component);
         _path.Add(id);
         
+        // 如果是 ComponentBase 派生，标记需要调用 Build
+        _needsBuildStack.Push(component is ComponentBase);
+        
         return new ComponentScope(this);
     }
     
@@ -60,10 +64,18 @@ public sealed class BuildContext : IBuildContext
     {
         if (_componentStack.Count > 0)
         {
-            _componentStack.Pop();
-            if (_path.Count > 0)
+            var component = _componentStack.Pop();
+            _path.RemoveAt(_path.Count - 1);
+            
+            // 检查是否需要调用 Build（ComponentBase 派生）
+            if (_needsBuildStack.Count > 0 && _needsBuildStack.Pop())
             {
-                _path.RemoveAt(_path.Count - 1);
+                // 调用嵌套组件的 Build 方法，构建其子组件树
+                if (component is ComponentBase componentBase)
+                {
+                    var childContext = new BuildContext(componentBase);
+                    componentBase.Build(childContext);
+                }
             }
         }
     }
