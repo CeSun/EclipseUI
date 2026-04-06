@@ -415,12 +415,13 @@ public class Label : ComponentBase
         }
         
         var scaledFontSize = FontSize * context.Scale;
+        var scaledPadding = Padding * context.Scale;
         var textWidth = context.MeasureText(Text, scaledFontSize, FontFamily);
         
         // 行高通常是字体大小的 1.2-1.5 �?
         var lineHeight = scaledFontSize * 1.3;
         
-        _desiredSize = new Size(textWidth, lineHeight);
+        _desiredSize = new Size(textWidth + scaledPadding * 2, lineHeight + scaledPadding * 2);
         return _desiredSize;
     }
     
