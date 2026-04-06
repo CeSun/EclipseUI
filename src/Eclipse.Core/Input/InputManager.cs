@@ -299,11 +299,36 @@ public sealed class InputManager
             return null;
         
         // 先检查子元素 (后渲染的在上面) - 即使 IsHitTestVisible=false 也要检查子元素
-        foreach (var child in element.Children)
+        // 注意：element.Children 返回 IInputElement，但实际子元素可能包含非 IInputElement 的容器
+        // 所以需要用 component.Children 来获取所有子元素
+        if (element is IComponent component)
         {
-            var result = HitTestRecursive(child, point);
-            if (result != null)
-                return result;
+            foreach (var child in component.Children)
+            {
+                if (child is IInputElement childInputElement)
+                {
+                    var result = HitTestRecursive(childInputElement, point);
+                    if (result != null)
+                        return result;
+                }
+                else
+                {
+                    // 非 IInputElement 容器，递归检查
+                    var result = HitTestRecursiveWithContainers(child, point);
+                    if (result != null)
+                        return result;
+                }
+            }
+        }
+        else
+        {
+            // 不是 IComponent，使用原有的 Children 属性
+            foreach (var child in element.Children)
+            {
+                var result = HitTestRecursive(child, point);
+                if (result != null)
+                    return result;
+            }
         }
         
         // 再检查自己（受 IsHitTestVisible 控制）
