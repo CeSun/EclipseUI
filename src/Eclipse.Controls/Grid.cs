@@ -7,9 +7,35 @@ using System.Collections.Generic;
 namespace Eclipse.Controls;
 
 /// <summary>
+/// Grid 附加属性
+/// </summary>
+public static class Grid
+{
+    /// <summary>
+    /// 所在行
+    /// </summary>
+    public static readonly AttachedProperty<int> Row = new("Grid.Row", 0);
+    
+    /// <summary>
+    /// 所在列
+    /// </summary>
+    public static readonly AttachedProperty<int> Column = new("Grid.Column", 0);
+    
+    /// <summary>
+    /// 占用行数
+    /// </summary>
+    public static readonly AttachedProperty<int> RowSpan = new("Grid.RowSpan", 1);
+    
+    /// <summary>
+    /// 占用列数
+    /// </summary>
+    public static readonly AttachedProperty<int> ColumnSpan = new("Grid.ColumnSpan", 1);
+}
+
+/// <summary>
 /// 网格布局控件
 /// </summary>
-public class Grid : InputElementBase
+public class GridLayout : InputElementBase
 {
     private Rect _bounds;
     private Size _desiredSize = Size.Zero;
@@ -160,25 +186,54 @@ public class Grid : InputElementBase
         var rowHeights = CalculateRowHeights(finalBounds.Height - scaledPadding * 2, scaledRowSpacing, context);
         var columnWidths = CalculateColumnWidths(finalBounds.Width - scaledPadding * 2, scaledColumnSpacing, context);
         
-        // 计算每个单元格的位置
+        // 计算每行的 Y 位置
+        var rowYPositions = new double[rowHeights.Length];
         double y = finalBounds.Y + scaledPadding;
-        for (int row = 0; row < rowHeights.Length; row++)
+        for (int i = 0; i < rowHeights.Length; i++)
         {
-            double x = finalBounds.X + scaledPadding;
-            for (int col = 0; col < columnWidths.Length; col++)
+            rowYPositions[i] = y;
+            y += rowHeights[i] + scaledRowSpacing;
+        }
+        
+        // 计算每列的 X 位置
+        var colXPositions = new double[columnWidths.Length];
+        double x = finalBounds.X + scaledPadding;
+        for (int i = 0; i < columnWidths.Length; i++)
+        {
+            colXPositions[i] = x;
+            x += columnWidths[i] + scaledColumnSpacing;
+        }
+        
+        // 遍历所有子元素，根据附加属性安排位置
+        foreach (var child in Children)
+        {
+            var row = child.Get(Grid.Row);
+            var col = child.Get(Grid.Column);
+            var rowSpan = child.Get(Grid.RowSpan);
+            var colSpan = child.Get(Grid.ColumnSpan);
+            
+            // 计算子元素边界
+            double childX = col < columnWidths.Length ? colXPositions[col] : colXPositions[0];
+            double childY = row < rowHeights.Length ? rowYPositions[row] : rowYPositions[0];
+            double childWidth = 0;
+            double childHeight = 0;
+            
+            // 计算宽度（考虑跨列）
+            for (int c = 0; c < colSpan && (col + c) < columnWidths.Length; c++)
             {
-                var cellBounds = new Rect(x, y, columnWidths[col], rowHeights[row]);
-                
-                // 查找放置在此单元格的子元素
-                var child = GetChildAt(row, col);
-                if (child != null)
-                {
-                    ArrangeChild(child, cellBounds, context);
-                }
-                
-                x += columnWidths[col] + scaledColumnSpacing;
+                childWidth += columnWidths[col + c];
+                if (c > 0) childWidth += scaledColumnSpacing;
             }
-            y += rowHeights[row] + scaledRowSpacing;
+            
+            // 计算高度（考虑跨行）
+            for (int r = 0; r < rowSpan && (row + r) < rowHeights.Length; r++)
+            {
+                childHeight += rowHeights[row + r];
+                if (r > 0) childHeight += scaledRowSpacing;
+            }
+            
+            var childBounds = new Rect(childX, childY, childWidth, childHeight);
+            ArrangeChild(child, childBounds, context);
         }
     }
     
@@ -200,24 +255,51 @@ public class Grid : InputElementBase
         var rowHeights = CalculateRowHeights(bounds.Height - scaledPadding * 2, scaledRowSpacing, context);
         var columnWidths = CalculateColumnWidths(bounds.Width - scaledPadding * 2, scaledColumnSpacing, context);
         
-        // 绘制子元素
+        // 计算每行的 Y 位置
+        var rowYPositions = new double[rowHeights.Length];
         double y = bounds.Y + scaledPadding;
-        for (int row = 0; row < rowHeights.Length; row++)
+        for (int i = 0; i < rowHeights.Length; i++)
         {
-            double x = bounds.X + scaledPadding;
-            for (int col = 0; col < columnWidths.Length; col++)
+            rowYPositions[i] = y;
+            y += rowHeights[i] + scaledRowSpacing;
+        }
+        
+        // 计算每列的 X 位置
+        var colXPositions = new double[columnWidths.Length];
+        double x = bounds.X + scaledPadding;
+        for (int i = 0; i < columnWidths.Length; i++)
+        {
+            colXPositions[i] = x;
+            x += columnWidths[i] + scaledColumnSpacing;
+        }
+        
+        // 遍历所有子元素，根据附加属性渲染
+        foreach (var child in Children)
+        {
+            var row = child.Get(Grid.Row);
+            var col = child.Get(Grid.Column);
+            var rowSpan = child.Get(Grid.RowSpan);
+            var colSpan = child.Get(Grid.ColumnSpan);
+            
+            double childX = col < columnWidths.Length ? colXPositions[col] : colXPositions[0];
+            double childY = row < rowHeights.Length ? rowYPositions[row] : rowYPositions[0];
+            double childWidth = 0;
+            double childHeight = 0;
+            
+            for (int c = 0; c < colSpan && (col + c) < columnWidths.Length; c++)
             {
-                var cellBounds = new Rect(x, y, columnWidths[col], rowHeights[row]);
-                
-                var child = GetChildAt(row, col);
-                if (child != null)
-                {
-                    child.Render(context, cellBounds);
-                }
-                
-                x += columnWidths[col] + scaledColumnSpacing;
+                childWidth += columnWidths[col + c];
+                if (c > 0) childWidth += scaledColumnSpacing;
             }
-            y += rowHeights[row] + scaledRowSpacing;
+            
+            for (int r = 0; r < rowSpan && (row + r) < rowHeights.Length; r++)
+            {
+                childHeight += rowHeights[row + r];
+                if (r > 0) childHeight += scaledRowSpacing;
+            }
+            
+            var childBounds = new Rect(childX, childY, childWidth, childHeight);
+            child.Render(context, childBounds);
         }
     }
     
@@ -244,19 +326,21 @@ public class Grid : InputElementBase
             }
             else if (rowDef.IsAuto)
             {
-                // Auto 行高基于内容
-                var child = GetChildAt(i, -1);
-                if (child != null)
+                // Auto 行高基于该行所有子元素的最大高度
+                double maxHeight = 40 * context.Scale; // 默认高度
+                
+                foreach (var child in Children)
                 {
-                    var size = MeasureChild(child, context);
-                    heights[i] = size.Height;
-                    absoluteTotal += heights[i];
+                    var row = child.Get(Grid.Row);
+                    if (row == i)
+                    {
+                        var size = MeasureChild(child, context);
+                        maxHeight = Math.Max(maxHeight, size.Height);
+                    }
                 }
-                else
-                {
-                    heights[i] = 40 * context.Scale; // 默认高度
-                    absoluteTotal += heights[i];
-                }
+                
+                heights[i] = maxHeight;
+                absoluteTotal += heights[i];
             }
             else if (rowDef.IsStar)
             {
@@ -307,19 +391,21 @@ public class Grid : InputElementBase
             }
             else if (colDef.IsAuto)
             {
-                // Auto 列宽基于内容
-                var child = GetChildAt(-1, i);
-                if (child != null)
+                // Auto 列宽基于该列所有子元素的最大宽度
+                double maxWidth = 100 * context.Scale; // 默认宽度
+                
+                foreach (var child in Children)
                 {
-                    var size = MeasureChild(child, context);
-                    widths[i] = size.Width;
-                    absoluteTotal += widths[i];
+                    var col = child.Get(Grid.Column);
+                    if (col == i)
+                    {
+                        var size = MeasureChild(child, context);
+                        maxWidth = Math.Max(maxWidth, size.Width);
+                    }
                 }
-                else
-                {
-                    widths[i] = 100 * context.Scale; // 默认宽度
-                    absoluteTotal += widths[i];
-                }
+                
+                widths[i] = maxWidth;
+                absoluteTotal += widths[i];
             }
             else if (colDef.IsStar)
             {
@@ -379,70 +465,6 @@ public class Grid : InputElementBase
         else if (child is StackLayout stackLayout)
         {
             stackLayout.Arrange(bounds, context);
-        }
-    }
-    
-    /// <summary>
-    /// 获取指定位置的子元素
-    /// </summary>
-    private IComponent? GetChildAt(int row, int col)
-    {
-        foreach (var child in Children)
-        {
-            if (child is GridCell gridCell)
-            {
-                if ((gridCell.Row == row || row < 0) && (gridCell.Column == col || col < 0))
-                {
-                    return gridCell.Child;
-                }
-            }
-            // 简单模式：按顺序分配
-            else if (row < 0 || col < 0)
-            {
-                return child;
-            }
-        }
-        return null;
-    }
-}
-
-/// <summary>
-/// 网格单元格 - 用于指定子元素在网格中的位置
-/// </summary>
-public class GridCell : ComponentBase
-{
-    /// <summary>
-    /// 所在行
-    /// </summary>
-    public int Row { get; set; } = 0;
-    
-    /// <summary>
-    /// 所在列
-    /// </summary>
-    public int Column { get; set; } = 0;
-    
-    /// <summary>
-    /// 占用行数
-    /// </summary>
-    public int RowSpan { get; set; } = 1;
-    
-    /// <summary>
-    /// 占用列数
-    /// </summary>
-    public int ColumnSpan { get; set; } = 1;
-    
-    /// <summary>
-    /// 子元素
-    /// </summary>
-    public IComponent? Child { get; set; }
-    
-    public override void Build(IBuildContext context) { }
-    
-    public override void Render(IDrawingContext context, Rect bounds)
-    {
-        if (Child != null)
-        {
-            Child.Render(context, bounds);
         }
     }
 }

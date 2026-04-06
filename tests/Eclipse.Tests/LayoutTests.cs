@@ -23,7 +23,7 @@ public class LayoutTests
         
         public double MeasureText(string text, double fontSize, string? fontFamily = null)
         {
-            // 简化实现：每个字符宽度�?fontSize * 0.6
+            // 简化实现：每个字符宽度�?fontSize * 0.6
             return text.Length * fontSize * 0.6;
         }
         
@@ -48,7 +48,7 @@ public class LayoutTests
         // Act
         var size = stack.Measure(Size.Empty, _context);
         
-        // Assert - �?Stack 只有 Padding
+        // Assert - �?Stack 只有 Padding
         Assert.Equal(20, size.Width);  // Padding * 2
         Assert.Equal(20, size.Height);
     }
@@ -74,8 +74,8 @@ public class LayoutTests
         var size = stack.Measure(Size.Empty, _context);
         
         // Assert
-        // 每个 Label 高度�?14 * 1.3 = 18.2
-        // 总高�?= 18.2 + 18.2 + 10 (spacing) + 10 (padding * 2)
+        // 每个 Label 高度�?14 * 1.3 = 18.2
+        // 总高�?= 18.2 + 18.2 + 10 (spacing) + 10 (padding * 2)
         var expectedHeight = 18.2 * 2 + 10 + 10;
         Assert.Equal(expectedHeight, size.Height, 1);
     }
@@ -101,9 +101,9 @@ public class LayoutTests
         var size = stack.Measure(Size.Empty, _context);
         
         // Assert
-        // 每个字符宽度�?14 * 0.6 = 8.4
+        // 每个字符宽度�?14 * 0.6 = 8.4
         // Hello = 5 chars = 42, World = 5 chars = 42
-        // 总宽�?= 42 + 42 + 10 (spacing) + 10 (padding * 2)
+        // 总宽�?= 42 + 42 + 10 (spacing) + 10 (padding * 2)
         var expectedWidth = 42 + 42 + 10 + 10;
         Assert.Equal(expectedWidth, size.Width, 1);
     }
@@ -161,7 +161,7 @@ public class LayoutTests
         var size14 = label14.Measure(Size.Empty, _context);
         var size28 = label28.Measure(Size.Empty, _context);
         
-        // Assert - 字体大小翻倍，尺寸也翻�?        Assert.Equal(size28.Width, size14.Width * 2, 1);
+        // Assert - 字体大小翻倍，尺寸也翻�?        Assert.Equal(size28.Width, size14.Width * 2, 1);
         Assert.Equal(size28.Height, size14.Height * 2, 1);
     }
     
@@ -203,7 +203,7 @@ public class LayoutTests
     public void Grid_RowCount_ShouldDefaultToOne()
     {
         // Arrange & Act
-        var grid = new Grid();
+        var grid = new GridLayout();
         
         // Assert
         Assert.Equal(1, grid.RowCount);
@@ -213,7 +213,7 @@ public class LayoutTests
     public void Grid_ColumnCount_ShouldDefaultToOne()
     {
         // Arrange & Act
-        var grid = new Grid();
+        var grid = new GridLayout();
         
         // Assert
         Assert.Equal(1, grid.ColumnCount);
@@ -223,7 +223,7 @@ public class LayoutTests
     public void Grid_SetRowDefinitions_ShouldUpdateRowCount()
     {
         // Arrange
-        var grid = new Grid();
+        var grid = new GridLayout();
         
         // Act
         grid.SetRowDefinitions(GridLength.Auto, GridLength.Star(1), GridLength.Absolute(50));
@@ -236,7 +236,7 @@ public class LayoutTests
     public void Grid_SetColumnDefinitions_ShouldUpdateColumnCount()
     {
         // Arrange
-        var grid = new Grid();
+        var grid = new GridLayout();
         
         // Act
         grid.SetColumnDefinitions(GridLength.Star(1), GridLength.Star(2));
@@ -496,7 +496,7 @@ public class LayoutTests
         // Act
         var size = checkBox.Measure(Size.Empty, _context);
         
-        // Assert - 应包�?Label 宽度
+        // Assert - 应包�?Label 宽度
         Assert.True(size.Width > 20);
     }
     

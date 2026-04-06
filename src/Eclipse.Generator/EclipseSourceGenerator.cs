@@ -508,7 +508,13 @@ namespace Eclipse.Generator
             
             foreach (var attr in control.Attributes)
             {
-                if (attr.IsEvent)
+                if (attr.IsAttached)
+                {
+                    // 附加属性：Grid.SetRow(element, value)
+                    var value = attr.IsBinding ? attr.Value : ConvertLiteralValue(attr.Value, null);
+                    WriteLine($"{attr.AttachedTypeName}.Set{attr.AttachedPropertyName}({varName}, {value});");
+                }
+                else if (attr.IsEvent)
                 {
                     WriteLine($"{varName}.{attr.Name} += {attr.Value};");
                 }

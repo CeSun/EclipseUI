@@ -19,6 +19,18 @@ public class AttributeNode
     public string Value { get; set; } = string.Empty;
     public bool IsBinding { get; set; }
     public bool IsEvent { get; set; }
+    /// <summary>
+    /// 是否是附加属性（如 Grid.Row）
+    /// </summary>
+    public bool IsAttached { get; set; }
+    /// <summary>
+    /// 附加属性的类型名（如 Grid）
+    /// </summary>
+    public string? AttachedTypeName { get; set; }
+    /// <summary>
+    /// 附加属性的属性名（如 Row）
+    /// </summary>
+    public string? AttachedPropertyName { get; set; }
 }
 
 public class TextNode : MarkupNode
@@ -164,12 +176,30 @@ public class EclipseMarkupParser
             
             var attrValue = ReadAttributeValue();
             
+            // 检查是否是附加属性（如 Grid.Row）
+            bool isAttached = attrName.IndexOf('.') >= 0;
+            string? attachedTypeName = null;
+            string? attachedPropertyName = null;
+            
+            if (isAttached)
+            {
+                var parts = attrName.Split('.');
+                if (parts.Length == 2)
+                {
+                    attachedTypeName = parts[0];
+                    attachedPropertyName = parts[1];
+                }
+            }
+            
             control.Attributes.Add(new AttributeNode
             {
                 Name = attrName,
                 Value = attrValue.text,
                 IsBinding = attrValue.isBinding,
-                IsEvent = attrName.StartsWith("On")
+                IsEvent = attrName.StartsWith("On"),
+                IsAttached = isAttached,
+                AttachedTypeName = attachedTypeName,
+                AttachedPropertyName = attachedPropertyName
             });
         }
         
