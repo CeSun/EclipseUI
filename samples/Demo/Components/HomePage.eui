@@ -13,11 +13,6 @@
         StateHasChanged();
     }
     
-    private void SwitchTab0() => SwitchTab(0);
-    private void SwitchTab1() => SwitchTab(1);
-    private void SwitchTab2() => SwitchTab(2);
-    private void SwitchTab3() => SwitchTab(3);
-    
     private void OnButtonClick(object? sender, EventArgs e)
     {
         _clickCount++;
@@ -32,23 +27,23 @@
 }
 
 <StackLayout Spacing="0" BackgroundColor="#F5F5F5">
-    <StackLayout Orientation="Horizontal" Spacing="0" BackgroundColor="#FFFFFF" Padding="10,5">
-        <Button Text="基础" OnClick="@SwitchTab0" 
-                BackgroundColor="@(_currentTab == 0 ? "#007AFF" : "Transparent")"
-                TextColor="@(_currentTab == 0 ? "White" : "#333")" 
-                CornerRadius="4" Padding="12,8" />
-        <Button Text="布局" OnClick="@SwitchTab1"
-                BackgroundColor="@(_currentTab == 1 ? "#007AFF" : "Transparent")"
-                TextColor="@(_currentTab == 1 ? "White" : "#333")"
-                CornerRadius="4" Padding="12,8" />
-        <Button Text="输入" OnClick="@SwitchTab2"
-                BackgroundColor="@(_currentTab == 2 ? "#007AFF" : "Transparent")"
-                TextColor="@(_currentTab == 2 ? "White" : "#333")"
-                CornerRadius="4" Padding="12,8" />
-        <Button Text="交互" OnClick="@SwitchTab3"
-                BackgroundColor="@(_currentTab == 3 ? "#007AFF" : "Transparent")"
-                TextColor="@(_currentTab == 3 ? "White" : "#333")"
-                CornerRadius="4" Padding="12,8" />
+    <StackLayout Orientation="Horizontal" Spacing="0" BackgroundColor="#FFFFFF" Padding="10">
+        <Button Text="基础" OnClick=@((s, e) => SwitchTab(0)) 
+                BackgroundColor=@(_currentTab == 0 ? "#007AFF" : "#EEEEEE")
+                TextColor=@(_currentTab == 0 ? "White" : "#333") 
+                CornerRadius="4" />
+        <Button Text="布局" OnClick=@((s, e) => SwitchTab(1))
+                BackgroundColor=@(_currentTab == 1 ? "#007AFF" : "#EEEEEE")
+                TextColor=@(_currentTab == 1 ? "White" : "#333")
+                CornerRadius="4" />
+        <Button Text="输入" OnClick=@((s, e) => SwitchTab(2))
+                BackgroundColor=@(_currentTab == 2 ? "#007AFF" : "#EEEEEE")
+                TextColor=@(_currentTab == 2 ? "White" : "#333")
+                CornerRadius="4" />
+        <Button Text="交互" OnClick=@((s, e) => SwitchTab(3))
+                BackgroundColor=@(_currentTab == 3 ? "#007AFF" : "#EEEEEE")
+                TextColor=@(_currentTab == 3 ? "White" : "#333")
+                CornerRadius="4" />
     </StackLayout>
     
     <ScrollView BackgroundColor="#FFFFFF">
@@ -61,22 +56,21 @@
                 <Label Text="粗体文本" FontSize="14" FontWeight="Bold" />
                 <Label Text="彩色文本" FontSize="14" Color="#FF0000" />
                 <Label Text="居中文本" FontSize="14" TextAlignment="Center" BackgroundColor="#E0E0E0" />
-                <Label Text="Emoji: Hello" FontSize="24" />
                 
                 <Label Text="" FontSize="1" />
                 <Label Text="Button 按钮" FontSize="20" FontWeight="Bold" />
                 
-                <Button Text="默认按钮" OnClick="@OnButtonClick" />
+                <Button Text="默认按钮" OnClick=@OnButtonClick />
                 <Button Text="自定义颜色" BackgroundColor="#28A745" TextColor="White" />
                 <Button Text="圆角按钮" BackgroundColor="#DC3545" CornerRadius="20" />
                 <Button Text="禁用按钮" IsEnabled="false" BackgroundColor="#007AFF" />
                 
-                <Label Text="@($"点击次数: {_clickCount}")" Color="#007AFF" FontSize="16" />
+                <Label Text=@$"点击次数: {_clickCount}" Color="#007AFF" FontSize="16" />
                 
                 <Label Text="" FontSize="1" />
                 <Label Text="CheckBox 复选框" FontSize="20" FontWeight="Bold" />
                 
-                <CheckBox Label="选项 A" IsChecked="@_isChecked" CheckedChanged="@OnCheckChanged" />
+                <CheckBox Label="选项 A" IsChecked=@_isChecked CheckedChanged=@OnCheckChanged />
                 <CheckBox Label="选项 B" IsChecked="true" />
                 <CheckBox Label="禁用选项" IsEnabled="false" />
             }
@@ -102,7 +96,7 @@
                 <Label Text="" FontSize="1" />
                 <Label Text="Grid 网格布局" FontSize="20" FontWeight="Bold" />
                 
-                <GridLayout RowCount="2" ColumnCount="2" RowSpacing="10" ColumnSpacing="10" Padding="10" BackgroundColor="#E8E8E8">
+                <GridLayout RowSpacing="10" ColumnSpacing="10" Padding="10" BackgroundColor="#E8E8E8">
                     <Label Grid.Row="0" Grid.Column="0" Text="0,0" BackgroundColor="#FFB6C1" Padding="10" TextAlignment="Center" />
                     <Label Grid.Row="0" Grid.Column="1" Text="0,1" BackgroundColor="#98FB98" Padding="10" TextAlignment="Center" />
                     <Label Grid.Row="1" Grid.Column="0" Text="1,0" BackgroundColor="#87CEEB" Padding="10" TextAlignment="Center" />
@@ -112,7 +106,7 @@
                 <Label Text="" FontSize="1" />
                 <Label Text="ScrollView 滚动视图" FontSize="20" FontWeight="Bold" />
                 
-                <ScrollView BackgroundColor="#F0F0F0" Height="150">
+                <ScrollView BackgroundColor="#F0F0F0">
                     <StackLayout Spacing="8" Padding="10">
                         <Label Text="滚动项 1" BackgroundColor="#FFF" Padding="8" />
                         <Label Text="滚动项 2" BackgroundColor="#FFF" Padding="8" />
@@ -128,12 +122,12 @@
                 <Label Text="TextInput 文本输入" FontSize="20" FontWeight="Bold" />
                 
                 <Label Text="普通输入:" FontSize="14" />
-                <TextInput Text="@_inputText" Placeholder="请输入文本..." />
+                <TextInput Text=@_inputText Placeholder="请输入文本..." />
                 
                 <Label Text="密码输入:" FontSize="14" />
                 <TextInput IsPassword="true" Placeholder="请输入密码" />
                 
-                <Label Text="@($"输入内容: {_inputText}")" Color="#007AFF" FontSize="14" />
+                <Label Text=@$"输入内容: {_inputText}" Color="#007AFF" FontSize="14" />
             }
             
             @if (_currentTab == 3)

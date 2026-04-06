@@ -159,7 +159,7 @@ public class EclipseMarkupParser
                 break;
             }
             
-            var attrName = ReadIdentifier();
+            var attrName = ReadAttributeName();
             if (string.IsNullOrEmpty(attrName))
             {
                 throw new FormatException($"Unclosed tag '<{tagName}>' at position {_position}, expected '/>' or '>' or attribute");
@@ -196,7 +196,7 @@ public class EclipseMarkupParser
                 Name = attrName,
                 Value = attrValue.text,
                 IsBinding = attrValue.isBinding,
-                IsEvent = attrName.StartsWith("On"),
+                IsEvent = attrName.StartsWith("On") || IsKnownEvent(attrName),
                 IsAttached = isAttached,
                 AttachedTypeName = attachedTypeName,
                 AttachedPropertyName = attachedPropertyName
@@ -426,6 +426,34 @@ public class EclipseMarkupParser
         while (!IsAtEnd() && (char.IsLetterOrDigit(Peek()) || Peek() == '_'))
         {
             sb.Append(Read());
+        }
+        
+        return sb.ToString();
+    }
+    
+    /// <summary>
+    /// 读取属性名（支持带点的附加属性，如 Grid.Row）
+    /// </summary>
+    private string ReadAttributeName()
+    {
+        var sb = new StringBuilder();
+        
+        // 读取第一个标识符部分
+        while (!IsAtEnd() && (char.IsLetterOrDigit(Peek()) || Peek() == '_'))
+        {
+            sb.Append(Read());
+        }
+        
+        // 检查是否是附加属性（TypeName.PropertyName 格式）
+        if (Peek() == '.' && char.IsLetterOrDigit(Peek(1)))
+        {
+            sb.Append(Read()); // 消耗 '.'
+            
+            // 读取属性名部分
+            while (!IsAtEnd() && (char.IsLetterOrDigit(Peek()) || Peek() == '_'))
+            {
+                sb.Append(Read());
+            }
         }
         
         return sb.ToString();
@@ -954,5 +982,24 @@ public class EclipseMarkupParser
         return text
             .Replace("\\", "\\\\")
             .Replace("\"", "\\\"");
+    }
+    
+    /// <summary>
+    /// 检查是否是已知的事件名
+    /// </summary>
+    private bool IsKnownEvent(string attrName)
+    {
+        return attrName == "Click" || 
+               attrName == "Changed" || 
+               attrName == "CheckedChanged" ||
+               attrName == "Tapped" ||
+               attrName == "PointerPressed" ||
+               attrName == "PointerReleased" ||
+               attrName == "PointerMoved" ||
+               attrName == "KeyPressed" ||
+               attrName == "KeyDown" ||
+               attrName == "KeyUp" ||
+               attrName == "FocusChanged" ||
+               attrName == "ScrollChanged";
     }
 }

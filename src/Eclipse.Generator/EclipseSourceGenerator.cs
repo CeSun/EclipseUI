@@ -174,7 +174,7 @@ namespace Eclipse.Generator
                     continue;
                 }
                 
-                foreach (var member in typeSymbol.GetMembers())
+                foreach (var member in GetAllSettableProperties(typeSymbol))
                 {
                     if (member is IPropertySymbol property && !property.IsStatic && property.SetMethod != null)
                     {
@@ -199,6 +199,50 @@ namespace Eclipse.Generator
             return result;
         }
 
+        /// <summary>
+        /// 获取类型及其基类中所有可设置的属性（包括继承的属性）
+        /// </summary>
+        private IEnumerable<IPropertySymbol> GetAllSettableProperties(ITypeSymbol typeSymbol)
+        {
+            var current = typeSymbol;
+            while (current != null && current.SpecialType != SpecialType.System_Object)
+            {
+                foreach (var member in current.GetMembers())
+                {
+                    if (member is IPropertySymbol property && !property.IsStatic && property.SetMethod != null)
+                    {
+                        yield return property;
+                    }
+                }
+                current = current.BaseType;
+            }
+        }
+        
+        /// <summary>
+        /// 推断附加属性的类型
+        /// </summary>
+        private PropertyTypeInfo? GetAttachedPropertyType(string? typeName, string? propertyName)
+        {
+            if (string.IsNullOrEmpty(typeName) || string.IsNullOrEmpty(propertyName))
+                return null;
+            
+            // Grid 附加属性：Row, Column, RowSpan, ColumnSpan 都是 int
+            if (typeName == "Grid" && 
+                (propertyName == "Row" || propertyName == "Column" || propertyName == "RowSpan" || propertyName == "ColumnSpan"))
+            {
+                return new PropertyTypeInfo { TypeName = "int", IsNumeric = true };
+            }
+            
+            // Canvas 附加属性：Left, Top, Right, Bottom, ZIndex 都是 double
+            if (typeName == "Canvas" &&
+                (propertyName == "Left" || propertyName == "Top" || propertyName == "Right" || propertyName == "Bottom" || propertyName == "ZIndex"))
+            {
+                return new PropertyTypeInfo { TypeName = "double", IsNumeric = true };
+            }
+            
+            return null;
+        }
+        
         private bool IsNumericType(ITypeSymbol type)
         {
             return type.SpecialType switch
@@ -510,9 +554,11 @@ namespace Eclipse.Generator
             {
                 if (attr.IsAttached)
                 {
-                    // 附加属性：Grid.SetRow(element, value)
-                    var value = attr.IsBinding ? attr.Value : ConvertLiteralValue(attr.Value, null);
-                    WriteLine($"{attr.AttachedTypeName}.Set{attr.AttachedPropertyName}({varName}, {value});");
+                    // 附加属性：element.Set(Grid.Row, value)
+                    // 需要根据附加属性名称推断类型
+                    var attachedType = GetAttachedPropertyType(attr.AttachedTypeName, attr.AttachedPropertyName);
+                    var value = attr.IsBinding ? attr.Value : ConvertLiteralValue(attr.Value, attachedType);
+                    WriteLine($"{varName}.Set({attr.AttachedTypeName}.{attr.AttachedPropertyName}, {value});");
                 }
                 else if (attr.IsEvent)
                 {
