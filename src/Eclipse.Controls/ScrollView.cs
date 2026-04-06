@@ -213,6 +213,11 @@ public class ScrollView : InputElementBase
             {
                 childSize = gridLayout.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity), context);
             }
+            else if (child is ComponentBase componentBase)
+            {
+                // ComponentBase 类型：测量其子元素
+                childSize = MeasureComponentBaseChildren(componentBase, context);
+            }
             else
             {
                 childSize = new Size(100 * context.Scale, 100 * context.Scale);
@@ -223,7 +228,45 @@ public class ScrollView : InputElementBase
         }
         
         _contentSize = new Size(maxWidth + Padding * 2 * context.Scale, maxHeight + Padding * 2 * context.Scale);
-        return availableSize;
+        
+        // 返回内容大小而不是 availableSize
+        return _contentSize;
+    }
+    
+    /// <summary>
+    /// 测量 ComponentBase 子元素
+    /// </summary>
+    private Size MeasureComponentBaseChildren(ComponentBase component, IDrawingContext context)
+    {
+        double maxWidth = 0;
+        double maxHeight = 0;
+        foreach (var child in component.Children)
+        {
+            Size childSize;
+            if (child is InteractiveControl interactiveControl)
+            {
+                childSize = interactiveControl.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity), context);
+            }
+            else if (child is StackLayout stackLayout)
+            {
+                childSize = stackLayout.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity), context);
+            }
+            else if (child is Label label)
+            {
+                childSize = label.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity), context);
+            }
+            else if (child is GridLayout gridLayout)
+            {
+                childSize = gridLayout.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity), context);
+            }
+            else
+            {
+                childSize = new Size(100 * context.Scale, 100 * context.Scale);
+            }
+            maxWidth = Math.Max(maxWidth, childSize.Width);
+            maxHeight += childSize.Height;
+        }
+        return new Size(maxWidth, maxHeight);
     }
     
     /// <summary>

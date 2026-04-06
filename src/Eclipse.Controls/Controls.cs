@@ -245,6 +245,16 @@ public class StackLayout : InputElementBase
         {
             return textContent.Measure(Size.Empty, context);
         }
+        else if (child is ScrollView scrollView)
+        {
+            return scrollView.Measure(Size.Empty, context);
+        }
+        else if (child is ComponentBase componentBase)
+        {
+            // ComponentBase 类型：测量其子元素
+            var height = MeasureComponentBaseChildren(componentBase, context);
+            return new Size(100 * context.Scale, height);
+        }
         return new Size(40 * context.Scale, 40 * context.Scale);
     }
     
@@ -327,8 +337,32 @@ public class StackLayout : InputElementBase
             var size = textContent.Measure(Size.Empty, context);
             return size.Height;
         }
+        else if (component is ScrollView scrollView)
+        {
+            // ScrollView 测量其内容
+            var size = scrollView.Measure(Size.Empty, context);
+            return size.Height;
+        }
+        else if (component is ComponentBase componentBase)
+        {
+            // ComponentBase 类型：测量其子元素
+            return MeasureComponentBaseChildren(componentBase, context);
+        }
         // 默认高度
         return 40.0 * context.Scale;
+    }
+    
+    /// <summary>
+    /// 测量 ComponentBase 子元素的总高度
+    /// </summary>
+    private double MeasureComponentBaseChildren(ComponentBase component, IDrawingContext context)
+    {
+        double totalHeight = 0;
+        foreach (var child in component.Children)
+        {
+            totalHeight += MeasureChildHeight(child, context);
+        }
+        return totalHeight > 0 ? totalHeight : 40.0 * context.Scale;
     }
 }
 
