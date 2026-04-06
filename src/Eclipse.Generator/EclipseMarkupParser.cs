@@ -31,6 +31,10 @@ public class AttributeNode
     /// 附加属性的属性名（如 Row）
     /// </summary>
     public string? AttachedPropertyName { get; set; }
+    /// <summary>
+    /// 是否是双向绑定（@bind-Property="variable"）
+    /// </summary>
+    public bool IsTwoWayBinding { get; set; }
 }
 
 public class TextNode : MarkupNode
@@ -176,14 +180,25 @@ public class EclipseMarkupParser
             
             var attrValue = ReadAttributeValue();
             
+            // 检查是否是双向绑定（@bind-Property="variable"）
+            bool isTwoWayBinding = attrName.StartsWith("@bind-", StringComparison.OrdinalIgnoreCase) || 
+                                    attrName.StartsWith("bind-", StringComparison.OrdinalIgnoreCase);
+            string actualAttrName = attrName;
+            
+            if (isTwoWayBinding)
+            {
+                // 移除 "@bind-" 或 "bind-" 前缀
+                actualAttrName = attrName.StartsWith("@bind-") ? attrName.Substring(6) : attrName.Substring(5);
+            }
+            
             // 检查是否是附加属性（如 Grid.Row）
-            bool isAttached = attrName.IndexOf('.') >= 0;
+            bool isAttached = actualAttrName.IndexOf('.') >= 0;
             string? attachedTypeName = null;
             string? attachedPropertyName = null;
             
             if (isAttached)
             {
-                var parts = attrName.Split('.');
+                var parts = actualAttrName.Split('.');
                 if (parts.Length == 2)
                 {
                     attachedTypeName = parts[0];
@@ -193,13 +208,14 @@ public class EclipseMarkupParser
             
             control.Attributes.Add(new AttributeNode
             {
-                Name = attrName,
+                Name = actualAttrName,
                 Value = attrValue.text,
-                IsBinding = attrValue.isBinding,
-                IsEvent = attrName.StartsWith("On") || IsKnownEvent(attrName),
+                IsBinding = attrValue.isBinding || isTwoWayBinding,
+                IsEvent = actualAttrName.StartsWith("On") || IsKnownEvent(actualAttrName),
                 IsAttached = isAttached,
                 AttachedTypeName = attachedTypeName,
-                AttachedPropertyName = attachedPropertyName
+                AttachedPropertyName = attachedPropertyName,
+                IsTwoWayBinding = isTwoWayBinding
             });
         }
         
@@ -438,8 +454,14 @@ public class EclipseMarkupParser
     {
         var sb = new StringBuilder();
         
-        // 读取第一个标识符部分
-        while (!IsAtEnd() && (char.IsLetterOrDigit(Peek()) || Peek() == '_'))
+        // 支持 @bind- 前缀
+        if (Peek() == '@')
+        {
+            sb.Append(Read()); // 消耗 @
+        }
+        
+        // 读取第一个标识符部分（支持 - 用于 bind- 前缀）
+        while (!IsAtEnd() && (char.IsLetterOrDigit(Peek()) || Peek() == '_' || Peek() == '-'))
         {
             sb.Append(Read());
         }

@@ -297,6 +297,38 @@ namespace Eclipse.Generator
             return null;
         }
         
+        /// <summary>
+        /// 推断属性对应的变化事件名
+        /// </summary>
+        private string GetChangedEventName(string propertyName)
+        {
+            // 常见的属性→事件映射
+            return propertyName switch
+            {
+                "IsChecked" => "CheckedChanged",
+                "Value" => "ValueChanged",
+                "Text" => "TextChanged",
+                "SelectedItem" => "SelectedItemChanged",
+                "SelectedIndex" => "SelectedIndexChanged",
+                _ => $"{propertyName}Changed"
+            };
+        }
+        
+        /// <summary>
+        /// 推断事件参数类型（用于双向绑定）
+        /// </summary>
+        private string GetEventArgsType(string propertyName)
+        {
+            return propertyName switch
+            {
+                "IsChecked" => "ValueChangedEventArgs<bool>",
+                "Value" => "ValueChangedEventArgs<double>",
+                "Text" => "ValueChangedEventArgs<string>",
+                "SelectedIndex" => "ValueChangedEventArgs<int>",
+                _ => "ValueChangedEventArgs<object>"
+            };
+        }
+        
         private bool IsNumericType(ITypeSymbol type)
         {
             return type.SpecialType switch
@@ -656,7 +688,19 @@ namespace Eclipse.Generator
             
             foreach (var attr in control.Attributes)
             {
-                if (attr.IsAttached)
+                if (attr.IsTwoWayBinding)
+                {
+                    // 双向绑定：设置属性值 + 事件处理器更新变量
+                    // 1. 设置属性
+                    WriteLine($"{varName}.{attr.Name} = {attr.Value};");
+                    
+                    // 2. 生成事件处理器
+                    var eventName = GetChangedEventName(attr.Name);
+                    var eventArgsType = GetEventArgsType(attr.Name);
+                    var variableName = attr.Value;
+                    WriteLine($"{varName}.{eventName} += (s, e) => {variableName} = e.NewValue;");
+                }
+                else if (attr.IsAttached)
                 {
                     // 附加属性：element.Set(Grid.Row, value)
                     // 需要根据附加属性名称推断类型
