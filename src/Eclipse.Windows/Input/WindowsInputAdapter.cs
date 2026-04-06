@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 using Eclipse.Input;
+using Eclipse.Windows;
 
 namespace Eclipse.Windows.Input;
 
@@ -11,12 +12,25 @@ internal sealed class WindowsInputAdapter
 {
     private readonly IntPtr _hwnd;
     private readonly InputManager _inputManager;
+    private readonly ImeContext _imeContext;
     
     public WindowsInputAdapter(IntPtr hwnd, InputManager inputManager)
     {
         _hwnd = hwnd;
         _inputManager = inputManager;
+        _imeContext = new ImeContext(hwnd);
+        
+        // 订阅 IME 事件
+        _imeContext.CompositionStarted += OnImeCompositionStarted;
+        _imeContext.CompositionChanged += OnImeCompositionChanged;
+        _imeContext.CompositionEnded += OnImeCompositionEnded;
+        _imeContext.ResultReceived += OnImeResultReceived;
     }
+    
+    /// <summary>
+    /// 获取 IME 上下文
+    /// </summary>
+    public ImeContext ImeContext => _imeContext;
     
     /// <summary>
     /// 处理 Windows 消息
@@ -68,7 +82,86 @@ internal sealed class WindowsInputAdapter
             case NativeMethods.WM_CHAR:
                 OnChar(wParam, lParam);
                 break;
+                
+            // IME 消息
+            case NativeMethods.WM_IME_STARTCOMPOSITION:
+                OnImeStartComposition();
+                break;
+                
+            case NativeMethods.WM_IME_COMPOSITION:
+                OnImeComposition(wParam, lParam);
+                break;
+                
+            case NativeMethods.WM_IME_ENDCOMPOSITION:
+                OnImeEndComposition();
+                break;
+                
+            case NativeMethods.WM_IME_CHAR:
+                OnImeChar(wParam, lParam);
+                break;
+                
+            case NativeMethods.WM_IME_NOTIFY:
+                OnImeNotify(wParam, lParam);
+                break;
         }
+    }
+    
+    // === IME 处理 ===
+    
+    private void OnImeStartComposition()
+    {
+        _imeContext.OnStartComposition();
+    }
+    
+    private void OnImeComposition(IntPtr wParam, IntPtr lParam)
+    {
+        _imeContext.OnComposition(wParam, lParam);
+    }
+    
+    private void OnImeEndComposition()
+    {
+        _imeContext.OnEndComposition();
+    }
+    
+    private void OnImeChar(IntPtr wParam, IntPtr lParam)
+    {
+        _imeContext.OnImeChar(wParam, lParam);
+    }
+    
+    private void OnImeNotify(IntPtr wParam, IntPtr lParam)
+    {
+        _imeContext.OnImeNotify(wParam, lParam);
+    }
+    
+    private void OnImeCompositionStarted(object? sender, EventArgs e)
+    {
+        _inputManager.ProcessCompositionStarted();
+    }
+    
+    private void OnImeCompositionChanged(object? sender, ImeContext.CompositionChangedEventArgs e)
+    {
+        _inputManager.ProcessCompositionChanged(e.CompositionText, e.CursorPosition);
+    }
+    
+    private void OnImeCompositionEnded(object? sender, EventArgs e)
+    {
+        _inputManager.ProcessCompositionEnded();
+    }
+    
+    private void OnImeResultReceived(object? sender, ImeContext.ResultEventArgs e)
+    {
+        _inputManager.ProcessTextInput(e.Result);
+    }
+    
+    /// <summary>
+    /// 更新组合窗口位置（用于 TextInput 控件）
+    /// </summary>
+    public void UpdateCompositionWindowPosition(double x, double y, float scale)
+    {
+        var scaledX = (int)(x * scale);
+        var scaledY = (int)(y * scale);
+        _imeContext.SetCompositionWindow(scaledX, scaledY);
+        _imeContext.SetCandidateWindow(scaledX, scaledY + 20);
     }
     
     private void OnPointerPressed(uint msg, IntPtr wParam, IntPtr lParam)
@@ -295,6 +388,14 @@ internal static class NativeMethods
     public const uint WM_CHAR = 0x0102;
     public const uint WM_SYSKEYDOWN = 0x0104;
     public const uint WM_SYSKEYUP = 0x0105;
+    
+    // IME 消息
+    public const uint WM_IME_STARTCOMPOSITION = 0x010D;
+    public const uint WM_IME_ENDCOMPOSITION = 0x010E;
+    public const uint WM_IME_COMPOSITION = 0x010F;
+    public const uint WM_IME_CHAR = 0x0286;
+    public const uint WM_IME_NOTIFY = 0x0282;
+    public const uint WM_IME_SETCONTEXT = 0x0281;
     
     public const int MK_CONTROL = 0x0008;
     public const int MK_SHIFT = 0x0004;

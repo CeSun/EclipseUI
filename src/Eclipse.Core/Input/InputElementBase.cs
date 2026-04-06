@@ -83,6 +83,23 @@ public abstract class InputElementBase : Core.ComponentBase, IInputElement
             nameof(TextInput),
             RoutingStrategy.Bubble);
     
+    // === IME 组合事件 ===
+    
+    public static readonly RoutedEvent<CompositionEventArgs> CompositionStartedEvent =
+        RoutedEvent<CompositionEventArgs>.Register<InputElementBase>(
+            nameof(CompositionStarted),
+            RoutingStrategy.Bubble);
+    
+    public static readonly RoutedEvent<CompositionEventArgs> CompositionChangedEvent =
+        RoutedEvent<CompositionEventArgs>.Register<InputElementBase>(
+            nameof(CompositionChanged),
+            RoutingStrategy.Bubble);
+    
+    public static readonly RoutedEvent<CompositionEventArgs> CompositionEndedEvent =
+        RoutedEvent<CompositionEventArgs>.Register<InputElementBase>(
+            nameof(CompositionEnded),
+            RoutingStrategy.Bubble);
+    
     // === CLR 事件包装 ===
     
     public event EventHandler<PointerPressedEventArgs> PointerPressed
@@ -169,6 +186,26 @@ public abstract class InputElementBase : Core.ComponentBase, IInputElement
     {
         add => AddHandler(TextInputEvent, value);
         remove => RemoveHandler(TextInputEvent, value);
+    }
+    
+    // === IME 组合事件 CLR 包装 ===
+    
+    public event EventHandler<CompositionEventArgs> CompositionStarted
+    {
+        add => AddHandler(CompositionStartedEvent, value);
+        remove => RemoveHandler(CompositionStartedEvent, value);
+    }
+    
+    public event EventHandler<CompositionEventArgs> CompositionChanged
+    {
+        add => AddHandler(CompositionChangedEvent, value);
+        remove => RemoveHandler(CompositionChangedEvent, value);
+    }
+    
+    public event EventHandler<CompositionEventArgs> CompositionEnded
+    {
+        add => AddHandler(CompositionEndedEvent, value);
+        remove => RemoveHandler(CompositionEndedEvent, value);
     }
     
     // === 属性 ===

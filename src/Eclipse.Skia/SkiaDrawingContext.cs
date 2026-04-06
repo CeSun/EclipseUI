@@ -100,6 +100,19 @@ public class SkiaDrawingContext : IDrawingContext
         _canvas.DrawRoundRect(rect, (float)cornerRadius, (float)cornerRadius, paint);
     }
     
+    public void DrawLine(double x1, double y1, double x2, double y2, string color, double strokeWidth)
+    {
+        using var paint = new SKPaint
+        {
+            IsAntialias = true,
+            Color = SKColor.TryParse(color, out var c) ? c : SKColors.Black,
+            Style = SKPaintStyle.Stroke,
+            StrokeWidth = (float)strokeWidth
+        };
+        
+        _canvas.DrawLine((float)x1, (float)y1, (float)x2, (float)y2, paint);
+    }
+    
     public void DrawText(string text, double x, double y, double fontSize, string? fontFamily = null, string? fontWeight = null, string? color = null)
     {
         if (string.IsNullOrEmpty(text))

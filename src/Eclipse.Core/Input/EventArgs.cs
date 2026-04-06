@@ -152,3 +152,27 @@ public class PointerCaptureLostEventArgs : RoutedEventArgs
         Pointer = pointer;
     }
 }
+
+/// <summary>
+/// IME 组合事件参数
+/// </summary>
+public class CompositionEventArgs : RoutedEventArgs
+{
+    /// <summary>
+    /// 组合文本（正在输入的拼音/笔画）
+    /// </summary>
+    public string CompositionText { get; } = string.Empty;
+    
+    /// <summary>
+    /// 组合文本中的光标位置
+    /// </summary>
+    public int CursorPosition { get; } = 0;
+    
+    public CompositionEventArgs() { }
+    
+    public CompositionEventArgs(string compositionText, int cursorPosition = 0)
+    {
+        CompositionText = compositionText;
+        CursorPosition = cursorPosition;
+    }
+}

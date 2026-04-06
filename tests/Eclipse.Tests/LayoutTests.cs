@@ -29,6 +29,7 @@ public class LayoutTests
         
         public void DrawRectangle(Rect bounds, string? fillColor, string? strokeColor = null, double strokeWidth = 0, double cornerRadius = 0) { }
         public void DrawRoundRect(Rect bounds, string fillColor, double cornerRadius) { }
+        public void DrawLine(double x1, double y1, double x2, double y2, string color, double strokeWidth) { }
         public void DrawText(string text, double x, double y, double fontSize, string? fontFamily = null, string? fontWeight = null, string? color = null) { }
         public void DrawImage(string imageKey, Rect bounds, Stretch stretch) { }
         public string? LoadImage(string source) => null;

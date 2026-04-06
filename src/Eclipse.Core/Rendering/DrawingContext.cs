@@ -39,6 +39,11 @@ public interface IDrawingContext
     void DrawRoundRect(Rect bounds, string fillColor, double cornerRadius);
     
     /// <summary>
+    /// 绘制线条
+    /// </summary>
+    void DrawLine(double x1, double y1, double x2, double y2, string color, double strokeWidth);
+    
+    /// <summary>
     /// 绘制文本
     /// </summary>
     void DrawText(string text, double x, double y, double fontSize, string? fontFamily = null, string? fontWeight = null, string? color = null);

@@ -48,6 +48,30 @@ public sealed class InputManager
     public event EventHandler<KeyEventArgs>? KeyUp;
     public event EventHandler<TextInputEventArgs>? TextInput;
     
+    // IME 组合事件
+    public event EventHandler<CompositionEventArgs>? CompositionStarted;
+    public event EventHandler<CompositionEventArgs>? CompositionChanged;
+    public event EventHandler<CompositionEventArgs>? CompositionEnded;
+    
+    // IME 位置更新委托
+    private Action<double, double>? _compositionPositionHandler;
+    
+    /// <summary>
+    /// 注册组合位置更新处理器
+    /// </summary>
+    public void RegisterCompositionPositionHandler(Action<double, double> handler)
+    {
+        _compositionPositionHandler = handler;
+    }
+    
+    /// <summary>
+    /// 更新组合窗口位置
+    /// </summary>
+    public void UpdateCompositionPosition(double x, double y)
+    {
+        _compositionPositionHandler?.Invoke(x, y);
+    }
+    
     /// <summary>
     /// 处理指针按下
     /// </summary>
@@ -215,6 +239,45 @@ public sealed class InputManager
         if (focusedElement != null)
         {
             RaiseTextInput(focusedElement, text);
+        }
+    }
+    
+    /// <summary>
+    /// 处理 IME 组合开始
+    /// </summary>
+    public void ProcessCompositionStarted()
+    {
+        var focusedElement = FocusManager.FocusedElement ?? RootElement;
+        
+        if (focusedElement != null)
+        {
+            RaiseCompositionStarted(focusedElement);
+        }
+    }
+    
+    /// <summary>
+    /// 处理 IME 组合文本变化
+    /// </summary>
+    public void ProcessCompositionChanged(string compositionText, int cursorPosition)
+    {
+        var focusedElement = FocusManager.FocusedElement ?? RootElement;
+        
+        if (focusedElement != null)
+        {
+            RaiseCompositionChanged(focusedElement, compositionText, cursorPosition);
+        }
+    }
+    
+    /// <summary>
+    /// 处理 IME 组合结束
+    /// </summary>
+    public void ProcessCompositionEnded()
+    {
+        var focusedElement = FocusManager.FocusedElement ?? RootElement;
+        
+        if (focusedElement != null)
+        {
+            RaiseCompositionEnded(focusedElement);
         }
     }
     
@@ -437,6 +500,35 @@ public sealed class InputManager
         target.RaiseEvent(args);
         
         TextInput?.Invoke(this, args);
+    }
+    
+    // === IME 组合事件触发 ===
+    
+    private void RaiseCompositionStarted(IInputElement target)
+    {
+        var args = new CompositionEventArgs();
+        args.RoutedEvent = InputElementBase.CompositionStartedEvent;
+        target.RaiseEvent(args);
+        
+        CompositionStarted?.Invoke(this, args);
+    }
+    
+    private void RaiseCompositionChanged(IInputElement target, string compositionText, int cursorPosition)
+    {
+        var args = new CompositionEventArgs(compositionText, cursorPosition);
+        args.RoutedEvent = InputElementBase.CompositionChangedEvent;
+        target.RaiseEvent(args);
+        
+        CompositionChanged?.Invoke(this, args);
+    }
+    
+    private void RaiseCompositionEnded(IInputElement target)
+    {
+        var args = new CompositionEventArgs();
+        args.RoutedEvent = InputElementBase.CompositionEndedEvent;
+        target.RaiseEvent(args);
+        
+        CompositionEnded?.Invoke(this, args);
     }
     
     // === 辅助方法 ===

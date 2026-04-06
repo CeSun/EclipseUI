@@ -7,7 +7,7 @@ using System.Collections.Generic;
 namespace Eclipse.Controls;
 
 /// <summary>
-/// 滚动视图 - 可滚动容器
+/// 滚动视图 - 可滚动容器，支持水平和垂直滚动
 /// </summary>
 public class ScrollView : InputElementBase
 {
@@ -17,6 +17,22 @@ public class ScrollView : InputElementBase
     private double _scrollY = 0;
     private double _maxScrollX = 0;
     private double _maxScrollY = 0;
+    
+    // 滚动条状态
+    private bool _verticalScrollBarHovered = false;
+    private bool _horizontalScrollBarHovered = false;
+    private bool _verticalThumbDragging = false;
+    private bool _horizontalThumbDragging = false;
+    private double _dragStartOffset = 0;
+    private double _dragStartThumbPosition = 0;
+    
+    // 滚动条样式
+    private double _scrollBarOpacity = 0.0; // 用于淡入淡出动画
+    private DateTime _lastScrollTime = DateTime.MinValue;
+    private const double ScrollBarFadeDelayMs = 1500; // 滚动后多久开始淡出
+    private const double ScrollBarFadeDurationMs = 300; // 淡出动画时长
+    
+    #region 属性
     
     /// <summary>
     /// 是否显示水平滚动条
@@ -31,22 +47,86 @@ public class ScrollView : InputElementBase
     /// <summary>
     /// 水平滚动偏移
     /// </summary>
-    public double ScrollX => _scrollX;
+    public double ScrollX
+    {
+        get => _scrollX;
+        set
+        {
+            var newValue = Math.Clamp(value, 0, _maxScrollX);
+            if (Math.Abs(_scrollX - newValue) > 0.001)
+            {
+                _scrollX = newValue;
+                OnScrollChanged();
+            }
+        }
+    }
     
     /// <summary>
     /// 垂直滚动偏移
     /// </summary>
-    public double ScrollY => _scrollY;
+    public double ScrollY
+    {
+        get => _scrollY;
+        set
+        {
+            var newValue = Math.Clamp(value, 0, _maxScrollY);
+            if (Math.Abs(_scrollY - newValue) > 0.001)
+            {
+                _scrollY = newValue;
+                OnScrollChanged();
+            }
+        }
+    }
     
     /// <summary>
-    /// 滚动条宽度
+    /// 最大水平滚动偏移
+    /// </summary>
+    public double MaxScrollX => _maxScrollX;
+    
+    /// <summary>
+    /// 最大垂直滚动偏移
+    /// </summary>
+    public double MaxScrollY => _maxScrollY;
+    
+    /// <summary>
+    /// 内容尺寸
+    /// </summary>
+    public Size ContentSize => _contentSize;
+    
+    /// <summary>
+    /// 视口宽度
+    /// </summary>
+    public double ViewportWidth => _bounds.Width;
+    
+    /// <summary>
+    /// 视口高度
+    /// </summary>
+    public double ViewportHeight => _bounds.Height;
+    
+    /// <summary>
+    /// 滚动条宽度（像素）
     /// </summary>
     public double ScrollBarWidth { get; set; } = 10;
     
     /// <summary>
     /// 滚动条颜色
     /// </summary>
-    public string? ScrollBarColor { get; set; } = "#CCCCCC";
+    public string? ScrollBarColor { get; set; } = "#808080";
+    
+    /// <summary>
+    /// 滚动条悬停颜色
+    /// </summary>
+    public string? ScrollBarHoverColor { get; set; } = "#606060";
+    
+    /// <summary>
+    /// 滚动条背景颜色
+    /// </summary>
+    public string? ScrollBarTrackColor { get; set; } = "#F0F0F0";
+    
+    /// <summary>
+    /// 滚动条圆角半径
+    /// </summary>
+    public double ScrollBarCornerRadius { get; set; } = 5;
     
     /// <summary>
     /// 背景颜色
@@ -58,6 +138,30 @@ public class ScrollView : InputElementBase
     /// </summary>
     public double Padding { get; set; } = 0;
     
+    /// <summary>
+    /// 鼠标滚轮滚动步长（像素）
+    /// </summary>
+    public double ScrollStep { get; set; } = 50;
+    
+    /// <summary>
+    /// 是否启用惯性滚动
+    /// </summary>
+    public bool EnableInertia { get; set; } = false;
+    
+    /// <summary>
+    /// 是否显示滚动条（自动隐藏）
+    /// </summary>
+    public bool AutoHideScrollBar { get; set; } = true;
+    
+    /// <summary>
+    /// 滚动位置改变事件
+    /// </summary>
+    public event EventHandler<ScrollChangedEventArgs>? ScrollChanged;
+    
+    #endregion
+    
+    #region 输入元素接口实现
+    
     public override bool IsVisible => true;
     public override Rect Bounds => _bounds;
     
@@ -65,11 +169,21 @@ public class ScrollView : InputElementBase
     
     protected override IEnumerable<IInputElement> GetInputChildren()
     {
-        // 滚动视图的子元素通常不直接接收输入
-        return Array.Empty<IInputElement>();
+        // 滚动视图的子元素可能也需要接收输入
+        foreach (var child in Children)
+        {
+            if (child is IInputElement inputElement)
+            {
+                yield return inputElement;
+            }
+        }
     }
     
     public override void Build(IBuildContext context) { }
+    
+    #endregion
+    
+    #region 测量和布局
     
     /// <summary>
     /// 测量内容所需尺寸
@@ -94,6 +208,10 @@ public class ScrollView : InputElementBase
             else if (child is Label label)
             {
                 childSize = label.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity), context);
+            }
+            else if (child is GridLayout gridLayout)
+            {
+                childSize = gridLayout.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity), context);
             }
             else
             {
@@ -122,7 +240,33 @@ public class ScrollView : InputElementBase
         // 限制滚动范围
         _scrollX = Math.Clamp(_scrollX, 0, _maxScrollX);
         _scrollY = Math.Clamp(_scrollY, 0, _maxScrollY);
+        
+        // 安排子元素
+        foreach (var child in Children)
+        {
+            ArrangeChild(child, finalBounds, context);
+        }
     }
+    
+    private void ArrangeChild(IComponent child, Rect bounds, IDrawingContext context)
+    {
+        if (child is InteractiveControl interactiveControl)
+        {
+            interactiveControl.Arrange(bounds, context);
+        }
+        else if (child is StackLayout stackLayout)
+        {
+            stackLayout.Arrange(bounds, context);
+        }
+        else if (child is GridLayout gridLayout)
+        {
+            gridLayout.Arrange(bounds, context);
+        }
+    }
+    
+    #endregion
+    
+    #region 渲染
     
     public override void Render(IDrawingContext context, Rect bounds)
     {
@@ -130,6 +274,7 @@ public class ScrollView : InputElementBase
         
         var scaledPadding = Padding * context.Scale;
         var scaledScrollBarWidth = ScrollBarWidth * context.Scale;
+        var scaledCornerRadius = ScrollBarCornerRadius * context.Scale;
         
         // 绘制背景
         if (!string.IsNullOrEmpty(BackgroundColor))
@@ -150,20 +295,68 @@ public class ScrollView : InputElementBase
             child.Render(context, contentBounds);
         }
         
+        // 更新滚动条可见性状态
+        UpdateScrollBarVisibility();
+        
+        // 计算滚动条透明度
+        var opacity = CalculateScrollBarOpacity();
+        
         // 绘制滚动条
         if (VerticalScrollBarVisible && _maxScrollY > 0)
         {
-            DrawVerticalScrollBar(context, bounds, scaledScrollBarWidth);
+            DrawVerticalScrollBar(context, bounds, scaledScrollBarWidth, scaledCornerRadius, opacity);
         }
         
         if (HorizontalScrollBarVisible && _maxScrollX > 0)
         {
-            DrawHorizontalScrollBar(context, bounds, scaledScrollBarWidth);
+            DrawHorizontalScrollBar(context, bounds, scaledScrollBarWidth, scaledCornerRadius, opacity);
         }
     }
     
-    private void DrawVerticalScrollBar(IDrawingContext context, Rect bounds, double scrollBarWidth)
+    private void UpdateScrollBarVisibility()
     {
+        if (!AutoHideScrollBar)
+        {
+            _scrollBarOpacity = 1.0;
+            return;
+        }
+        
+        var now = DateTime.Now;
+        var elapsed = (now - _lastScrollTime).TotalMilliseconds;
+        
+        if (elapsed < ScrollBarFadeDelayMs)
+        {
+            // 滚动后保持显示
+            _scrollBarOpacity = 1.0;
+        }
+        else if (elapsed < ScrollBarFadeDelayMs + ScrollBarFadeDurationMs)
+        {
+            // 淡出中
+            var fadeProgress = (elapsed - ScrollBarFadeDelayMs) / ScrollBarFadeDurationMs;
+            _scrollBarOpacity = Math.Max(0, 1.0 - fadeProgress);
+        }
+        else
+        {
+            _scrollBarOpacity = 0;
+        }
+        
+        // 悬停时保持显示
+        if (_verticalScrollBarHovered || _horizontalScrollBarHovered || 
+            _verticalThumbDragging || _horizontalThumbDragging)
+        {
+            _scrollBarOpacity = 1.0;
+        }
+    }
+    
+    private double CalculateScrollBarOpacity()
+    {
+        return _scrollBarOpacity;
+    }
+    
+    private void DrawVerticalScrollBar(IDrawingContext context, Rect bounds, double scrollBarWidth, double cornerRadius, double opacity)
+    {
+        if (opacity <= 0) return;
+        
         // 滚动条区域
         var scrollBarBounds = new Rect(
             bounds.X + bounds.Width - scrollBarWidth,
@@ -171,25 +364,39 @@ public class ScrollView : InputElementBase
             scrollBarWidth,
             bounds.Height);
         
-        // 滚动滑块高度
-        var thumbHeight = bounds.Height * (bounds.Height / _contentSize.Height);
+        // 计算滑块高度和位置
+        var thumbHeight = Math.Max(20 * context.Scale, bounds.Height * (bounds.Height / _contentSize.Height));
         var thumbY = bounds.Y + (bounds.Height - thumbHeight) * (_scrollY / _maxScrollY);
         
+        // 存储滑块区域用于命中测试
+        _verticalThumbBounds = new Rect(scrollBarBounds.X, thumbY, scrollBarWidth, thumbHeight);
+        
         // 绘制滚动条背景
-        context.DrawRectangle(scrollBarBounds, "#EEEEEE");
+        var trackColor = ApplyOpacity(ScrollBarTrackColor ?? "#F0F0F0", opacity * 0.5);
+        context.DrawRectangle(scrollBarBounds, trackColor, null, 0, cornerRadius);
         
         // 绘制滚动滑块
+        var thumbColor = _verticalThumbDragging 
+            ? (ScrollBarHoverColor ?? "#606060") 
+            : (_verticalScrollBarHovered 
+                ? (ScrollBarHoverColor ?? "#606060") 
+                : (ScrollBarColor ?? "#808080"));
+        
+        thumbColor = ApplyOpacity(thumbColor, opacity);
+        
         var thumbBounds = new Rect(
             scrollBarBounds.X,
             thumbY,
             scrollBarWidth,
             thumbHeight);
         
-        context.DrawRectangle(thumbBounds, ScrollBarColor ?? "#CCCCCC", null, 0, scrollBarWidth / 2);
+        context.DrawRectangle(thumbBounds, thumbColor, null, 0, cornerRadius);
     }
     
-    private void DrawHorizontalScrollBar(IDrawingContext context, Rect bounds, double scrollBarWidth)
+    private void DrawHorizontalScrollBar(IDrawingContext context, Rect bounds, double scrollBarWidth, double cornerRadius, double opacity)
     {
+        if (opacity <= 0) return;
+        
         // 滚动条区域
         var scrollBarBounds = new Rect(
             bounds.X,
@@ -197,31 +404,83 @@ public class ScrollView : InputElementBase
             bounds.Width,
             scrollBarWidth);
         
-        // 滚动滑块宽度
-        var thumbWidth = bounds.Width * (bounds.Width / _contentSize.Width);
+        // 计算滑块宽度和位置
+        var thumbWidth = Math.Max(20 * context.Scale, bounds.Width * (bounds.Width / _contentSize.Width));
         var thumbX = bounds.X + (bounds.Width - thumbWidth) * (_scrollX / _maxScrollX);
         
+        // 存储滑块区域用于命中测试
+        _horizontalThumbBounds = new Rect(thumbX, scrollBarBounds.Y, thumbWidth, scrollBarWidth);
+        
         // 绘制滚动条背景
-        context.DrawRectangle(scrollBarBounds, "#EEEEEE");
+        var trackColor = ApplyOpacity(ScrollBarTrackColor ?? "#F0F0F0", opacity * 0.5);
+        context.DrawRectangle(scrollBarBounds, trackColor, null, 0, cornerRadius);
         
         // 绘制滚动滑块
+        var thumbColor = _horizontalThumbDragging 
+            ? (ScrollBarHoverColor ?? "#606060") 
+            : (_horizontalScrollBarHovered 
+                ? (ScrollBarHoverColor ?? "#606060") 
+                : (ScrollBarColor ?? "#808080"));
+        
+        thumbColor = ApplyOpacity(thumbColor, opacity);
+        
         var thumbBounds = new Rect(
             thumbX,
             scrollBarBounds.Y,
             thumbWidth,
             scrollBarWidth);
         
-        context.DrawRectangle(thumbBounds, ScrollBarColor ?? "#CCCCCC", null, 0, scrollBarWidth / 2);
+        context.DrawRectangle(thumbBounds, thumbColor, null, 0, cornerRadius);
     }
+    
+    private string ApplyOpacity(string color, double opacity)
+    {
+        // 解析颜色并应用透明度
+        if (color.StartsWith("#") && color.Length == 7)
+        {
+            try
+            {
+                int r = Convert.ToInt32(color.Substring(1, 2), 16);
+                int g = Convert.ToInt32(color.Substring(3, 2), 16);
+                int b = Convert.ToInt32(color.Substring(5, 2), 16);
+                int a = (int)(255 * opacity);
+                return $"#{a:X2}{r:X2}{g:X2}{b:X2}";
+            }
+            catch
+            {
+                return color;
+            }
+        }
+        return color;
+    }
+    
+    #endregion
+    
+    #region 滚动控制
     
     /// <summary>
     /// 滚动到指定位置
     /// </summary>
     public void ScrollTo(double x, double y)
     {
+        var oldScrollX = _scrollX;
+        var oldScrollY = _scrollY;
+        
         _scrollX = Math.Clamp(x, 0, _maxScrollX);
         _scrollY = Math.Clamp(y, 0, _maxScrollY);
-        StateHasChanged();
+        
+        if (Math.Abs(oldScrollX - _scrollX) > 0.001 || Math.Abs(oldScrollY - _scrollY) > 0.001)
+        {
+            OnScrollChanged();
+        }
+    }
+    
+    /// <summary>
+    /// 滚动指定的增量
+    /// </summary>
+    public void ScrollBy(double deltaX, double deltaY)
+    {
+        ScrollTo(_scrollX + deltaX, _scrollY + deltaY);
     }
     
     /// <summary>
@@ -241,8 +500,67 @@ public class ScrollView : InputElementBase
     }
     
     /// <summary>
-    /// 处理滚轮事件
+    /// 滚动到左侧
     /// </summary>
+    public void ScrollToLeft()
+    {
+        ScrollTo(0, _scrollY);
+    }
+    
+    /// <summary>
+    /// 滚动到右侧
+    /// </summary>
+    public void ScrollToRight()
+    {
+        ScrollTo(_maxScrollX, _scrollY);
+    }
+    
+    /// <summary>
+    /// 滚动使指定元素可见
+    /// </summary>
+    public void ScrollIntoView(Rect elementBounds)
+    {
+        // 垂直滚动
+        if (elementBounds.Y < _scrollY)
+        {
+            _scrollY = elementBounds.Y;
+        }
+        else if (elementBounds.Bottom > _scrollY + _bounds.Height)
+        {
+            _scrollY = elementBounds.Bottom - _bounds.Height;
+        }
+        
+        // 水平滚动
+        if (elementBounds.X < _scrollX)
+        {
+            _scrollX = elementBounds.X;
+        }
+        else if (elementBounds.Right > _scrollX + _bounds.Width)
+        {
+            _scrollX = elementBounds.Right - _bounds.Width;
+        }
+        
+        _scrollX = Math.Clamp(_scrollX, 0, _maxScrollX);
+        _scrollY = Math.Clamp(_scrollY, 0, _maxScrollY);
+        OnScrollChanged();
+    }
+    
+    private void OnScrollChanged()
+    {
+        _lastScrollTime = DateTime.Now;
+        _scrollBarOpacity = 1.0;
+        ScrollChanged?.Invoke(this, new ScrollChangedEventArgs(_scrollX, _scrollY, _maxScrollX, _maxScrollY));
+        StateHasChanged();
+    }
+    
+    #endregion
+    
+    #region 输入处理
+    
+    // 用于命中测试的滑块区域缓存
+    private Rect _verticalThumbBounds;
+    private Rect _horizontalThumbBounds;
+    
     public override bool HitTest(Point point)
     {
         if (!IsVisible || !IsHitTestVisible)
@@ -252,19 +570,292 @@ public class ScrollView : InputElementBase
     }
     
     /// <summary>
-    /// 处理指针滚轮
+    /// 初始化输入事件处理
     /// </summary>
+    public ScrollView()
+    {
+        // 订阅指针事件
+        PointerWheelChanged += OnPointerWheelChanged;
+        PointerPressed += OnPointerPressedHandler;
+        PointerMoved += OnPointerMovedHandler;
+        PointerReleased += OnPointerReleasedHandler;
+        PointerEntered += OnPointerEnteredHandler;
+        PointerExited += OnPointerExitedHandler;
+    }
+    
+    private void OnPointerWheelChanged(object? sender, PointerWheelEventArgs e)
+    {
+        if (!IsInputEnabled) return;
+        
+        // 计算滚动增量
+        var deltaY = -e.Delta.Y * ScrollStep;
+        var deltaX = -e.Delta.X * ScrollStep;
+        
+        // 优先处理垂直滚动
+        if (_maxScrollY > 0 && Math.Abs(deltaY) > 0.001)
+        {
+            ScrollBy(0, deltaY);
+            e.Handled = true;
+        }
+        
+        // 水平滚动（如果有水平滚动条或按住 Shift）
+        if (_maxScrollX > 0 && Math.Abs(deltaX) > 0.001)
+        {
+            ScrollBy(deltaX, 0);
+            e.Handled = true;
+        }
+    }
+    
+    private void OnPointerPressedHandler(object? sender, PointerPressedEventArgs e)
+    {
+        if (!IsInputEnabled) return;
+        
+        var point = e.Position;
+        var scaledScrollBarWidth = ScrollBarWidth;
+        
+        // 检查是否点击垂直滚动条
+        if (VerticalScrollBarVisible && _maxScrollY > 0)
+        {
+            var vScrollBarBounds = new Rect(
+                _bounds.X + _bounds.Width - scaledScrollBarWidth,
+                _bounds.Y,
+                scaledScrollBarWidth,
+                _bounds.Height);
+            
+            if (vScrollBarBounds.Contains(point))
+            {
+                // 检查是否点击滑块
+                if (_verticalThumbBounds.Contains(point))
+                {
+                    // 开始拖动滑块
+                    _verticalThumbDragging = true;
+                    _dragStartOffset = point.Y;
+                    _dragStartThumbPosition = _scrollY;
+                    e.Capture(this);
+                }
+                else
+                {
+                    // 点击轨道，跳转到对应位置
+                    var thumbHeight = Math.Max(20, _bounds.Height * (_bounds.Height / _contentSize.Height));
+                    var clickY = point.Y - _bounds.Y;
+                    var newScrollY = (clickY / _bounds.Height) * _maxScrollY;
+                    
+                    // 使滑块中心移动到点击位置
+                    var thumbCenterOffset = thumbHeight / 2 / _bounds.Height * _maxScrollY;
+                    ScrollTo(_scrollX, newScrollY - thumbCenterOffset);
+                }
+                
+                e.Handled = true;
+                return;
+            }
+        }
+        
+        // 检查是否点击水平滚动条
+        if (HorizontalScrollBarVisible && _maxScrollX > 0)
+        {
+            var hScrollBarBounds = new Rect(
+                _bounds.X,
+                _bounds.Y + _bounds.Height - scaledScrollBarWidth,
+                _bounds.Width,
+                scaledScrollBarWidth);
+            
+            if (hScrollBarBounds.Contains(point))
+            {
+                // 检查是否点击滑块
+                if (_horizontalThumbBounds.Contains(point))
+                {
+                    // 开始拖动滑块
+                    _horizontalThumbDragging = true;
+                    _dragStartOffset = point.X;
+                    _dragStartThumbPosition = _scrollX;
+                    e.Capture(this);
+                }
+                else
+                {
+                    // 点击轨道，跳转到对应位置
+                    var thumbWidth = Math.Max(20, _bounds.Width * (_bounds.Width / _contentSize.Width));
+                    var clickX = point.X - _bounds.X;
+                    var newScrollX = (clickX / _bounds.Width) * _maxScrollX;
+                    
+                    // 使滑块中心移动到点击位置
+                    var thumbCenterOffset = thumbWidth / 2 / _bounds.Width * _maxScrollX;
+                    ScrollTo(newScrollX - thumbCenterOffset, _scrollY);
+                }
+                
+                e.Handled = true;
+                return;
+            }
+        }
+    }
+    
+    private void OnPointerMovedHandler(object? sender, PointerEventArgs e)
+    {
+        if (!IsInputEnabled) return;
+        
+        var point = e.Position;
+        var scaledScrollBarWidth = ScrollBarWidth;
+        
+        // 处理拖动
+        if (_verticalThumbDragging)
+        {
+            // 计算拖动距离对应的滚动距离
+            var deltaY = point.Y - _dragStartOffset;
+            var scrollRatio = _maxScrollY / (_bounds.Height - GetVerticalThumbHeight());
+            ScrollTo(_scrollX, _dragStartThumbPosition + deltaY * scrollRatio);
+            e.Handled = true;
+            return;
+        }
+        
+        if (_horizontalThumbDragging)
+        {
+            var deltaX = point.X - _dragStartOffset;
+            var scrollRatio = _maxScrollX / (_bounds.Width - GetHorizontalThumbWidth());
+            ScrollTo(_dragStartThumbPosition + deltaX * scrollRatio, _scrollY);
+            e.Handled = true;
+            return;
+        }
+        
+        // 更新悬停状态
+        bool vHovered = false;
+        bool hHovered = false;
+        
+        if (VerticalScrollBarVisible && _maxScrollY > 0)
+        {
+            var vScrollBarBounds = new Rect(
+                _bounds.X + _bounds.Width - scaledScrollBarWidth,
+                _bounds.Y,
+                scaledScrollBarWidth,
+                _bounds.Height);
+            
+            vHovered = vScrollBarBounds.Contains(point);
+        }
+        
+        if (HorizontalScrollBarVisible && _maxScrollX > 0)
+        {
+            var hScrollBarBounds = new Rect(
+                _bounds.X,
+                _bounds.Y + _bounds.Height - scaledScrollBarWidth,
+                _bounds.Width,
+                scaledScrollBarWidth);
+            
+            hHovered = hScrollBarBounds.Contains(point);
+        }
+        
+        if (_verticalScrollBarHovered != vHovered || _horizontalScrollBarHovered != hHovered)
+        {
+            _verticalScrollBarHovered = vHovered;
+            _horizontalScrollBarHovered = hHovered;
+            StateHasChanged();
+        }
+    }
+    
+    private void OnPointerReleasedHandler(object? sender, PointerReleasedEventArgs e)
+    {
+        if (_verticalThumbDragging || _horizontalThumbDragging)
+        {
+            _verticalThumbDragging = false;
+            _horizontalThumbDragging = false;
+            e.Handled = true;
+            StateHasChanged();
+        }
+    }
+    
+    private void OnPointerEnteredHandler(object? sender, PointerEventArgs e)
+    {
+        // 鼠标进入时显示滚动条
+        _scrollBarOpacity = 1.0;
+        StateHasChanged();
+    }
+    
+    private void OnPointerExitedHandler(object? sender, PointerEventArgs e)
+    {
+        _verticalScrollBarHovered = false;
+        _horizontalScrollBarHovered = false;
+        
+        if (!_verticalThumbDragging && !_horizontalThumbDragging)
+        {
+            StateHasChanged();
+        }
+    }
+    
+    private double GetVerticalThumbHeight()
+    {
+        if (_contentSize.Height <= 0) return 0;
+        return Math.Max(20, _bounds.Height * (_bounds.Height / _contentSize.Height));
+    }
+    
+    private double GetHorizontalThumbWidth()
+    {
+        if (_contentSize.Width <= 0) return 0;
+        return Math.Max(20, _bounds.Width * (_bounds.Width / _contentSize.Width));
+    }
+    
+    #endregion
+    
+    #region 兼容旧 API
+    
+    /// <summary>
+    /// 处理滚轮事件（兼容旧 API）
+    /// </summary>
+    [Obsolete("Use PointerWheelChanged event instead")]
     public void OnPointerWheel(PointerWheelEventArgs e)
     {
-        // 滚动内容
-        _scrollY -= e.Delta.Y * 50; // 滚动步长
-        _scrollX -= e.Delta.X * 50;
-        
-        // 限制范围
-        _scrollY = Math.Clamp(_scrollY, 0, _maxScrollY);
-        _scrollX = Math.Clamp(_scrollX, 0, _maxScrollX);
-        
-        e.Handled = true;
-        StateHasChanged();
+        OnPointerWheelChanged(this, e);
+    }
+    
+    #endregion
+}
+
+/// <summary>
+/// 滚动位置改变事件参数
+/// </summary>
+public class ScrollChangedEventArgs : EventArgs
+{
+    /// <summary>
+    /// 当前水平滚动位置
+    /// </summary>
+    public double ScrollX { get; }
+    
+    /// <summary>
+    /// 当前垂直滚动位置
+    /// </summary>
+    public double ScrollY { get; }
+    
+    /// <summary>
+    /// 最大水平滚动位置
+    /// </summary>
+    public double MaxScrollX { get; }
+    
+    /// <summary>
+    /// 最大垂直滚动位置
+    /// </summary>
+    public double MaxScrollY { get; }
+    
+    /// <summary>
+    /// 是否已滚动到顶部
+    /// </summary>
+    public bool IsAtTop => ScrollY <= 0;
+    
+    /// <summary>
+    /// 是否已滚动到底部
+    /// </summary>
+    public bool IsAtBottom => ScrollY >= MaxScrollY;
+    
+    /// <summary>
+    /// 是否已滚动到左侧
+    /// </summary>
+    public bool IsAtLeft => ScrollX <= 0;
+    
+    /// <summary>
+    /// 是否已滚动到右侧
+    /// </summary>
+    public bool IsAtRight => ScrollX >= MaxScrollX;
+    
+    public ScrollChangedEventArgs(double scrollX, double scrollY, double maxScrollX, double maxScrollY)
+    {
+        ScrollX = scrollX;
+        ScrollY = scrollY;
+        MaxScrollX = maxScrollX;
+        MaxScrollY = maxScrollY;
     }
 }

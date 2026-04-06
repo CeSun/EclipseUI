@@ -123,6 +123,19 @@ public class WindowImpl : IDisposable
             }
         }
     }
+    
+    /// <summary>
+    /// 获取输入适配器（用于 IME 位置更新）
+    /// </summary>
+    internal WindowsInputAdapter? InputAdapter => _inputAdapter;
+    
+    /// <summary>
+    /// 更新 IME 组合窗口位置
+    /// </summary>
+    public void UpdateImePosition(double x, double y)
+    {
+        _inputAdapter?.UpdateCompositionWindowPosition(x, y, _scaling);
+    }
 
     public WindowImpl() : this(RenderBackend.Angle, null)
     {
@@ -196,6 +209,9 @@ public class WindowImpl : IDisposable
         // 使用注入的 InputManager，如果没有则创建新的
         _inputManager = inputManager ?? new InputManager();
         _inputAdapter = new WindowsInputAdapter(_hwnd, _inputManager);
+        
+        // 注册 IME 位置更新处理器
+        _inputManager.RegisterCompositionPositionHandler((x, y) => UpdateImePosition(x, y));
     }
 
     private void InitializeBackend()
@@ -308,7 +324,14 @@ public class WindowImpl : IDisposable
             if (_inputAdapter != null)
             {
                 _inputAdapter.ProcessMessage(uMsg, wParam, lParam);
-                return IntPtr.Zero;
+                // 对于 IME 组合消息，需要继续默认处理
+                if (uMsg != NativeMethods.WM_IME_STARTCOMPOSITION &&
+                    uMsg != NativeMethods.WM_IME_COMPOSITION &&
+                    uMsg != NativeMethods.WM_IME_ENDCOMPOSITION &&
+                    uMsg != NativeMethods.WM_IME_SETCONTEXT)
+                {
+                    return IntPtr.Zero;
+                }
             }
         }
         
@@ -332,6 +355,10 @@ public class WindowImpl : IDisposable
             case NativeMethods.WM_KILLFOCUS:
                 OnLostFocus();
                 return IntPtr.Zero;
+            
+            case NativeMethods.WM_IME_SETCONTEXT:
+                // 让 IMM32 处理 IME 上下文设置
+                return NativeMethods.DefWindowProc(_hwnd, uMsg, wParam, lParam);
 
             case NativeMethods.WM_CLOSE:
                 Close();
@@ -355,6 +382,8 @@ public class WindowImpl : IDisposable
             >= 0x0200 and <= 0x020E => true,  // 鼠标消息
             0x0100 or 0x0101 or 0x0102 or 0x0104 or 0x0105 => true,  // 键盘消息
             0x0240 => true,  // 触摸消息
+            >= 0x0280 and <= 0x0291 => true,  // IME 消息 (WM_IME_*)
+            0x010D or 0x010E or 0x010F => true,  // IME 组合消息
             _ => false
         };
     }

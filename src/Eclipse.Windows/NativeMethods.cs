@@ -6,7 +6,7 @@ namespace Eclipse.Windows;
 /// <summary>
 /// Win32 API 声明
 /// </summary>
-internal static class NativeMethods
+internal static partial class NativeMethods
 {
     #region User32
 
