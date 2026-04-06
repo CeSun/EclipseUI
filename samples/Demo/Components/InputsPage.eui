@@ -21,7 +21,7 @@
     
     <Label Text="CheckBox 复选框:" FontSize="14" FontWeight="Bold" />
     
-    <CheckBox Label=@$"选项 A (已选中: {_isChecked})" IsChecked=@_isChecked CheckedChanged=@OnCheckChanged />
+    <CheckBox Label="选项 A" IsChecked=@_isChecked CheckedChanged=@OnCheckChanged />
     <CheckBox Label="选项 B (默认选中)" IsChecked="true" />
     <CheckBox Label="选项 C (禁用)" IsEnabled="false" />
 </StackLayout>
@@ -33,6 +33,5 @@
     private void OnCheckChanged(object? sender, ValueChangedEventArgs<bool> e)
     {
         _isChecked = e.NewValue;
-        StateHasChanged();
     }
 }
