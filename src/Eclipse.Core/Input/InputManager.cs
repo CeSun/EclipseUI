@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Eclipse.Core.Abstractions;
 
 namespace Eclipse.Input;
 
@@ -288,7 +289,9 @@ public sealed class InputManager
         if (RootElement == null)
             return null;
         
-        return HitTestRecursive(RootElement, point);
+        // 使用支持容器组件的命中测试
+        // RootElement 可能是容器（如 StackLayout），需要递归检查其子元素
+        return HitTestRecursiveWithContainers((IComponent)RootElement, point);
     }
     
     private IInputElement? HitTestRecursive(IInputElement element, Point point)
@@ -307,6 +310,44 @@ public sealed class InputManager
         // 再检查自己
         if (element.HitTest(point))
             return element;
+        
+        return null;
+    }
+    
+    /// <summary>
+    /// 递归命中测试（支持 ComponentBase 容器）
+    /// </summary>
+    private IInputElement? HitTestRecursiveWithContainers(IComponent component, Point point)
+    {
+        // 如果是 IInputElement，先检查可见性
+        if (component is IInputElement inputElement)
+        {
+            if (!inputElement.IsVisible || !inputElement.IsHitTestVisible || !inputElement.IsInputEnabled)
+                return null;
+        }
+        
+        // 先检查子元素 (后渲染的在上面)
+        foreach (var child in component.Children)
+        {
+            // 如果子元素是 IInputElement，用 HitTestRecursive
+            if (child is IInputElement childInputElement)
+            {
+                var result = HitTestRecursive(childInputElement, point);
+                if (result != null)
+                    return result;
+            }
+            else
+            {
+                // 否则继续递归（可能是 ComponentBase 容器）
+                var result = HitTestRecursiveWithContainers(child, point);
+                if (result != null)
+                    return result;
+            }
+        }
+        
+        // 如果自己也是 IInputElement，检查自己
+        if (component is IInputElement selfElement && selfElement.HitTest(point))
+            return selfElement;
         
         return null;
     }
