@@ -31,35 +31,64 @@ namespace Eclipse.Generator
                 })
                 .WithComparer(new ParsedEuiFileComparer());
 
-            // 结合 Compilation、配置和解析后的文件
+            // 收集所有 EUI 文件的组件信息（用于识别自定义组件）
+            var allComponentsInfo = parsedFiles.Collect().Select((files, _) =>
+            {
+                var components = new Dictionary<string, string>(); // ClassName -> Namespace
+                foreach (var file in files)
+                {
+                    // 先解析 @namespace 指令
+                    var ns = file.Parsed.Namespace;
+                    if (string.IsNullOrEmpty(ns))
+                    {
+                        // 暂时用占位符，后续在 GenerateSource 中用 MSBuild 配置推断
+                        ns = $"__pending__:{file.Path}";
+                    }
+                    components[file.ClassName] = ns;
+                }
+                return new AllComponentsInfo { Components = components };
+            });
+
+            // 结合 Compilation、配置、解析后的文件和所有组件信息
             var withCompilation = parsedFiles.Combine(context.CompilationProvider);
             var withConfig = withCompilation.Combine(context.AnalyzerConfigOptionsProvider);
+            var withAllComponents = withConfig.Combine(allComponentsInfo);
             
-            context.RegisterSourceOutput(withConfig, (spc, source) =>
+            context.RegisterSourceOutput(withAllComponents, (spc, source) =>
             {
-                var ((file, compilation), optionsProvider) = source;
+                var (((file, compilation), optionsProvider), allComponents) = source;
+                
+                // 推断命名空间（如果还没确定）
+                string @namespace = file.Parsed.Namespace ?? InferNamespace(file.Path, file.AdditionalText, optionsProvider);
+                
+                // 更新组件信息中的命名空间
+                if (allComponents.Components.TryGetValue(file.ClassName, out var cachedNs) && cachedNs.StartsWith("__pending__:"))
+                {
+                    allComponents.Components[file.ClassName] = @namespace;
+                }
                 
                 // 类型查找缓存（在 compilation 级别共享）
-                var typeCache = new TypeLookupCache(compilation);
+                var typeCache = new TypeLookupCache(compilation, allComponents);
                 
-                GenerateSource(spc, optionsProvider, typeCache, file);
+                GenerateSource(spc, optionsProvider, typeCache, file, @namespace, allComponents);
             });
+        }
+
+        // 存储所有组件信息
+        private class AllComponentsInfo
+        {
+            public Dictionary<string, string> Components { get; set; } = new();
         }
 
         private void GenerateSource(SourceProductionContext context, 
             AnalyzerConfigOptionsProvider optionsProvider, 
             TypeLookupCache typeCache, 
-            ParsedEuiFile file)
+            ParsedEuiFile file,
+            string @namespace,
+            AllComponentsInfo allComponents)
         {
             var className = file.ClassName;
             var parsed = file.Parsed;
-            
-            // 优先使用 @namespace 指令，否则从 MSBuild 配置获取
-            string @namespace = parsed.Namespace ?? InferNamespace(file.Path, file.AdditionalText, optionsProvider);
-            if (string.IsNullOrEmpty(@namespace))
-            {
-                @namespace = "Eclipse.Generated";
-            }
             
             // 一次性解析 markup，同时收集类型信息
             List<MarkupNode> nodes;
@@ -85,7 +114,7 @@ namespace Eclipse.Generator
             // 获取这些类型的属性信息
             var propertyTypes = GetPropertyTypes(typeCache, controlTypes, parsed.Usings, file.Path, context);
             
-            var generatedCode = GenerateComponentCode(@namespace, className, parsed, nodes, propertyTypes);
+            var generatedCode = GenerateComponentCode(@namespace, className, parsed, nodes, propertyTypes, typeCache, usings: parsed.Usings);
             var hintName = $"{className}.eui.g.cs";
             context.AddSource(hintName, SourceText.From(generatedCode, Encoding.UTF8));
         }
@@ -158,8 +187,33 @@ namespace Eclipse.Generator
             
             foreach (var typeName in controlTypes)
             {
-                var typeSymbol = cache.FindTypeSymbol(typeName, usings);
-                if (typeSymbol == null)
+                // 检查是否是自定义组件
+                if (cache.IsCustomComponent(typeName))
+                {
+                    // 自定义组件：尝试从 Compilation 中查找已有的 partial class
+                    var componentNs = cache.GetCustomComponentNamespace(typeName);
+                    if (!string.IsNullOrEmpty(componentNs))
+                    {
+                        var fullTypeName = $"{componentNs}.{typeName}";
+                        var typeSymbol = cache.FindTypeSymbol(fullTypeName, usings);
+                        
+                        if (typeSymbol != null)
+                        {
+                            // 找到了 partial class，读取其属性
+                            foreach (var prop in GetAllSettableProperties(typeSymbol))
+                            {
+                                var info = CreatePropertyTypeInfo(prop.Type);
+                                result[(typeName, prop.Name)] = info;
+                            }
+                        }
+                        // 没找到 partial class 时，组件没有额外属性，直接继承 ComponentBase
+                    }
+                    continue;
+                }
+                
+                // 标准控件
+                var controlTypeSymbol = cache.FindTypeSymbol(typeName, usings);
+                if (controlTypeSymbol == null)
                 {
                     // 报告类型未找到警告
                     var descriptor = new DiagnosticDescriptor(
@@ -174,29 +228,29 @@ namespace Eclipse.Generator
                     continue;
                 }
                 
-                foreach (var member in GetAllSettableProperties(typeSymbol))
+                foreach (var prop in GetAllSettableProperties(controlTypeSymbol))
                 {
-                    if (member is IPropertySymbol property && !property.IsStatic && property.SetMethod != null)
-                    {
-                        var propType = property.Type;
-                        var info = new PropertyTypeInfo
-                        {
-                            TypeName = propType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat),
-                            IsEnum = propType.TypeKind == TypeKind.Enum,
-                            IsNumeric = IsNumericType(propType),
-                            IsBoolean = propType.SpecialType == SpecialType.System_Boolean,
-                            IsString = propType.SpecialType == SpecialType.System_String,
-                            EnumTypeName = propType.TypeKind == TypeKind.Enum 
-                                ? propType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat) 
-                                : null
-                        };
-                        
-                        result[(typeName, property.Name)] = info;
-                    }
+                    var info = CreatePropertyTypeInfo(prop.Type);
+                    result[(typeName, prop.Name)] = info;
                 }
             }
             
             return result;
+        }
+        
+        private PropertyTypeInfo CreatePropertyTypeInfo(ITypeSymbol propType)
+        {
+            return new PropertyTypeInfo
+            {
+                TypeName = propType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat),
+                IsEnum = propType.TypeKind == TypeKind.Enum,
+                IsNumeric = IsNumericType(propType),
+                IsBoolean = propType.SpecialType == SpecialType.System_Boolean,
+                IsString = propType.SpecialType == SpecialType.System_String,
+                EnumTypeName = propType.TypeKind == TypeKind.Enum 
+                    ? propType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat) 
+                    : null
+            };
         }
 
         /// <summary>
@@ -452,7 +506,8 @@ namespace Eclipse.Generator
         }
 
         private string GenerateComponentCode(string @namespace, string className, ParsedEui parsed, 
-            List<MarkupNode> nodes, Dictionary<(string Control, string Property), PropertyTypeInfo> propertyTypes)
+            List<MarkupNode> nodes, Dictionary<(string Control, string Property), PropertyTypeInfo> propertyTypes,
+            TypeLookupCache typeCache, List<string> usings)
         {
             var sb = new StringBuilder();
             var indent = 0;
@@ -467,6 +522,16 @@ namespace Eclipse.Generator
             WriteLine("using Eclipse.Core.Abstractions;");
             foreach (var @using in parsed.Usings)
                 WriteLine($"using {@using};");
+            
+            // 添加自定义组件的命名空间（如果有使用）
+            var customComponentNamespaces = new HashSet<string>();
+            CollectCustomComponentNamespaces(nodes, typeCache, customComponentNamespaces);
+            foreach (var customNs in customComponentNamespaces)
+            {
+                if (customNs != @namespace) // 不添加自己的命名空间
+                    WriteLine($"using {customNs};");
+            }
+            
             sb.AppendLine();
             WriteLine($"namespace {@namespace}");
             WriteLine("{");
@@ -501,6 +566,36 @@ namespace Eclipse.Generator
             indent--;
             WriteLine("}");
             return sb.ToString();
+        }
+
+        /// <summary>
+        /// 收集自定义组件的命名空间
+        /// </summary>
+        private void CollectCustomComponentNamespaces(List<MarkupNode> nodes, TypeLookupCache typeCache, HashSet<string> namespaces)
+        {
+            foreach (var node in nodes)
+            {
+                if (node is ControlNode control)
+                {
+                    if (typeCache.IsCustomComponent(control.TagName))
+                    {
+                        var ns = typeCache.GetCustomComponentNamespace(control.TagName);
+                        if (!string.IsNullOrEmpty(ns))
+                            namespaces.Add(ns);
+                    }
+                    CollectCustomComponentNamespaces(control.Children, typeCache, namespaces);
+                }
+                else if (node is IfNode ifNode)
+                {
+                    CollectCustomComponentNamespaces(ifNode.ThenBranch, typeCache, namespaces);
+                    if (ifNode.ElseBranch != null)
+                        CollectCustomComponentNamespaces(ifNode.ElseBranch, typeCache, namespaces);
+                }
+                else if (node is ForeachNode foreachNode)
+                {
+                    CollectCustomComponentNamespaces(foreachNode.Body, typeCache, namespaces);
+                }
+            }
         }
 
         private void GenerateNodes(List<MarkupNode> nodes, StringBuilder sb, ref int indent, Action<string> WriteLine, 
@@ -871,11 +966,49 @@ namespace Eclipse.Generator
         private class TypeLookupCache
         {
             private readonly Compilation _compilation;
+            private readonly AllComponentsInfo? _allComponents;
             private readonly Dictionary<(string TypeName, string UsingList), INamedTypeSymbol?> _cache = new();
+            // 自定义组件属性缓存（由于组件正在生成，没有编译好的类型符号）
+            private readonly Dictionary<string, Dictionary<string, PropertyTypeInfo>> _customComponentProperties = new();
 
-            public TypeLookupCache(Compilation compilation)
+            public TypeLookupCache(Compilation compilation, AllComponentsInfo? allComponents = null)
             {
                 _compilation = compilation;
+                _allComponents = allComponents;
+            }
+
+            /// <summary>
+            /// 检查是否是自定义组件
+            /// </summary>
+            public bool IsCustomComponent(string typeName)
+            {
+                if (_allComponents == null) return false;
+                return _allComponents.Components.ContainsKey(typeName);
+            }
+
+            /// <summary>
+            /// 获取自定义组件的命名空间
+            /// </summary>
+            public string? GetCustomComponentNamespace(string typeName)
+            {
+                if (_allComponents == null) return null;
+                return _allComponents.Components.TryGetValue(typeName, out var ns) ? ns : null;
+            }
+
+            /// <summary>
+            /// 注册自定义组件的属性（从 @code 块解析）
+            /// </summary>
+            public void RegisterCustomComponentProperties(string typeName, Dictionary<string, PropertyTypeInfo> properties)
+            {
+                _customComponentProperties[typeName] = properties;
+            }
+
+            /// <summary>
+            /// 获取自定义组件的属性
+            /// </summary>
+            public Dictionary<string, PropertyTypeInfo>? GetCustomComponentProperties(string typeName)
+            {
+                return _customComponentProperties.TryGetValue(typeName, out var props) ? props : null;
             }
 
             public INamedTypeSymbol? FindTypeSymbol(string typeName, List<string> usings)
@@ -892,6 +1025,14 @@ namespace Eclipse.Generator
 
             private INamedTypeSymbol? FindTypeSymbolInternal(string typeName, List<string> usings)
             {
+                // 先检查自定义组件
+                if (IsCustomComponent(typeName))
+                {
+                    // 自定义组件在编译时还没生成类型符号，返回 null
+                    // 但 Generator 会知道它是自定义组件并正确生成代码
+                    return null;
+                }
+
                 if (typeName.Contains('.'))
                 {
                     var symbol = _compilation.GetTypeByMetadataName(typeName);

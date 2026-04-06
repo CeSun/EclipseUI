@@ -27,6 +27,8 @@
 }
 
 <StackLayout Spacing="0" BackgroundColor="#F5F5F5">
+    <Header Title="EclipseUI Demo" Subtitle="一个现代的声明式 UI 框架" />
+    
     <StackLayout Orientation="Horizontal" Spacing="0" BackgroundColor="#FFFFFF" Padding="10">
         <Button Text="基础" OnClick=@((s, e) => SwitchTab(0)) 
                 BackgroundColor=@(_currentTab == 0 ? "#007AFF" : "#EEEEEE")
@@ -157,4 +159,6 @@
             
         </StackLayout>
     </ScrollView>
+    
+    <Footer FooterText="© 2026 EclipseUI Demo - 声明式 UI 框架" />
 </StackLayout>
