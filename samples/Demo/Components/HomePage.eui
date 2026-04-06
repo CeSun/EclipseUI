@@ -1,36 +1,200 @@
 @using Eclipse.Controls
+@using Eclipse.Input
 
 @code {
+    private int _currentTab = 0;
     private int _clickCount = 0;
+    private string _inputText = "";
+    private bool _isChecked = false;
+    private double _scrollY = 0;
+    
+    // Tab 切换
+    private void SwitchTab(int tab)
+    {
+        _currentTab = tab;
+        StateHasChanged();
+    }
     
     private void OnButtonClick(object? sender, EventArgs e)
     {
         _clickCount++;
-        Console.WriteLine($"_clickCount: {_clickCount}");
+        StateHasChanged();
+    }
+    
+    private void OnCheckChanged(object? sender, ValueChangedEventArgs<bool> e)
+    {
+        _isChecked = e.NewValue;
         StateHasChanged();
     }
 }
 
-<StackLayout Spacing="16" Padding="20">
-    <Label Text="Hello EclipseUI! 🎉" FontSize="32" FontWeight="Bold" />
-    <Label Text="SkiaSharp 渲染演示 🚀" FontSize="18" Color="#666" />
+<StackLayout Spacing="0" BackgroundColor="#F5F5F5">
+    <!-- 顶部 Tab 栏 -->
+    <StackLayout Orientation="Horizontal" Spacing="0" BackgroundColor="#FFFFFF" Padding="10,5">
+        <Button Text="基础" OnClick="@(() => SwitchTab(0))" 
+                BackgroundColor="@(_currentTab == 0 ? "#007AFF" : "Transparent")"
+                TextColor="@(_currentTab == 0 ? "White" : "#333")" 
+                CornerRadius="4" Padding="12,8" />
+        <Button Text="布局" OnClick="@(() => SwitchTab(1))"
+                BackgroundColor="@(_currentTab == 1 ? "#007AFF" : "Transparent")"
+                TextColor="@(_currentTab == 1 ? "White" : "#333")"
+                CornerRadius="4" Padding="12,8" />
+        <Button Text="输入" OnClick="@(() => SwitchTab(2))"
+                BackgroundColor="@(_currentTab == 2 ? "#007AFF" : "Transparent")"
+                TextColor="@(_currentTab == 2 ? "White" : "#333")"
+                CornerRadius="4" Padding="12,8" />
+        <Button Text="交互" OnClick="@(() => SwitchTab(3))"
+                BackgroundColor="@(_currentTab == 3 ? "#007AFF" : "Transparent")"
+                TextColor="@(_currentTab == 3 ? "White" : "#333")"
+                CornerRadius="4" Padding="12,8" />
+    </StackLayout>
     
-    <Label Text="字体 Fallback 测试:" FontSize="16" FontWeight="Bold" />
-    <Label Text="默认字体 - 中文和English混排" FontSize="14" />
-    <Label Text="Arial字体 - 中文自动fallback 🎯" FontSize="14" FontFamily="Arial" />
-    <Label Text="Times New Roman - 测试123Test 🌟" FontSize="14" FontFamily="Times New Roman" />
-    
-    <Label Text="Emoji 测试:" FontSize="16" FontWeight="Bold" />
-    <Label Text="😀 😃 😄 😁 😆 😅 🤣 😂" FontSize="24" />
-    <Label Text="👍 👎 👏 🙏 💪 🎉 🔥 ⭐⭐" FontSize="24" />
-    
-    @if (_clickCount > 0)
-    {
-        <Label Text=$"点击次数: {_clickCount} 🎯" FontSize="16" Color="#007AFF" />
-    }
-    
-    <Button Text="点击我 👆" BackgroundColor="#007AFF" TextColor="White" FontSize="16" CornerRadius="8" OnClick="@OnButtonClick" />
-    <Button Text="Arial - 中文测试 🚀" FontFamily="Arial" BackgroundColor="#6C757D" TextColor="White" CornerRadius="8" />
-    
-    <Label Text="这是一个使用 EUI 语法和 SkiaSharp 渲染的示例应用。✨" FontSize="14" Color="#333" />
+    <!-- 内容区域 -->
+    <ScrollView BackgroundColor="#FFFFFF">
+        <StackLayout Spacing="16" Padding="20">
+            
+            <!-- Tab 0: 基础控件 -->
+            @if (_currentTab == 0)
+            {
+                <Label Text="🔤 Label 标签" FontSize="20" FontWeight="Bold" />
+                <Label Text="普通文本" FontSize="14" />
+                <Label Text="粗体文本" FontSize="14" FontWeight="Bold" />
+                <Label Text="彩色文本" FontSize="14" Color="#FF0000" />
+                <Label Text="居中文本" FontSize="14" TextAlignment="Center" BackgroundColor="#E0E0E0" />
+                <Label Text="Emoji: 😀😃😄😁😆😅🤣😂" FontSize="24" />
+                
+                <Label Text="" FontSize="1" />
+                <Label Text="🔘 Button 按钮" FontSize="20" FontWeight="Bold" />
+                
+                <Button Text="默认按钮" OnClick="@OnButtonClick" />
+                <Button Text="自定义颜色" BackgroundColor="#28A745" TextColor="White" />
+                <Button Text="圆角按钮" BackgroundColor="#DC3545" CornerRadius="20" />
+                <Button Text="禁用按钮" IsEnabled="false" BackgroundColor="#007AFF" />
+                
+                @if (_clickCount > 0)
+                {
+                    <Label Text=$"点击次数: {_clickCount}" Color="#007AFF" FontSize="16" />
+                }
+                
+                <Label Text="" FontSize="1" />
+                <Label Text="☑️ CheckBox 复选框" FontSize="20" FontWeight="Bold" />
+                
+                <CheckBox Label="选项 A" IsChecked="@_isChecked" CheckedChanged="@OnCheckChanged" />
+                <CheckBox Label="选项 B" IsChecked="true" />
+                <CheckBox Label="禁用选项" IsEnabled="false" />
+                
+                @if (_isChecked)
+                {
+                    <Label Text="选项 A 已选中 ✅" Color="#28A745" />
+                }
+                
+                <Label Text="" FontSize="1" />
+                <Label Text="🖼️ Image 图片" FontSize="20" FontWeight="Bold" />
+                <Image Source="https://via.placeholder.com/150" Width="150" Height="150" Stretch="Uniform" />
+            }
+            
+            <!-- Tab 1: 布局控件 -->
+            @if (_currentTab == 1)
+            {
+                <Label Text="📦 StackLayout 堆叠布局" FontSize="20" FontWeight="Bold" />
+                
+                <Label Text="垂直堆叠:" FontSize="14" FontWeight="Bold" />
+                <StackLayout Spacing="8" Padding="10" BackgroundColor="#E8E8E8">
+                    <Label Text="项目 1" BackgroundColor="#FFF" Padding="5" />
+                    <Label Text="项目 2" BackgroundColor="#FFF" Padding="5" />
+                    <Label Text="项目 3" BackgroundColor="#FFF" Padding="5" />
+                </StackLayout>
+                
+                <Label Text="水平堆叠:" FontSize="14" FontWeight="Bold" />
+                <StackLayout Orientation="Horizontal" Spacing="8" Padding="10" BackgroundColor="#E8E8E8">
+                    <Button Text="A" CornerRadius="4" />
+                    <Button Text="B" CornerRadius="4" />
+                    <Button Text="C" CornerRadius="4" />
+                </StackLayout>
+                
+                <Label Text="" FontSize="1" />
+                <Label Text="📐 Grid 网格布局" FontSize="20" FontWeight="Bold" />
+                
+                <GridLayout RowCount="2" ColumnCount="2" RowSpacing="10" ColumnSpacing="10" Padding="10" BackgroundColor="#E8E8E8">
+                    <Label Grid.Row="0" Grid.Column="0" Text="0,0" BackgroundColor="#FFB6C1" Padding="10" TextAlignment="Center" />
+                    <Label Grid.Row="0" Grid.Column="1" Text="0,1" BackgroundColor="#98FB98" Padding="10" TextAlignment="Center" />
+                    <Label Grid.Row="1" Grid.Column="0" Text="1,0" BackgroundColor="#87CEEB" Padding="10" TextAlignment="Center" />
+                    <Label Grid.Row="1" Grid.Column="1" Text="1,1" BackgroundColor="#DDA0DD" Padding="10" TextAlignment="Center" />
+                </GridLayout>
+                
+                <Label Text="跨列示例:" FontSize="14" FontWeight="Bold" />
+                <GridLayout RowCount="2" ColumnCount="2" RowSpacing="5" ColumnSpacing="5" Padding="10" BackgroundColor="#E8E8E8">
+                    <Label Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Text="横跨两列" BackgroundColor="#FFD700" Padding="10" TextAlignment="Center" />
+                    <Label Grid.Row="1" Grid.Column="0" Text="左" BackgroundColor="#90EE90" Padding="10" TextAlignment="Center" />
+                    <Label Grid.Row="1" Grid.Column="1" Text="右" BackgroundColor="#90EE90" Padding="10" TextAlignment="Center" />
+                </GridLayout>
+                
+                <Label Text="" FontSize="1" />
+                <Label Text="📜 ScrollView 滚动视图" FontSize="20" FontWeight="Bold" />
+                
+                <ScrollView BackgroundColor="#F0F0F0" Height="150">
+                    <StackLayout Spacing="8" Padding="10">
+                        @for (int i = 1; i <= 20; i++)
+                        {
+                            <Label Text=$"滚动项 {i}" BackgroundColor="#FFF" Padding="8" />
+                        }
+                    </StackLayout>
+                </ScrollView>
+            }
+            
+            <!-- Tab 2: 输入控件 -->
+            @if (_currentTab == 2)
+            {
+                <Label Text="⌨️ TextInput 文本输入" FontSize="20" FontWeight="Bold" />
+                
+                <Label Text="普通输入:" FontSize="14" />
+                <TextInput Text="@_inputText" Placeholder="请输入文本..." />
+                
+                <Label Text="密码输入:" FontSize="14" />
+                <TextInput IsPassword="true" Placeholder="请输入密码" />
+                
+                <Label Text="多行输入 (不支持，演示效果):" FontSize="14" />
+                <TextInput Placeholder="输入内容..." />
+                
+                @if (!string.IsNullOrEmpty(_inputText))
+                {
+                    <Label Text=$"输入内容: {_inputText}" Color="#007AFF" FontSize="14" />
+                }
+            }
+            
+            <!-- Tab 3: 交互测试 -->
+            @if (_currentTab == 3)
+            {
+                <Label Text="🖱️ 按钮状态测试" FontSize="20" FontWeight="Bold" />
+                
+                <Label Text="悬停测试 - 移动鼠标到按钮上:" FontSize="14" />
+                <Button Text="悬停变色按钮" BackgroundColor="#007AFF" />
+                
+                <Label Text="按下测试 - 按住按钮:" FontSize="14" />
+                <Button Text="按住我" BackgroundColor="#28A745" />
+                
+                <Label Text="禁用状态:" FontSize="14" />
+                <Button Text="禁用按钮" IsEnabled="false" BackgroundColor="#007AFF" />
+                
+                <Label Text="" FontSize="1" />
+                <Label Text="🎨 颜色测试" FontSize="20" FontWeight="Bold" />
+                
+                <StackLayout Orientation="Horizontal" Spacing="8">
+                    <Button Text="红" BackgroundColor="#DC3545" CornerRadius="4" />
+                    <Button Text="绿" BackgroundColor="#28A745" CornerRadius="4" />
+                    <Button Text="蓝" BackgroundColor="#007AFF" CornerRadius="4" />
+                    <Button Text="黄" BackgroundColor="#FFC107" TextColor="#333" CornerRadius="4" />
+                    <Button Text="紫" BackgroundColor="#6F42C1" CornerRadius="4" />
+                </StackLayout>
+                
+                <Label Text="" FontSize="1" />
+                <Label Text="📏 尺寸测试" FontSize="20" FontWeight="Bold" />
+                
+                <Button Text="小" FontSize="12" CornerRadius="4" />
+                <Button Text="中" FontSize="16" CornerRadius="6" />
+                <Button Text="大" FontSize="20" CornerRadius="8" />
+            }
+            
+        </StackLayout>
+    </ScrollView>
 </StackLayout>
