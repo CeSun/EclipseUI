@@ -81,6 +81,12 @@ public class StackLayout : InputElementBase
     public override bool IsVisible => true;
     public override Rect Bounds => _bounds;
     
+    public StackLayout()
+    {
+        // 作为布局容器，不接收直接的命中测试，让事件穿透到子元素
+        IsHitTestVisible = false;
+    }
+    
     public void UpdateBounds(Rect bounds) => _bounds = bounds;
     
     protected override IEnumerable<IInputElement> GetInputChildren()
@@ -550,6 +556,7 @@ public class Button : InteractiveControl
     
     private void OnPointerReleased(object? sender, PointerReleasedEventArgs e)
     {
+        if (!IsEnabled) return;
         _isPressed = false;
         StateHasChanged();
     }

@@ -289,17 +289,16 @@ public sealed class InputManager
         if (RootElement == null)
             return null;
         
-        // 使用支持容器组件的命中测试
-        // RootElement 可能是容器（如 StackLayout），需要递归检查其子元素
         return HitTestRecursiveWithContainers((IComponent)RootElement, point);
     }
     
     private IInputElement? HitTestRecursive(IInputElement element, Point point)
     {
-        if (!element.IsVisible || !element.IsHitTestVisible || !element.IsInputEnabled)
+        // 不可见或禁用时跳过整个元素（包括子元素）
+        if (!element.IsVisible || !element.IsInputEnabled)
             return null;
         
-        // 先检查子元素 (后渲染的在上面)
+        // 先检查子元素 (后渲染的在上面) - 即使 IsHitTestVisible=false 也要检查子元素
         foreach (var child in element.Children)
         {
             var result = HitTestRecursive(child, point);
@@ -307,8 +306,8 @@ public sealed class InputManager
                 return result;
         }
         
-        // 再检查自己
-        if (element.HitTest(point))
+        // 再检查自己（受 IsHitTestVisible 控制）
+        if (element.IsHitTestVisible && element.HitTest(point))
             return element;
         
         return null;
@@ -319,14 +318,17 @@ public sealed class InputManager
     /// </summary>
     private IInputElement? HitTestRecursiveWithContainers(IComponent component, Point point)
     {
-        // 如果是 IInputElement，先检查可见性
+        // 如果是 IInputElement，检查可见性和启用状态
         if (component is IInputElement inputElement)
         {
-            if (!inputElement.IsVisible || !inputElement.IsHitTestVisible || !inputElement.IsInputEnabled)
+            // 不可见或禁用时跳过整个元素（包括子元素）
+            if (!inputElement.IsVisible || !inputElement.IsInputEnabled)
+            {
                 return null;
+            }
         }
         
-        // 先检查子元素 (后渲染的在上面)
+        // 先检查子元素 (后渲染的在上面) - 即使 IsHitTestVisible=false 也要检查子元素
         foreach (var child in component.Children)
         {
             // 如果子元素是 IInputElement，用 HitTestRecursive
@@ -345,9 +347,14 @@ public sealed class InputManager
             }
         }
         
-        // 如果自己也是 IInputElement，检查自己
-        if (component is IInputElement selfElement && selfElement.HitTest(point))
-            return selfElement;
+        // 如果自己也是 IInputElement，检查自己（但受 IsHitTestVisible 控制）
+        if (component is IInputElement selfElement)
+        {
+            if (selfElement.IsHitTestVisible && selfElement.HitTest(point))
+            {
+                return selfElement;
+            }
+        }
         
         return null;
     }
