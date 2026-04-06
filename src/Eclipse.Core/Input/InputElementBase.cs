@@ -215,7 +215,10 @@ public abstract class InputElementBase : Core.ComponentBase, IInputElement
     public virtual bool IsFocusable { get; set; }
     public virtual bool IsFocused { get; protected set; }
     public abstract bool IsVisible { get; }
-    public abstract Rect Bounds { get; }
+    
+    // Bounds 继承自 ComponentBase，这里提供 new 关键字避免警告
+    // 子类应该通过 UpdateBounds 方法更新边界
+    public new virtual Rect Bounds => base.Bounds;
     
     // IInputElement.Parent 显式实现
     IInputElement? IInputElement.Parent => Parent as IInputElement;

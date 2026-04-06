@@ -17,6 +17,7 @@ namespace Eclipse.Core
         private bool _isMounted;
         private bool _isDisposed;
         private bool _isDirty = true; // 脏标记，初始为 true 以确保首次渲染
+        private Rect _bounds = new Rect(0, 0, 0, 0);
         
         protected ComponentBase() => _id = Interlocked.Increment(ref _nextId);
         
@@ -24,6 +25,16 @@ namespace Eclipse.Core
         public IComponent? Parent => _parent;
         public IReadOnlyList<IComponent> Children => _children;
         public event EventHandler? StateChanged;
+        
+        /// <summary>
+        /// 组件的边界矩形
+        /// </summary>
+        public Rect Bounds => _bounds;
+        
+        /// <summary>
+        /// 更新组件边界（在 Render 时调用）
+        /// </summary>
+        protected void UpdateBounds(Rect bounds) => _bounds = bounds;
         
         /// <summary>
         /// 是否需要重建（脏标记）

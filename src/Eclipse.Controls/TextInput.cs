@@ -169,7 +169,6 @@ public class TextInput : InteractiveControl
     public TextInput()
     {
         IsFocusable = true;
-        _bounds = new Rect(0, 0, 200, 30);
         _desiredSize = new Size(200, 30);
         
         // 订阅键盘事件
@@ -667,7 +666,7 @@ public class TextInput : InteractiveControl
         var scaledPadding = Padding;
         var scaledFontSize = FontSize;
         
-        var textStartX = _bounds.X + scaledPadding;
+        var textStartX = Bounds.X + scaledPadding;
         var textX = position.X - textStartX;
         
         if (textX <= 0)

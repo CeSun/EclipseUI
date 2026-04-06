@@ -11,16 +11,12 @@ namespace Eclipse.Controls;
 /// </summary>
 public abstract class InteractiveControl : InputElementBase
 {
-    protected Rect _bounds = new(0, 0, 100, 40);
     protected Size _desiredSize = new(100, 40);
     
     public bool IsEnabled { get; set; } = true;
     
     public override bool IsInputEnabled => IsEnabled;
     public override bool IsVisible => true;
-    public override Rect Bounds => _bounds;
-    
-    public void UpdateBounds(Rect bounds) => _bounds = bounds;
     
     /// <summary>
     /// 测量控件所需尺寸
@@ -35,7 +31,7 @@ public abstract class InteractiveControl : InputElementBase
     /// </summary>
     public virtual void Arrange(Rect finalBounds, IDrawingContext context)
     {
-        _bounds = finalBounds;
+        UpdateBounds(finalBounds);
     }
     
     protected override IEnumerable<IInputElement> GetInputChildren()
@@ -75,19 +71,15 @@ public class StackLayout : InputElementBase
     
     public string? BackgroundColor { get; set; }
     
-    private Rect _bounds;
     private Size _desiredSize = Size.Zero;
     
     public override bool IsVisible => true;
-    public override Rect Bounds => _bounds;
     
     public StackLayout()
     {
         // 作为布局容器，不接收直接的命中测试，让事件穿透到子元素
         IsHitTestVisible = false;
     }
-    
-    public void UpdateBounds(Rect bounds) => _bounds = bounds;
     
     protected override IEnumerable<IInputElement> GetInputChildren()
     {
@@ -194,7 +186,7 @@ public class StackLayout : InputElementBase
     /// </summary>
     public void Arrange(Rect finalBounds, IDrawingContext context)
     {
-        _bounds = finalBounds;
+        UpdateBounds(finalBounds);
         
         var spacingValue = Spacing * context.Scale;
         var paddingValue = Padding * context.Scale;
@@ -402,6 +394,8 @@ public class Label : ComponentBase
     
     public override void Render(IDrawingContext context, Rect bounds)
     {
+        UpdateBounds(bounds);
+        
         var scaledPadding = Padding * context.Scale;
         
         // 绘制背景
@@ -514,7 +508,6 @@ public class Button : InteractiveControl
     public Button()
     {
         IsFocusable = true;
-        _bounds = new Rect(0, 0, 100, 40);
         _desiredSize = new Size(100, 44);
         
         // 指针事件
@@ -719,7 +712,6 @@ public class CheckBox : InteractiveControl
     public CheckBox()
     {
         IsFocusable = true;
-        _bounds = new Rect(0, 0, 20, 20);
         _desiredSize = new Size(20, 20);
         
         Tapped += (s, e) =>
