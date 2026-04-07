@@ -1,6 +1,7 @@
 using Eclipse.Controls;
 using Eclipse.Rendering;
 using Xunit;
+using Color = System.Drawing.Color;
 
 namespace Eclipse.Tests;
 
@@ -19,7 +20,7 @@ public class ControlTests
         Assert.Equal(Orientation.Vertical, stack.Orientation);
         Assert.Equal(0, stack.Spacing);
         Assert.Equal(0, stack.Padding);
-        Assert.Null(stack.BackgroundColor);
+        Assert.Equal(Color.Transparent, stack.BackgroundColor);
     }
 
     [Fact]
@@ -53,7 +54,7 @@ public class ControlTests
         Assert.Equal(14, label.FontSize);
         Assert.Equal(TextAlignment.Left, label.TextAlignment);
         Assert.Null(label.Text);
-        Assert.Null(label.Color);
+        Assert.Equal(Color.Black, label.Color);
         Assert.Null(label.FontWeight);
     }
 
@@ -74,8 +75,8 @@ public class ControlTests
         var button = new Button();
 
         // Assert
-        Assert.Equal("#007AFF", button.BackgroundColor);
-        Assert.Equal("White", button.TextColor);
+        Assert.Equal(Color.FromArgb(0, 122, 255), button.BackgroundColor);
+        Assert.Equal(Color.White, button.TextColor);
         Assert.Equal(14, button.FontSize);
         Assert.Equal(4, button.CornerRadius);
         Assert.True(button.IsEnabled);
@@ -149,7 +150,7 @@ public class ControlTests
         var container = new Container();
 
         // Assert
-        Assert.Null(container.BackgroundColor);
+        Assert.Equal(Color.Transparent, container.BackgroundColor);
         Assert.Equal(0, container.Padding);
         Assert.Equal(0, container.CornerRadius);
     }

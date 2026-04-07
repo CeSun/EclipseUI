@@ -2,6 +2,7 @@ using Eclipse.Core;
 using Eclipse.Core.Abstractions;
 using Eclipse.Input;
 using Eclipse.Rendering;
+using Color = System.Drawing.Color;
 
 namespace Eclipse.Controls;
 
@@ -41,7 +42,7 @@ public static class Canvas
 /// </summary>
 public class CanvasLayout : InputElementBase
 {
-    public Color? BackgroundColor { get; set; }
+    public Color BackgroundColor { get; set; } = Color.Transparent;
     
     public override bool IsVisible => true;
     
@@ -115,7 +116,7 @@ public class CanvasLayout : InputElementBase
     {
         UpdateBounds(bounds);
         
-        if (BackgroundColor.HasValue)
+        if (BackgroundColor != Color.Transparent)
         {
             context.DrawRectangle(bounds, BackgroundColor);
         }

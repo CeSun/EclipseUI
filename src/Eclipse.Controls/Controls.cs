@@ -4,6 +4,7 @@ using Eclipse.Input;
 using Eclipse.Rendering;
 using System;
 using System.Collections.Generic;
+using Color = System.Drawing.Color;
 
 namespace Eclipse.Controls;
 
@@ -19,17 +20,11 @@ public abstract class InteractiveControl : InputElementBase
     public override bool IsInputEnabled => IsEnabled;
     public override bool IsVisible => true;
     
-    /// <summary>
-    /// 测量控件所需尺寸
-    /// </summary>
     public virtual Size Measure(Size availableSize, IDrawingContext context)
     {
         return _desiredSize;
     }
     
-    /// <summary>
-    /// 安排控件位置和尺寸
-    /// </summary>
     public virtual void Arrange(Rect finalBounds, IDrawingContext context)
     {
         UpdateBounds(finalBounds);
@@ -59,18 +54,9 @@ public abstract class InteractiveControl : InputElementBase
 public class StackLayout : InputElementBase
 {
     public Orientation Orientation { get; set; } = Orientation.Vertical;
-    
-    /// <summary>
-    /// 子元素间距
-    /// </summary>
     public double Spacing { get; set; } = 0;
-    
-    /// <summary>
-    /// 内边距
-    /// </summary>
     public double Padding { get; set; } = 0;
-    
-    public Color? BackgroundColor { get; set; }
+    public Color BackgroundColor { get; set; } = Color.Transparent;
     
     private Size _desiredSize = Size.Zero;
     
@@ -78,7 +64,6 @@ public class StackLayout : InputElementBase
     
     public StackLayout()
     {
-        // 作为布局容器，不接收直接的命中测试，让事件穿透到子元素
         IsHitTestVisible = false;
     }
     
@@ -95,9 +80,6 @@ public class StackLayout : InputElementBase
     
     public override void Build(IBuildContext context) { }
     
-    /// <summary>
-    /// 测量布局所需尺寸 - 实现真正的 Measure 机制
-    /// </summary>
     public Size Measure(Size availableSize, IDrawingContext context)
     {
         if (Children.Count == 0)
@@ -109,45 +91,16 @@ public class StackLayout : InputElementBase
         var spacingValue = Spacing * context.Scale;
         var paddingValue = Padding * context.Scale;
         
-        // 计算内容可用尺寸
         var contentAvailableSize = new Size(
             availableSize.Width - paddingValue * 2,
             availableSize.Height - paddingValue * 2);
         
         double totalWidth = 0;
         double totalHeight = 0;
-        double maxChildWidth = 0;
-        double maxChildHeight = 0;
         
-        // 测量每个子元素
         foreach (var child in Children)
         {
-            Size childSize;
-            
-            if (child is InteractiveControl interactiveControl)
-            {
-                childSize = interactiveControl.Measure(contentAvailableSize, context);
-            }
-            else if (child is StackLayout stackLayout)
-            {
-                childSize = stackLayout.Measure(contentAvailableSize, context);
-            }
-            else if (child is Label label)
-            {
-                childSize = label.Measure(contentAvailableSize, context);
-            }
-            else if (child is TextContent textContent)
-            {
-                childSize = textContent.Measure(contentAvailableSize, context);
-            }
-            else
-            {
-                // 默认尺寸
-                childSize = new Size(40 * context.Scale, 40 * context.Scale);
-            }
-            
-            maxChildWidth = Math.Max(maxChildWidth, childSize.Width);
-            maxChildHeight = Math.Max(maxChildHeight, childSize.Height);
+            Size childSize = GetChildSize(child, contentAvailableSize, context);
             
             if (Orientation == Orientation.Vertical)
             {
@@ -161,20 +114,14 @@ public class StackLayout : InputElementBase
             }
         }
         
-        // 添加间距
         if (Children.Count > 1)
         {
             if (Orientation == Orientation.Vertical)
-            {
                 totalHeight += spacingValue * (Children.Count - 1);
-            }
             else
-            {
                 totalWidth += spacingValue * (Children.Count - 1);
-            }
         }
         
-        // 添加内边距
         totalWidth += paddingValue * 2;
         totalHeight += paddingValue * 2;
         
@@ -182,9 +129,6 @@ public class StackLayout : InputElementBase
         return _desiredSize;
     }
     
-    /// <summary>
-    /// 安排子元素位置 - 实现真正的 Arrange 机制
-    /// </summary>
     public void Arrange(Rect finalBounds, IDrawingContext context)
     {
         UpdateBounds(finalBounds);
@@ -203,12 +147,9 @@ public class StackLayout : InputElementBase
             double y = contentBounds.Y;
             foreach (var child in Children)
             {
-                Size childSize = GetChildDesiredSize(child, context);
+                Size childSize = GetChildSize(child, new Size(contentBounds.Width, contentBounds.Height), context);
                 var childBounds = new Rect(contentBounds.X, y, contentBounds.Width, childSize.Height);
-                
-                // 安排子元素
                 ArrangeChild(child, childBounds, context);
-                
                 y += childSize.Height + spacingValue;
             }
         }
@@ -217,44 +158,32 @@ public class StackLayout : InputElementBase
             double x = contentBounds.X;
             foreach (var child in Children)
             {
-                Size childSize = GetChildDesiredSize(child, context);
+                Size childSize = GetChildSize(child, new Size(contentBounds.Width, contentBounds.Height), context);
                 var childBounds = new Rect(x, contentBounds.Y, childSize.Width, contentBounds.Height);
-                
-                // 安排子元素
                 ArrangeChild(child, childBounds, context);
-                
                 x += childSize.Width + spacingValue;
             }
         }
     }
     
-    private Size GetChildDesiredSize(IComponent child, IDrawingContext context)
+    private Size GetChildSize(IComponent child, Size availableSize, IDrawingContext context)
     {
         if (child is InteractiveControl interactiveControl)
+            return interactiveControl.Measure(availableSize, context);
+        if (child is StackLayout stackLayout)
+            return stackLayout.Measure(availableSize, context);
+        if (child is Label label)
+            return label.Measure(availableSize, context);
+        if (child is TextContent textContent)
+            return textContent.Measure(availableSize, context);
+        if (child is ScrollView scrollView)
+            return scrollView.Measure(availableSize, context);
+        if (child is ComponentBase componentBase)
         {
-            return interactiveControl.Measure(Size.Empty, context);
-        }
-        else if (child is StackLayout stackLayout)
-        {
-            return stackLayout.Measure(Size.Empty, context);
-        }
-        else if (child is Label label)
-        {
-            return label.Measure(Size.Empty, context);
-        }
-        else if (child is TextContent textContent)
-        {
-            return textContent.Measure(Size.Empty, context);
-        }
-        else if (child is ScrollView scrollView)
-        {
-            return scrollView.Measure(Size.Empty, context);
-        }
-        else if (child is ComponentBase componentBase)
-        {
-            // ComponentBase 类型：测量其子元素
-            var height = MeasureComponentBaseChildren(componentBase, context);
-            return new Size(100 * context.Scale, height);
+            double height = 0;
+            foreach (var c in componentBase.Children)
+                height += GetChildSize(c, availableSize, context).Height;
+            return new Size(100 * context.Scale, height > 0 ? height : 40 * context.Scale);
         }
         return new Size(40 * context.Scale, 40 * context.Scale);
     }
@@ -262,13 +191,9 @@ public class StackLayout : InputElementBase
     private void ArrangeChild(IComponent child, Rect bounds, IDrawingContext context)
     {
         if (child is InteractiveControl interactiveControl)
-        {
             interactiveControl.Arrange(bounds, context);
-        }
         else if (child is StackLayout stackLayout)
-        {
             stackLayout.Arrange(bounds, context);
-        }
     }
     
     public override void Render(IDrawingContext context, Rect bounds)
@@ -278,10 +203,8 @@ public class StackLayout : InputElementBase
         var spacingValue = Spacing * context.Scale;
         var paddingValue = Padding * context.Scale;
         
-        if (BackgroundColor.HasValue)
-        {
+        if (BackgroundColor != Color.Transparent)
             context.DrawRectangle(bounds, BackgroundColor);
-        }
         
         var contentBounds = new Rect(
             bounds.X + paddingValue,
@@ -294,7 +217,7 @@ public class StackLayout : InputElementBase
             double y = contentBounds.Y;
             foreach (var child in Children)
             {
-                var childHeight = MeasureChildHeight(child, context);
+                var childHeight = GetChildSize(child, new Size(contentBounds.Width, contentBounds.Height), context).Height;
                 var childBounds = new Rect(contentBounds.X, y, contentBounds.Width, childHeight);
                 child.Render(context, childBounds);
                 y += childHeight + spacingValue;
@@ -312,59 +235,6 @@ public class StackLayout : InputElementBase
             }
         }
     }
-    
-    /// <summary>
-    /// 测量子元素高度 - 使用真正的 Measure 机制而非硬编码
-    /// </summary>
-    private double MeasureChildHeight(IComponent component, IDrawingContext context)
-    {
-        if (component is InteractiveControl interactiveControl)
-        {
-            var size = interactiveControl.Measure(Size.Empty, context);
-            return size.Height;
-        }
-        else if (component is StackLayout stackLayout)
-        {
-            var size = stackLayout.Measure(Size.Empty, context);
-            return size.Height;
-        }
-        else if (component is Label label)
-        {
-            var size = label.Measure(Size.Empty, context);
-            return size.Height;
-        }
-        else if (component is TextContent textContent)
-        {
-            var size = textContent.Measure(Size.Empty, context);
-            return size.Height;
-        }
-        else if (component is ScrollView scrollView)
-        {
-            // ScrollView 测量其内容
-            var size = scrollView.Measure(Size.Empty, context);
-            return size.Height;
-        }
-        else if (component is ComponentBase componentBase)
-        {
-            // ComponentBase 类型：测量其子元素
-            return MeasureComponentBaseChildren(componentBase, context);
-        }
-        // 默认高度
-        return 40.0 * context.Scale;
-    }
-    
-    /// <summary>
-    /// 测量 ComponentBase 子元素的总高度
-    /// </summary>
-    private double MeasureComponentBaseChildren(ComponentBase component, IDrawingContext context)
-    {
-        double totalHeight = 0;
-        foreach (var child in component.Children)
-        {
-            totalHeight += MeasureChildHeight(child, context);
-        }
-        return totalHeight > 0 ? totalHeight : 40.0 * context.Scale;
-    }
 }
 
 public enum Orientation
@@ -381,32 +251,16 @@ public class HStack : StackLayout
 public class Label : ComponentBase
 {
     public string? Text { get; set; }
-    
-    /// <summary>
-    /// 字体大小
-    /// </summary>
     public double FontSize { get; set; } = 14;
-    
-    public Color? Color { get; set; }
+    public Color Color { get; set; } = Color.Black;
     public string? FontWeight { get; set; }
     public string? FontFamily { get; set; }
     public TextAlignment TextAlignment { get; set; } = TextAlignment.Left;
-    
-    /// <summary>
-    /// 背景颜色
-    /// </summary>
-    public Color? BackgroundColor { get; set; }
-    
-    /// <summary>
-    /// 内边距
-    /// </summary>
+    public Color BackgroundColor { get; set; } = Color.Transparent;
     public double Padding { get; set; } = 0;
     
     private Size _desiredSize = Size.Zero;
     
-    /// <summary>
-    /// 测量文本所需尺寸
-    /// </summary>
     public Size Measure(Size availableSize, IDrawingContext context)
     {
         if (string.IsNullOrEmpty(Text))
@@ -418,8 +272,6 @@ public class Label : ComponentBase
         var scaledFontSize = FontSize * context.Scale;
         var scaledPadding = Padding * context.Scale;
         var textWidth = context.MeasureText(Text, scaledFontSize, FontFamily);
-        
-        // 行高通常是字体大小的 1.2-1.5 倍
         var lineHeight = scaledFontSize * 1.3;
         
         _desiredSize = new Size(textWidth + scaledPadding * 2, lineHeight + scaledPadding * 2);
@@ -434,24 +286,19 @@ public class Label : ComponentBase
         
         var scaledPadding = Padding * context.Scale;
         
-        // 绘制背景
-        if (BackgroundColor.HasValue)
-        {
+        if (BackgroundColor != Color.Transparent)
             context.DrawRectangle(bounds, BackgroundColor);
-        }
         
         if (!string.IsNullOrEmpty(Text))
         {
             var scaledFontSize = FontSize * context.Scale;
             
-            // 计算文本区域（考虑 Padding）
             var textBounds = new Rect(
                 bounds.X + scaledPadding,
                 bounds.Y + scaledPadding,
                 bounds.Width - scaledPadding * 2,
                 bounds.Height - scaledPadding * 2);
             
-            // 根据 TextAlignment 计算水平位置
             double x = textBounds.X;
             if (TextAlignment == TextAlignment.Center)
             {
@@ -464,7 +311,6 @@ public class Label : ComponentBase
                 x = textBounds.X + textBounds.Width - textWidth;
             }
             
-            // y 是文本视觉中心，文本从顶部开始
             var y = textBounds.Y + scaledFontSize * 0.5;
             context.DrawText(Text, x, y, scaledFontSize, FontFamily, FontWeight, Color);
         }
@@ -483,56 +329,19 @@ public class Button : InteractiveControl
     private bool _isPressed = false;
     private bool _isHovered = false;
     
-    // === 文本属性 ===
     public string? Text { get; set; }
     public double FontSize { get; set; } = 14;
     public string? FontFamily { get; set; }
-    public Color? TextColor { get; set; } = Color.White;
-    
-    // === 背景颜色（各状态） ===
-    /// <summary>
-    /// 默认背景颜色
-    /// </summary>
-    public Color? BackgroundColor { get; set; } = Color.SystemBlue;
-    
-    /// <summary>
-    /// 鼠标悬停时的背景颜色
-    /// </summary>
+    public Color TextColor { get; set; } = Color.White;
+    public Color BackgroundColor { get; set; } = Color.FromArgb(0, 122, 255);
     public Color? HoverBackgroundColor { get; set; }
-    
-    /// <summary>
-    /// 按下时的背景颜色
-    /// </summary>
     public Color? PressedBackgroundColor { get; set; }
-    
-    /// <summary>
-    /// 禁用时的背景颜色
-    /// </summary>
-    public Color? DisabledBackgroundColor { get; set; } = Color.LightGray;
-    
-    // === 文本颜色（各状态） ===
-    /// <summary>
-    /// 禁用时的文本颜色
-    /// </summary>
-    public Color? DisabledTextColor { get; set; } = Color.Gray;
-    
-    // === 边框属性 ===
-    /// <summary>
-    /// 边框颜色
-    /// </summary>
+    public Color DisabledBackgroundColor { get; set; } = Color.LightGray;
+    public Color DisabledTextColor { get; set; } = Color.Gray;
     public Color? BorderColor { get; set; }
-    
-    /// <summary>
-    /// 边框宽度
-    /// </summary>
     public double BorderWidth { get; set; } = 0;
-    
-    /// <summary>
-    /// 圆角半径
-    /// </summary>
     public double CornerRadius { get; set; } = 4;
     
-    // === 事件 ===
     public event EventHandler? Click;
     
     public event EventHandler? OnClick
@@ -546,19 +355,15 @@ public class Button : InteractiveControl
         IsFocusable = true;
         _desiredSize = new Size(100, 44);
         
-        // 指针事件
         PointerEntered += OnPointerEntered;
         PointerExited += OnPointerExited;
         PointerPressed += OnPointerPressed;
         PointerReleased += OnPointerReleased;
         
-        // Tapped 事件
         Tapped += (s, e) =>
         {
             if (IsEnabled)
-            {
                 Click?.Invoke(this, EventArgs.Empty);
-            }
         };
     }
     
@@ -590,37 +395,33 @@ public class Button : InteractiveControl
         StateHasChanged();
     }
     
-    /// <summary>
-    /// 获取当前状态的背景颜色
-    /// </summary>
     private Color GetCurrentBackgroundColor()
     {
         if (!IsEnabled)
-            return DisabledBackgroundColor ?? Color.LightGray;
+            return DisabledBackgroundColor;
         
         if (_isPressed)
-            return PressedBackgroundColor ?? (BackgroundColor ?? Color.SystemBlue).Darken(0.2);
+            return PressedBackgroundColor ?? DarkenColor(BackgroundColor, 0.2f);
         
         if (_isHovered)
-            return HoverBackgroundColor ?? (BackgroundColor ?? Color.SystemBlue).Darken(0.1);
+            return HoverBackgroundColor ?? DarkenColor(BackgroundColor, 0.1f);
         
-        return BackgroundColor ?? Color.SystemBlue;
+        return BackgroundColor;
     }
     
-    /// <summary>
-    /// 获取当前状态的文本颜色
-    /// </summary>
+    private static Color DarkenColor(Color color, float amount)
+    {
+        int r = (int)(color.R * (1 - amount));
+        int g = (int)(color.G * (1 - amount));
+        int b = (int)(color.B * (1 - amount));
+        return Color.FromArgb(color.A, r, g, b);
+    }
+    
     private Color GetCurrentTextColor()
     {
-        if (!IsEnabled)
-            return DisabledTextColor ?? Color.Gray;
-        
-        return TextColor ?? Color.White;
+        return IsEnabled ? TextColor : DisabledTextColor;
     }
     
-    /// <summary>
-    /// 测量按钮所需尺寸
-    /// </summary>
     public override Size Measure(Size availableSize, IDrawingContext context)
     {
         if (string.IsNullOrEmpty(Text))
@@ -632,11 +433,7 @@ public class Button : InteractiveControl
         var scaledFontSize = FontSize * context.Scale;
         var textWidth = context.MeasureText(Text, scaledFontSize, FontFamily);
         
-        // 添加内边距（水平约 20px）
-        var buttonWidth = textWidth + 40 * context.Scale;
-        var buttonHeight = 44 * context.Scale;
-        
-        _desiredSize = new Size(buttonWidth, buttonHeight);
+        _desiredSize = new Size(textWidth + 40 * context.Scale, 44 * context.Scale);
         return _desiredSize;
     }
     
@@ -650,16 +447,11 @@ public class Button : InteractiveControl
         var bgColor = GetCurrentBackgroundColor();
         var textColor = GetCurrentTextColor();
         
-        // 绘制背景
         context.DrawRoundRect(bounds, bgColor, scaledCornerRadius);
         
-        // 绘制边框
         if (BorderWidth > 0 && BorderColor.HasValue)
-        {
-            context.DrawRectangle(bounds, null, BorderColor, BorderWidth * context.Scale, scaledCornerRadius);
-        }
+            context.DrawRectangle(bounds, Color.Transparent, BorderColor, BorderWidth * context.Scale, scaledCornerRadius);
         
-        // 绘制聚焦边框
         if (IsFocused && IsEnabled)
         {
             var focusBounds = new Rect(
@@ -667,16 +459,15 @@ public class Button : InteractiveControl
                 bounds.Y - 2 * context.Scale,
                 bounds.Width + 4 * context.Scale,
                 bounds.Height + 4 * context.Scale);
-            context.DrawRectangle(focusBounds, null, Color.SystemBlue, 2 * context.Scale, scaledCornerRadius + 2);
+            context.DrawRectangle(focusBounds, Color.Transparent, Color.FromArgb(0, 122, 255), 2 * context.Scale, scaledCornerRadius + 2);
         }
         
-        // 绘制文本
         if (!string.IsNullOrEmpty(Text))
         {
             var scaledFontSize = FontSize * context.Scale;
             var textWidth = context.MeasureText(Text, scaledFontSize, FontFamily);
             var x = bounds.X + (bounds.Width - textWidth) / 2;
-            var y = bounds.Y + bounds.Height / 2; // 视觉中心
+            var y = bounds.Y + bounds.Height / 2;
             context.DrawText(Text, x, y, scaledFontSize, FontFamily, null, textColor);
         }
     }
@@ -707,13 +498,13 @@ public class CheckBox : InteractiveControl
                 var oldValue = _isChecked;
                 _isChecked = value;
                 CheckedChanged?.Invoke(this, new ValueChangedEventArgs<bool>(oldValue, value));
-                StateHasChanged(); // 自动触发重绘
+                StateHasChanged();
             }
         }
     }
     
     public string? Label { get; set; }
-    public Color? CheckedColor { get; set; }
+    public Color CheckedColor { get; set; } = Color.FromArgb(0, 122, 255);
     public double Size { get; set; } = 20;
     
     public event EventHandler<ValueChangedEventArgs<bool>>? CheckedChanged;
@@ -726,9 +517,7 @@ public class CheckBox : InteractiveControl
         Tapped += (s, e) =>
         {
             if (IsEnabled)
-            {
                 IsChecked = !IsChecked;
-            }
         };
     }
     
@@ -742,7 +531,6 @@ public class CheckBox : InteractiveControl
         }
         else
         {
-            // 包含标签文本宽度
             var textWidth = context.MeasureText(Label, 14 * context.Scale, null);
             _desiredSize = new Size(scaledSize + 8 * context.Scale + textWidth, scaledSize);
         }
@@ -758,77 +546,53 @@ public class CheckBox : InteractiveControl
         
         var scaledSize = Size * context.Scale;
         var checkBounds = new Rect(bounds.X, bounds.Y, scaledSize, scaledSize);
-        var color = IsChecked ? (CheckedColor ?? Color.SystemBlue) : Color.LightGray;
+        var color = IsChecked ? CheckedColor : Color.LightGray;
         context.DrawRoundRect(checkBounds, color, 4 * context.Scale);
         
         if (!string.IsNullOrEmpty(Label))
         {
             var scaledFontSize = 14 * context.Scale;
-            var textY = bounds.Y + scaledFontSize * 0.5; // 视觉中心
+            var textY = bounds.Y + scaledFontSize * 0.5;
             context.DrawText(Label, bounds.X + scaledSize + 8 * context.Scale, textY, scaledFontSize);
         }
     }
 }
 
-/// <summary>
-/// 图片控件 - 支持从文件加载图片并显示
-/// </summary>
 public class Image : ComponentBase
 {
     private string? _loadedImageKey;
     
-    /// <summary>
-    /// 图片源路径
-    /// </summary>
     public string? Source { get; set; }
-    
-    /// <summary>
-    /// 宽度（-1 表示自动）
-    /// </summary>
     public double Width { get; set; } = -1;
-    
-    /// <summary>
-    /// 高度（-1 表示自动）
-    /// </summary>
     public double Height { get; set; } = -1;
-    
-    /// <summary>
-    /// 拉伸模式
-    /// </summary>
     public Stretch Stretch { get; set; } = Stretch.Uniform;
     
     public override void Build(IBuildContext context) { }
     
     public override void Render(IDrawingContext context, Rect bounds)
     {
-        // 如果没有图片源，显示占位符
         if (string.IsNullOrEmpty(Source))
         {
             context.DrawRectangle(bounds, Color.LightGray);
             return;
         }
         
-        // 加载图片（如果尚未加载）
         if (_loadedImageKey == null || !string.Equals(_loadedImageKey, Source, StringComparison.OrdinalIgnoreCase))
-        {
             _loadedImageKey = context.LoadImage(Source);
-        }
         
-        // 如果加载失败，显示占位符
         if (_loadedImageKey == null)
         {
             context.DrawRectangle(bounds, Color.LightGray);
             return;
         }
         
-        // 绘制图片
         context.DrawImage(_loadedImageKey, bounds, Stretch);
     }
 }
 
 public class Container : ComponentBase
 {
-    public Color? BackgroundColor { get; set; }
+    public Color BackgroundColor { get; set; } = Color.Transparent;
     public double Padding { get; set; } = 0;
     public double CornerRadius { get; set; } = 0;
     
@@ -836,10 +600,8 @@ public class Container : ComponentBase
     
     public override void Render(IDrawingContext context, Rect bounds)
     {
-        if (BackgroundColor.HasValue)
-        {
-            context.DrawRoundRect(bounds, BackgroundColor.Value, CornerRadius * context.Scale);
-        }
+        if (BackgroundColor != Color.Transparent)
+            context.DrawRoundRect(bounds, BackgroundColor, CornerRadius * context.Scale);
         
         var contentBounds = new Rect(
             bounds.X + Padding * context.Scale,
@@ -848,8 +610,6 @@ public class Container : ComponentBase
             bounds.Height - Padding * 2 * context.Scale);
         
         foreach (var child in Children)
-        {
             child.Render(context, contentBounds);
-        }
     }
 }

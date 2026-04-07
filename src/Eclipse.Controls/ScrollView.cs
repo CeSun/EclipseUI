@@ -3,6 +3,7 @@ using Eclipse.Core.Abstractions;
 using Eclipse.Input;
 using Eclipse.Rendering;
 using System.Collections.Generic;
+using Color = System.Drawing.Color;
 
 namespace Eclipse.Controls;
 
@@ -111,17 +112,17 @@ public class ScrollView : InputElementBase
     /// <summary>
     /// 滚动条颜色
     /// </summary>
-    public Color? ScrollBarColor { get; set; } = Color.Gray;
+    public Color ScrollBarColor { get; set; } = Color.Gray;
     
     /// <summary>
     /// 滚动条悬停颜色
     /// </summary>
-    public Color? ScrollBarHoverColor { get; set; } = Color.DarkGray;
+    public Color ScrollBarHoverColor { get; set; } = Color.DarkGray;
     
     /// <summary>
     /// 滚动条背景颜色
     /// </summary>
-    public Color? ScrollBarTrackColor { get; set; } = Color.LightGray;
+    public Color ScrollBarTrackColor { get; set; } = Color.LightGray;
     
     /// <summary>
     /// 滚动条圆角半径
@@ -131,7 +132,7 @@ public class ScrollView : InputElementBase
     /// <summary>
     /// 背景颜色
     /// </summary>
-    public Color? BackgroundColor { get; set; }
+    public Color BackgroundColor { get; set; } = Color.Transparent;
     
     /// <summary>
     /// 内容内边距
@@ -317,7 +318,7 @@ public class ScrollView : InputElementBase
         var scaledCornerRadius = ScrollBarCornerRadius * context.Scale;
         
         // 绘制背景
-        if (BackgroundColor.HasValue)
+        if (BackgroundColor != Color.Transparent)
         {
             context.DrawRectangle(bounds, BackgroundColor);
         }
@@ -397,32 +398,25 @@ public class ScrollView : InputElementBase
     {
         if (opacity <= 0) return;
         
-        // 滚动条区域
         var scrollBarBounds = new Rect(
             bounds.X + bounds.Width - scrollBarWidth,
             bounds.Y,
             scrollBarWidth,
             bounds.Height);
         
-        // 计算滑块高度和位置
         var thumbHeight = Math.Max(20 * context.Scale, bounds.Height * (bounds.Height / _contentSize.Height));
         var thumbY = bounds.Y + (bounds.Height - thumbHeight) * (_scrollY / _maxScrollY);
         
-        // 存储滑块区域用于命中测试
         _verticalThumbBounds = new Rect(scrollBarBounds.X, thumbY, scrollBarWidth, thumbHeight);
         
-        // 绘制滚动条背景
-        var trackColor = (ScrollBarTrackColor ?? Color.LightGray).WithAlpha(opacity * 0.5);
+        var trackColor = Color.FromArgb((int)(opacity * 0.5 * 255), ScrollBarTrackColor);
         context.DrawRectangle(scrollBarBounds, trackColor, null, 0, cornerRadius);
         
-        // 绘制滚动滑块
         var thumbColor = _verticalThumbDragging 
-            ? (ScrollBarHoverColor ?? Color.DarkGray) 
-            : (_verticalScrollBarHovered 
-                ? (ScrollBarHoverColor ?? Color.DarkGray) 
-                : (ScrollBarColor ?? Color.Gray));
+            ? ScrollBarHoverColor
+            : (_verticalScrollBarHovered ? ScrollBarHoverColor : ScrollBarColor);
         
-        thumbColor = thumbColor.WithAlpha(opacity);
+        thumbColor = Color.FromArgb((int)(opacity * 255), thumbColor);
         
         var thumbBounds = new Rect(
             scrollBarBounds.X,
@@ -437,32 +431,25 @@ public class ScrollView : InputElementBase
     {
         if (opacity <= 0) return;
         
-        // 滚动条区域
         var scrollBarBounds = new Rect(
             bounds.X,
             bounds.Y + bounds.Height - scrollBarWidth,
             bounds.Width,
             scrollBarWidth);
         
-        // 计算滑块宽度和位置
         var thumbWidth = Math.Max(20 * context.Scale, bounds.Width * (bounds.Width / _contentSize.Width));
         var thumbX = bounds.X + (bounds.Width - thumbWidth) * (_scrollX / _maxScrollX);
         
-        // 存储滑块区域用于命中测试
         _horizontalThumbBounds = new Rect(thumbX, scrollBarBounds.Y, thumbWidth, scrollBarWidth);
         
-        // 绘制滚动条背景
-        var trackColor = (ScrollBarTrackColor ?? Color.LightGray).WithAlpha(opacity * 0.5);
+        var trackColor = Color.FromArgb((int)(opacity * 0.5 * 255), ScrollBarTrackColor);
         context.DrawRectangle(scrollBarBounds, trackColor, null, 0, cornerRadius);
         
-        // 绘制滚动滑块
         var thumbColor = _horizontalThumbDragging 
-            ? (ScrollBarHoverColor ?? Color.DarkGray) 
-            : (_horizontalScrollBarHovered 
-                ? (ScrollBarHoverColor ?? Color.DarkGray) 
-                : (ScrollBarColor ?? Color.Gray));
+            ? ScrollBarHoverColor
+            : (_horizontalScrollBarHovered ? ScrollBarHoverColor : ScrollBarColor);
         
-        thumbColor = thumbColor.WithAlpha(opacity);
+        thumbColor = Color.FromArgb((int)(opacity * 255), thumbColor);
         
         var thumbBounds = new Rect(
             thumbX,
@@ -475,7 +462,7 @@ public class ScrollView : InputElementBase
     
     private static Color ApplyOpacity(Color color, double opacity)
     {
-        return color.WithAlpha(opacity);
+        return Color.FromArgb((int)(opacity * 255), color);
     }
     
     #endregion

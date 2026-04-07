@@ -3,6 +3,7 @@ using Eclipse.Core.Abstractions;
 using Eclipse.Input;
 using Eclipse.Rendering;
 using System.Collections.Generic;
+using Color = System.Drawing.Color;
 
 namespace Eclipse.Controls;
 
@@ -62,7 +63,7 @@ public class GridLayout : InputElementBase
     /// <summary>
     /// 背景颜色
     /// </summary>
-    public Color? BackgroundColor { get; set; }
+    public Color BackgroundColor { get; set; } = Color.Transparent;
     
     /// <summary>
     /// 内边距
@@ -242,7 +243,7 @@ public class GridLayout : InputElementBase
         var scaledColumnSpacing = ColumnSpacing * context.Scale;
         
         // 绘制背景
-        if (BackgroundColor.HasValue)
+        if (BackgroundColor != Color.Transparent)
         {
             context.DrawRectangle(bounds, BackgroundColor);
         }

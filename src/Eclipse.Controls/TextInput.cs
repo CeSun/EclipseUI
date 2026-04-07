@@ -2,6 +2,7 @@ using Eclipse.Core.Abstractions;
 using Eclipse.Input;
 using Eclipse.Rendering;
 using System;
+using Color = System.Drawing.Color;
 
 namespace Eclipse.Controls;
 
@@ -69,12 +70,12 @@ public class TextInput : InteractiveControl
     /// <summary>
     /// 背景颜色
     /// </summary>
-    public Color? BackgroundColor { get; set; } = Color.White;
+    public Color BackgroundColor { get; set; } = Color.White;
     
     /// <summary>
     /// 边框颜色（聚焦时）
     /// </summary>
-    public Color? FocusBorderColor { get; set; } = Color.SystemBlue;
+    public Color FocusBorderColor { get; set; } = Color.FromArgb(0, 122, 255);
     
     /// <summary>
     /// 圆角半径
@@ -144,12 +145,12 @@ public class TextInput : InteractiveControl
     /// <summary>
     /// 选择背景颜色
     /// </summary>
-    public Color? SelectionBackgroundColor { get; set; } = Color.SystemBlue.WithAlpha(0.3);
+    public Color SelectionBackgroundColor { get; set; } = Color.FromArgb(128, 0, 122, 255);
     
     /// <summary>
     /// 选择文本颜色
     /// </summary>
-    public Color? SelectionTextColor { get; set; } = Color.Black;
+    public Color SelectionTextColor { get; set; } = Color.Black;
     
     /// <summary>
     /// 文本变化事件
@@ -814,12 +815,11 @@ public class TextInput : InteractiveControl
         var scaledPadding = Padding * context.Scale;
         
         // 绘制背景
-        var bgColor = BackgroundColor ?? Color.White;
-        context.DrawRoundRect(bounds, bgColor, scaledCornerRadius);
+        context.DrawRoundRect(bounds, BackgroundColor, scaledCornerRadius);
         
         // 绘制边框（聚焦时使用蓝色）
-        var borderColor = IsFocused ? (FocusBorderColor ?? Color.SystemBlue) : Color.LightGray;
-        context.DrawRectangle(bounds, null, borderColor, 1 * context.Scale, scaledCornerRadius);
+        var borderColor = IsFocused ? FocusBorderColor : Color.LightGray;
+        context.DrawRectangle(bounds, Color.Transparent, borderColor, 1 * context.Scale, scaledCornerRadius);
         
         // 计算文本绘制区域
         var textBounds = new Rect(
@@ -872,7 +872,7 @@ public class TextInput : InteractiveControl
                 context.DrawLine(
                     compositionX, underlineY,
                     compositionX + compositionWidth, underlineY,
-                    "#000000", 1 * context.Scale);
+                    Color.Black, 1 * context.Scale);
                 
                 // 绘制组合文本中的光标
                 if (_compositionCursor > 0 && _compositionCursor <= _compositionText.Length)
@@ -880,7 +880,7 @@ public class TextInput : InteractiveControl
                     var textBeforeCursor = _compositionText.Substring(0, _compositionCursor);
                     var cursorX = compositionX + context.MeasureText(textBeforeCursor, scaledFontSize, null);
                     var cursorBounds = new Rect(cursorX, textBounds.Y, 2 * context.Scale, scaledFontSize);
-                    context.DrawRectangle(cursorBounds, "#007AFF"); // 组合光标用蓝色
+                    context.DrawRectangle(cursorBounds, Color.FromArgb(0, 122, 255)); // 组合光标用蓝色
                 }
             }
             
@@ -893,7 +893,7 @@ public class TextInput : InteractiveControl
         else if (!string.IsNullOrEmpty(Placeholder))
         {
             var textY = textBounds.Y + scaledFontSize * 0.5;
-            context.DrawText(Placeholder, textBounds.X, textY, scaledFontSize, null, null, "#888888");
+            context.DrawText(Placeholder, textBounds.X, textY, scaledFontSize, null, null, Color.Gray);
             
             // 绘制光标（聚焦时，无文本时光标在开头）
             if (IsFocused && ShouldShowCursor())
@@ -934,7 +934,7 @@ public class TextInput : InteractiveControl
             endX - startX,
             scaledFontSize);
         
-        context.DrawRectangle(selectionRect, SelectionBackgroundColor ?? Color.SystemBlue.WithAlpha(0.3));
+        context.DrawRectangle(selectionRect, SelectionBackgroundColor);
     }
     
     /// <summary>
@@ -979,7 +979,7 @@ public class TextInput : InteractiveControl
         
         // 绘制细线作为光标
         var cursorBounds = new Rect(cursorX, cursorY, 2 * context.Scale, cursorHeight);
-        context.DrawRectangle(cursorBounds, "#000000");
+        context.DrawRectangle(cursorBounds, Color.Black);
     }
     
     protected override void OnGotFocus()

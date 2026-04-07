@@ -554,6 +554,7 @@ namespace Eclipse.Generator
             sb.AppendLine("#nullable enable");
             sb.AppendLine();
             WriteLine("using System;");
+            WriteLine("using System.Drawing;");
             WriteLine("using Eclipse.Core;");
             WriteLine("using Eclipse.Core.Abstractions;");
             foreach (var @using in parsed.Usings)
@@ -718,7 +719,11 @@ namespace Eclipse.Generator
                 }
                 else if (attr.IsBinding)
                 {
-                    WriteLine($"{varName}.{attr.Name} = {attr.Value};");
+                    // 绑定表达式也需要进行类型转换（如颜色值）
+                    var propTypeInfo = propertyTypes.TryGetValue((control.TagName, attr.Name), out var info) 
+                        ? info : null;
+                    var convertedValue = ConvertBindingValue(attr.Value, propTypeInfo);
+                    WriteLine($"{varName}.{attr.Name} = {convertedValue};");
                 }
                 else
                 {
@@ -776,6 +781,12 @@ namespace Eclipse.Generator
         
         private string ConvertLiteralValue(string value, PropertyTypeInfo? typeInfo)
         {
+            // 先检查是否是复杂表达式（包含条件运算符）
+            if (value.Contains('?') && value.Contains(':'))
+            {
+                return ConvertExpressionValues(value, typeInfo);
+            }
+            
             if (!value.StartsWith("\"") || !value.EndsWith("\"") || value.Length < 2)
                 return value;
             
@@ -808,15 +819,18 @@ namespace Eclipse.Generator
             }
             
             // 复杂类型转换
-            switch (typeInfo.TypeName)
+            var typeName = typeInfo.TypeName;
+            
+            // Color 类型：支持多种格式
+            // "#FF0000" → "ColorTranslator.FromHtml("#FF0000")"
+            // "Red" → "Color.Red"
+            if (typeName == "Color" || typeName == "System.Drawing.Color" || typeName.EndsWith(".Color"))
             {
-                // Color 类型：支持多种格式
-                // "#FF0000" → "Color.FromHex(\"#FF0000\")"
-                // "Red" → "Colors.Red"
-                case "Color":
-                case "SkiaSharp.SKColor":
-                    return ConvertColorValue(innerValue);
-                
+                return ConvertColorValue(innerValue);
+            }
+            
+            switch (typeName)
+            {
                 // Thickness 类型：支持多种格式
                 // "10" → "new Thickness(10)"
                 // "10,20" → "new Thickness(10, 20)"
@@ -847,7 +861,7 @@ namespace Eclipse.Generator
                 // DateTime 类型："2024-01-15" → "DateTime.Parse(\"2024-01-15\")"
                 case "DateTime":
                 case "DateTimeOffset":
-                    return $"{typeInfo.TypeName}.Parse(\"{innerValue}\")";
+                    return $"{typeName}.Parse(\"{innerValue}\")";
                 
                 // Guid 类型："..." → "Guid.Parse(\"...\")"
                 case "Guid":
@@ -863,31 +877,99 @@ namespace Eclipse.Generator
         }
 
         /// <summary>
-        /// 转换颜色值
+        /// 转换颜色值到 System.Drawing.Color
         /// </summary>
         private string ConvertColorValue(string value)
         {
             // Hex 格式: #RGB, #RRGGBB, #ARGB, #AARRGGBB
             if (value.StartsWith("#"))
             {
-                return $"Color.FromHex(\"{value}\")";
+                return $"ColorTranslator.FromHtml(\"{value}\")";
             }
             
             // rgb/rgba 格式: rgb(255,0,0), rgba(255,0,0,0.5)
             if (value.StartsWith("rgb", StringComparison.OrdinalIgnoreCase))
             {
-                return $"Color.Parse(\"{value}\")";
+                // 解析 rgb/rgba 格式
+                return ParseRgbColor(value);
             }
             
-            // 颜色名称: Red, Blue, Green 等
+            // 颜色名称: Red, Blue, Green, White, Black 等
             if (char.IsLetter(value[0]))
             {
-                // 尝试作为 Colors 静态属性
-                return $"Colors.{value}";
+                // 使用 Color 静态属性
+                return $"Color.{value}";
             }
             
-            // 回退：作为字符串解析
-            return $"Color.Parse(\"{value}\")";
+            // 回退：使用 ColorTranslator.FromHtml
+            return $"ColorTranslator.FromHtml(\"{value}\")";
+        }
+        
+        /// <summary>
+        /// 转换绑定表达式中的值（处理条件表达式中的颜色字面量等）
+        /// </summary>
+        private string ConvertBindingValue(string expression, PropertyTypeInfo? typeInfo)
+        {
+            if (typeInfo == null)
+                return expression;
+            
+            var typeName = typeInfo.TypeName;
+            bool isColorType = typeName == "Color" || typeName == "System.Drawing.Color" || typeName.EndsWith(".Color");
+            
+            if (!isColorType)
+                return expression;
+            
+            // 匹配表达式中的颜色字符串字面量："#RRGGBB" 或 "ColorName"
+            // 使用正则表达式替换
+            var result = System.Text.RegularExpressions.Regex.Replace(
+                expression,
+                "\"(#?[A-Za-z0-9]+)\"",
+                match =>
+                {
+                    var colorValue = match.Groups[1].Value;
+                    return ConvertColorValue(colorValue);
+                });
+            
+            return result;
+        }
+        
+        /// <summary>
+        /// 转换表达式中的颜色值（处理条件表达式等）
+        /// </summary>
+        private string ConvertExpressionValues(string expression, PropertyTypeInfo? typeInfo)
+        {
+            // 这里的逻辑与 ConvertBindingValue 相同
+            return ConvertBindingValue(expression, typeInfo);
+        }
+        
+        /// <summary>
+        /// 解析 rgb/rgba 颜色格式
+        /// </summary>
+        private string ParseRgbColor(string value)
+        {
+            // rgb(255,0,0) → Color.FromArgb(255, 0, 0)
+            // rgba(255,0,0,0.5) → Color.FromArgb(128, 255, 0, 0)
+            var match = System.Text.RegularExpressions.Regex.Match(
+                value, 
+                @"rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+))?\s*\)",
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            
+            if (match.Success)
+            {
+                var r = int.Parse(match.Groups[1].Value);
+                var g = int.Parse(match.Groups[2].Value);
+                var b = int.Parse(match.Groups[3].Value);
+                
+                if (match.Groups[4].Success)
+                {
+                    var a = (int)(double.Parse(match.Groups[4].Value) * 255);
+                    return $"Color.FromArgb({a}, {r}, {g}, {b})";
+                }
+                
+                return $"Color.FromArgb({r}, {g}, {b})";
+            }
+            
+            return $"ColorTranslator.FromHtml(\"{value}\")";
         }
 
         /// <summary>

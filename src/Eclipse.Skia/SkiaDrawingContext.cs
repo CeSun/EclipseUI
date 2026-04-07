@@ -6,6 +6,7 @@ using SkiaSharp;
 using System;
 using System.Collections.Concurrent;
 using System.IO;
+using Color = System.Drawing.Color;
 
 namespace Eclipse.Skia;
 
@@ -33,33 +34,29 @@ public class SkiaDrawingContext : IDrawingContext
         Scale = scale;
     }
     
-    public void Clear(Color? color = null)
+    public void Clear(Color color)
     {
-        var bgColor = color.HasValue ? ToSKColor(color.Value) : SKColors.White;
-        _canvas.Clear(bgColor);
+        _canvas.Clear(ToSKColor(color));
     }
     
-    public void DrawRectangle(Rect bounds, Color? fillColor, Color? strokeColor = null, double strokeWidth = 0, double cornerRadius = 0)
+    public void DrawRectangle(Rect bounds, Color fillColor, Color? strokeColor = null, double strokeWidth = 0, double cornerRadius = 0)
     {
-        if (fillColor.HasValue)
+        using var paint = new SKPaint
         {
-            using var paint = new SKPaint
-            {
-                IsAntialias = true,
-                Color = ToSKColor(fillColor.Value),
-                Style = SKPaintStyle.Fill
-            };
-            
-            var rect = new SKRect((float)bounds.X, (float)bounds.Y, (float)(bounds.X + bounds.Width), (float)(bounds.Y + bounds.Height));
-            
-            if (cornerRadius > 0)
-            {
-                _canvas.DrawRoundRect(rect, (float)cornerRadius, (float)cornerRadius, paint);
-            }
-            else
-            {
-                _canvas.DrawRect(rect, paint);
-            }
+            IsAntialias = true,
+            Color = ToSKColor(fillColor),
+            Style = SKPaintStyle.Fill
+        };
+        
+        var rect = new SKRect((float)bounds.X, (float)bounds.Y, (float)(bounds.X + bounds.Width), (float)(bounds.Y + bounds.Height));
+        
+        if (cornerRadius > 0)
+        {
+            _canvas.DrawRoundRect(rect, (float)cornerRadius, (float)cornerRadius, paint);
+        }
+        else
+        {
+            _canvas.DrawRect(rect, paint);
         }
         
         if (strokeColor.HasValue && strokeWidth > 0)
@@ -71,8 +68,6 @@ public class SkiaDrawingContext : IDrawingContext
                 Style = SKPaintStyle.Stroke,
                 StrokeWidth = (float)strokeWidth
             };
-            
-            var rect = new SKRect((float)bounds.X, (float)bounds.Y, (float)(bounds.X + bounds.Width), (float)(bounds.Y + bounds.Height));
             
             if (cornerRadius > 0)
             {
@@ -111,7 +106,7 @@ public class SkiaDrawingContext : IDrawingContext
         _canvas.DrawLine((float)x1, (float)y1, (float)x2, (float)y2, paint);
     }
     
-    public void DrawText(string text, double x, double y, double fontSize, string? fontFamily = null, string? fontWeight = null, Color? color = null)
+    public void DrawText(string text, double x, double y, double fontSize, string? fontFamily = null, string? fontWeight = null, Color color = default)
     {
         if (string.IsNullOrEmpty(text))
             return;
@@ -128,15 +123,13 @@ public class SkiaDrawingContext : IDrawingContext
         using var paint = new SKPaint
         {
             IsAntialias = true,
-            Color = color.HasValue ? ToSKColor(color.Value) : SKColors.Black
+            Color = color != default ? ToSKColor(color) : SKColors.Black
         };
         
         // 获取字体度量信息
         var metrics = font.Metrics;
         
         // y 参数表示文本视觉中心
-        // 视觉中心 = (Top + Bottom) / 2，Top 是负数
-        // 基线位置 = y - 视觉中心
         var visualCenter = (metrics.Top + metrics.Bottom) / 2;
         var baseline = (float)(y - visualCenter);
         
@@ -161,19 +154,15 @@ public class SkiaDrawingContext : IDrawingContext
         if (string.IsNullOrEmpty(source))
             return null;
         
-        // 使用路径作为缓存键
         var cacheKey = source;
         
-        // 如果已缓存，直接返回
         if (_imageCache.ContainsKey(cacheKey))
             return cacheKey;
         
-        // 尝试加载图片
         try
         {
             SKImage? image = null;
             
-            // 检查是否是文件路径
             if (File.Exists(source))
             {
                 using var stream = File.OpenRead(source);
@@ -188,18 +177,6 @@ public class SkiaDrawingContext : IDrawingContext
                     }
                 }
             }
-            // 检查是否是 HTTP URL（未来扩展）
-            else if (source.StartsWith("http://") || source.StartsWith("https://"))
-            {
-                // 暂不支持 HTTP 加载
-                return null;
-            }
-            // 检查是否是资源路径（未来扩展）
-            else if (source.StartsWith("res://"))
-            {
-                // 暂不支持资源加载
-                return null;
-            }
             
             if (image != null)
             {
@@ -207,18 +184,14 @@ public class SkiaDrawingContext : IDrawingContext
                 return cacheKey;
             }
         }
-        catch (Exception)
+        catch
         {
-            // 加载失败
             return null;
         }
         
         return null;
     }
     
-    /// <summary>
-    /// 获取图片原始尺寸
-    /// </summary>
     public Size GetImageSize(string imageKey)
     {
         if (string.IsNullOrEmpty(imageKey) || !_imageCache.TryGetValue(imageKey, out var image))
@@ -227,27 +200,19 @@ public class SkiaDrawingContext : IDrawingContext
         return new Size(image.Width, image.Height);
     }
     
-    /// <summary>
-    /// 绘制图片
-    /// </summary>
     public void DrawImage(string imageKey, Rect bounds, Stretch stretch = Stretch.Uniform)
     {
         if (string.IsNullOrEmpty(imageKey) || !_imageCache.TryGetValue(imageKey, out var image))
             return;
         
-        // 计算绘制区域
         var destRect = CalculateStretchRect(
             new Size(image.Width, image.Height),
             bounds,
             stretch);
         
-        // 绘制图片
         _canvas.DrawImage(image, destRect);
     }
     
-    /// <summary>
-    /// 根据拉伸模式计算绘制区域
-    /// </summary>
     private static SKRect CalculateStretchRect(Size imageSize, Rect bounds, Stretch stretch)
     {
         var imageWidth = imageSize.Width;
@@ -263,17 +228,14 @@ public class SkiaDrawingContext : IDrawingContext
         switch (stretch)
         {
             case Stretch.None:
-                // 不拉伸，居中显示
                 var x = bounds.X + (boundsWidth - imageWidth) / 2;
                 var y = bounds.Y + (boundsHeight - imageHeight) / 2;
                 return new SKRect((float)x, (float)y, (float)(x + imageWidth), (float)(y + imageHeight));
             
             case Stretch.Fill:
-                // 填充整个区域，可能改变比例
                 return new SKRect((float)bounds.X, (float)bounds.Y, (float)(bounds.X + boundsWidth), (float)(bounds.Y + boundsHeight));
             
             case Stretch.Uniform:
-                // 保持比例，适应区域（可能留空白）
                 var uniformScale = Math.Min(boundsWidth / imageWidth, boundsHeight / imageHeight);
                 var uniformWidth = imageWidth * uniformScale;
                 var uniformHeight = imageHeight * uniformScale;
@@ -282,7 +244,6 @@ public class SkiaDrawingContext : IDrawingContext
                 return new SKRect((float)uniformX, (float)uniformY, (float)(uniformX + uniformWidth), (float)(uniformY + uniformHeight));
             
             case Stretch.UniformToFill:
-                // 保持比例，填充区域（可能裁剪）
                 var fillScale = Math.Max(boundsWidth / imageWidth, boundsHeight / imageHeight);
                 var fillWidth = imageWidth * fillScale;
                 var fillHeight = imageHeight * fillScale;
@@ -336,7 +297,7 @@ public class SkiaDrawingContext : IDrawingContext
     }
     
     /// <summary>
-    /// 将 Color 转换为 SKColor
+    /// 将 System.Drawing.Color 转换为 SKColor
     /// </summary>
     private static SKColor ToSKColor(Color color)
     {
