@@ -62,6 +62,11 @@ public class DockPanel : InputElementBase
     /// </summary>
     public bool LastChildFill { get; set; } = true;
     
+    /// <summary>
+    /// 固定高度（用于在 StackLayout 等布局中）
+    /// </summary>
+    public double Height { get; set; } = 200;
+    
     public override bool IsVisible => true;
     
     public DockPanel()
@@ -90,8 +95,11 @@ public class DockPanel : InputElementBase
         var paddingValue = Padding * context.Scale;
         var spacingValue = Spacing * context.Scale;
         
+        // 如果有固定高度，优先使用
+        var fixedHeight = Height * context.Scale;
+        
         var remainingWidth = availableSize.Width - paddingValue * 2;
-        var remainingHeight = availableSize.Height - paddingValue * 2;
+        var remainingHeight = fixedHeight > 0 ? fixedHeight - paddingValue * 2 : availableSize.Height - paddingValue * 2;
         
         double totalWidth = paddingValue * 2;
         double totalHeight = paddingValue * 2;
@@ -225,10 +233,68 @@ public class DockPanel : InputElementBase
             context.DrawRectangle(bounds, BackgroundColor);
         }
         
-        // 渲染子元素
-        foreach (var child in Children)
+        var paddingValue = Padding * context.Scale;
+        var spacingValue = Spacing * context.Scale;
+        
+        // 计算可用区域
+        var x = bounds.X + paddingValue;
+        var y = bounds.Y + paddingValue;
+        var width = bounds.Width - paddingValue * 2;
+        var height = bounds.Height - paddingValue * 2;
+        
+        // 渲染每个子元素
+        for (int i = 0; i < Children.Count; i++)
         {
-            child.Render(context, Bounds);
+            var child = Children[i];
+            var dock = GetDock(child);
+            var isLast = i == Children.Count - 1;
+            
+            // 获取子元素尺寸
+            var childSize = MeasureChild(child, new Size(width, height), context);
+            
+            Rect childBounds;
+            
+            // 最后一个子元素且 LastChildFill=true 时，填充剩余空间
+            var shouldFill = (isLast && LastChildFill) || dock == Dock.Fill;
+            
+            if (shouldFill)
+            {
+                // 填充剩余空间
+                childBounds = new Rect(x, y, width, height);
+                child.Render(context, childBounds);
+                break;
+            }
+            
+            switch (dock)
+            {
+                case Dock.Left:
+                    childBounds = new Rect(x, y, childSize.Width, height);
+                    x += childSize.Width + spacingValue;
+                    width -= childSize.Width + spacingValue;
+                    break;
+                    
+                case Dock.Right:
+                    childBounds = new Rect(x + width - childSize.Width, y, childSize.Width, height);
+                    width -= childSize.Width + spacingValue;
+                    break;
+                    
+                case Dock.Top:
+                    childBounds = new Rect(x, y, width, childSize.Height);
+                    y += childSize.Height + spacingValue;
+                    height -= childSize.Height + spacingValue;
+                    break;
+                    
+                case Dock.Bottom:
+                    childBounds = new Rect(x, y + height - childSize.Height, width, childSize.Height);
+                    height -= childSize.Height + spacingValue;
+                    break;
+                    
+                default:
+                    childBounds = new Rect(x, y, width, height);
+                    break;
+            }
+            
+            child.Render(context, childBounds);
         }
     }
     
@@ -249,10 +315,57 @@ public class DockPanel : InputElementBase
             return scrollView.Measure(availableSize, context);
         if (child is GridLayout gridLayout)
             return gridLayout.Measure(availableSize, context);
+        if (child is Container container)
+            return MeasureContainer(container, availableSize, context);
         if (child is ComponentBase componentBase)
             return MeasureComponentBaseChildren(componentBase, context);
         
         return new Size(100 * context.Scale, 100 * context.Scale);
+    }
+    
+    /// <summary>
+    /// 测量 Container
+    /// </summary>
+    private Size MeasureContainer(Container container, Size availableSize, IDrawingContext context)
+    {
+        var width = container.Width * context.Scale;
+        var height = container.Height * context.Scale;
+        
+        // 如果有固定尺寸，直接返回
+        if (container.Width > 0 && container.Height > 0)
+        {
+            return new Size(width, height);
+        }
+        
+        // 否则根据子元素计算
+        double maxWidth = 0;
+        double maxHeight = 0;
+        
+        foreach (var child in container.Children)
+        {
+            var childSize = MeasureChild(child, availableSize, context);
+            maxWidth = Math.Max(maxWidth, childSize.Width);
+            maxHeight = Math.Max(maxHeight, childSize.Height);
+        }
+        
+        // 加上 Padding
+        var paddingValue = container.Padding * context.Scale;
+        maxWidth += paddingValue * 2;
+        maxHeight += paddingValue * 2;
+        
+        // 如果没有子元素，给一个默认尺寸
+        if (maxWidth == 0 && maxHeight == 0)
+        {
+            return new Size(paddingValue * 2, paddingValue * 2);
+        }
+        
+        // 使用固定宽高（如果指定了）
+        if (container.Width > 0)
+            maxWidth = width;
+        if (container.Height > 0)
+            maxHeight = height;
+        
+        return new Size(maxWidth, maxHeight);
     }
     
     /// <summary>

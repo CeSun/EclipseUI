@@ -3,20 +3,20 @@
     
     <Label Text="1. 基本停靠 (Left, Top, Right, Bottom, Fill)" FontSize="16" />
     
-    <DockPanel BackgroundColor="#E0E0E0" LastChildFill="true">
-        <Container BackgroundColor="#E74C3C" Padding="10" DockPanel.Dock="Left">
+    <DockPanel BackgroundColor="#E0E0E0" LastChildFill="true" Height="300">
+        <Container BackgroundColor="#E74C3C" Padding="10" Width="80" DockPanel.Dock="Left">
             <Label Text="Left" Color="White" />
         </Container>
+
+		<Container BackgroundColor="#2ECC71" Padding="10" Width="80" DockPanel.Dock="Right">
+			<Label Text="Right" Color="White" />
+		</Container>
+
+		<Container BackgroundColor="#3498DB" Padding="10" Height="40" DockPanel.Dock="Top">
+			<Label Text="Top" Color="White" />
+		</Container>
         
-        <Container BackgroundColor="#3498DB" Padding="10" DockPanel.Dock="Top">
-            <Label Text="Top" Color="White" />
-        </Container>
-        
-        <Container BackgroundColor="#2ECC71" Padding="10" DockPanel.Dock="Right">
-            <Label Text="Right" Color="White" />
-        </Container>
-        
-        <Container BackgroundColor="#E67E22" Padding="10" DockPanel.Dock="Bottom">
+        <Container BackgroundColor="#E67E22" Padding="10" Height="40" DockPanel.Dock="Bottom">
             <Label Text="Bottom" Color="White" />
         </Container>
         
@@ -27,8 +27,8 @@
     
     <Label Text="2. 工具栏布局 (Top + Fill)" FontSize="16" />
     
-    <DockPanel BackgroundColor="#F5F5F5">
-        <StackLayout Orientation="Horizontal" BackgroundColor="#E0E0E0" Padding="8" Spacing="8" DockPanel.Dock="Top">
+    <DockPanel BackgroundColor="#F5F5F5" Height="200">
+        <StackLayout Orientation="Horizontal" BackgroundColor="#E0E0E0" Padding="8" Spacing="8" Height="44" DockPanel.Dock="Top">
             <Button Text="文件" CornerRadius="0" />
             <Button Text="编辑" CornerRadius="0" />
             <Button Text="视图" CornerRadius="0" />
@@ -41,8 +41,8 @@
     
     <Label Text="3. 侧边栏布局 (Left + Fill)" FontSize="16" />
     
-    <DockPanel BackgroundColor="White">
-        <StackLayout BackgroundColor="#2C3E50" Padding="16" Spacing="12" DockPanel.Dock="Left">
+    <DockPanel BackgroundColor="White" Height="250">
+        <StackLayout BackgroundColor="#2C3E50" Padding="16" Spacing="12" Width="120" DockPanel.Dock="Left">
             <Label Text="导航菜单" Color="White" FontWeight="Bold" />
             <Label Text="首页" Color="LightGray" />
             <Label Text="设置" Color="LightGray" />

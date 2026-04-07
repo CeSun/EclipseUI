@@ -57,6 +57,16 @@ public class StackLayout : InputElementBase
     public double Padding { get; set; } = 0;
     public Color BackgroundColor { get; set; } = Color.Transparent;
     
+    /// <summary>
+    /// 固定宽度（-1 表示自动）
+    /// </summary>
+    public double Width { get; set; } = -1;
+    
+    /// <summary>
+    /// 固定高度（-1 表示自动）
+    /// </summary>
+    public double Height { get; set; } = -1;
+    
     private Size _desiredSize = Size.Zero;
     
     public override bool IsVisible => true;
@@ -171,6 +181,8 @@ public class StackLayout : InputElementBase
             return interactiveControl.Measure(availableSize, context);
         if (child is StackLayout stackLayout)
             return stackLayout.Measure(availableSize, context);
+        if (child is DockPanel dockPanel)
+            return dockPanel.Measure(availableSize, context);
         if (child is Label label)
             return label.Measure(availableSize, context);
         if (child is TextContent textContent)
@@ -219,11 +231,16 @@ public class StackLayout : InputElementBase
                 var childHeight = GetChildSize(child, new Size(contentBounds.Width, contentBounds.Height), context).Height;
                 var childBounds = new Rect(contentBounds.X, y, contentBounds.Width, childHeight);
                 
-                // 对 ScrollView 调用 Measure 和 Arrange
+                // 对 ScrollView 和 DockPanel 调用 Measure 和 Arrange
                 if (child is ScrollView scrollView)
                 {
                     scrollView.Measure(new Size(contentBounds.Width, contentBounds.Height), context);
                     scrollView.Arrange(childBounds, context);
+                }
+                else if (child is DockPanel dockPanel)
+                {
+                    dockPanel.Measure(new Size(contentBounds.Width, contentBounds.Height), context);
+                    dockPanel.Arrange(childBounds, context);
                 }
                 
                 child.Render(context, childBounds);
@@ -238,11 +255,16 @@ public class StackLayout : InputElementBase
             {
                 var childBounds = new Rect(x, contentBounds.Y, childWidth, contentBounds.Height);
                 
-                // 对 ScrollView 调用 Measure 和 Arrange
-                if (child is ScrollView scrollView)
+                // 对 ScrollView 和 DockPanel 调用 Measure 和 Arrange
+                if (child is ScrollView scrollViewH)
                 {
-                    scrollView.Measure(new Size(childWidth, contentBounds.Height), context);
-                    scrollView.Arrange(childBounds, context);
+                    scrollViewH.Measure(new Size(childWidth, contentBounds.Height), context);
+                    scrollViewH.Arrange(childBounds, context);
+                }
+                else if (child is DockPanel dockPanelH)
+                {
+                    dockPanelH.Measure(new Size(childWidth, contentBounds.Height), context);
+                    dockPanelH.Arrange(childBounds, context);
                 }
                 
                 child.Render(context, childBounds);
@@ -602,6 +624,16 @@ public class Container : ComponentBase
     public Color BackgroundColor { get; set; } = Color.Transparent;
     public double Padding { get; set; } = 0;
     public double CornerRadius { get; set; } = 0;
+    
+    /// <summary>
+    /// 固定宽度（-1 表示自动）
+    /// </summary>
+    public double Width { get; set; } = -1;
+    
+    /// <summary>
+    /// 固定高度（-1 表示自动）
+    /// </summary>
+    public double Height { get; set; } = -1;
     
     public override void Build(IBuildContext context) { }
     

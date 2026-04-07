@@ -8,6 +8,7 @@
         <TabButton Text="按钮" IsActive=@(_currentTab == 1) OnClick=@((s, e) => SwitchTab(1)) />
         <TabButton Text="布局" IsActive=@(_currentTab == 2) OnClick=@((s, e) => SwitchTab(2)) />
         <TabButton Text="输入" IsActive=@(_currentTab == 3) OnClick=@((s, e) => SwitchTab(3)) />
+        <TabButton Text="Dock布局" IsActive=@(_currentTab == 4) OnClick=@((s, e) => SwitchTab(4)) />
     </StackLayout>
     
     <ScrollView BackgroundColor="#FFFFFF">
@@ -26,6 +27,10 @@
         @if (_currentTab == 3)
         {
             <InputsPage />
+        }
+        @if (_currentTab == 4)
+        {
+            <DockPage />
         }
     </ScrollView>
     
