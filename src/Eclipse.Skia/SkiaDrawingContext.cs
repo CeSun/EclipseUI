@@ -33,22 +33,20 @@ public class SkiaDrawingContext : IDrawingContext
         Scale = scale;
     }
     
-    public void Clear(string? color = null)
+    public void Clear(Color? color = null)
     {
-        var bgColor = string.IsNullOrEmpty(color) 
-            ? SKColors.White 
-            : SKColor.TryParse(color, out var c) ? c : SKColors.White;
+        var bgColor = color.HasValue ? ToSKColor(color.Value) : SKColors.White;
         _canvas.Clear(bgColor);
     }
     
-    public void DrawRectangle(Rect bounds, string? fillColor, string? strokeColor = null, double strokeWidth = 0, double cornerRadius = 0)
+    public void DrawRectangle(Rect bounds, Color? fillColor, Color? strokeColor = null, double strokeWidth = 0, double cornerRadius = 0)
     {
-        if (!string.IsNullOrEmpty(fillColor))
+        if (fillColor.HasValue)
         {
             using var paint = new SKPaint
             {
                 IsAntialias = true,
-                Color = SKColor.TryParse(fillColor, out var c) ? c : SKColors.Transparent,
+                Color = ToSKColor(fillColor.Value),
                 Style = SKPaintStyle.Fill
             };
             
@@ -64,12 +62,12 @@ public class SkiaDrawingContext : IDrawingContext
             }
         }
         
-        if (!string.IsNullOrEmpty(strokeColor) && strokeWidth > 0)
+        if (strokeColor.HasValue && strokeWidth > 0)
         {
             using var strokePaint = new SKPaint
             {
                 IsAntialias = true,
-                Color = SKColor.TryParse(strokeColor, out var c) ? c : SKColors.Transparent,
+                Color = ToSKColor(strokeColor.Value),
                 Style = SKPaintStyle.Stroke,
                 StrokeWidth = (float)strokeWidth
             };
@@ -87,12 +85,12 @@ public class SkiaDrawingContext : IDrawingContext
         }
     }
     
-    public void DrawRoundRect(Rect bounds, string fillColor, double cornerRadius)
+    public void DrawRoundRect(Rect bounds, Color fillColor, double cornerRadius)
     {
         using var paint = new SKPaint
         {
             IsAntialias = true,
-            Color = SKColor.TryParse(fillColor, out var c) ? c : SKColors.Gray,
+            Color = ToSKColor(fillColor),
             Style = SKPaintStyle.Fill
         };
         
@@ -100,12 +98,12 @@ public class SkiaDrawingContext : IDrawingContext
         _canvas.DrawRoundRect(rect, (float)cornerRadius, (float)cornerRadius, paint);
     }
     
-    public void DrawLine(double x1, double y1, double x2, double y2, string color, double strokeWidth)
+    public void DrawLine(double x1, double y1, double x2, double y2, Color color, double strokeWidth)
     {
         using var paint = new SKPaint
         {
             IsAntialias = true,
-            Color = SKColor.TryParse(color, out var c) ? c : SKColors.Black,
+            Color = ToSKColor(color),
             Style = SKPaintStyle.Stroke,
             StrokeWidth = (float)strokeWidth
         };
@@ -113,7 +111,7 @@ public class SkiaDrawingContext : IDrawingContext
         _canvas.DrawLine((float)x1, (float)y1, (float)x2, (float)y2, paint);
     }
     
-    public void DrawText(string text, double x, double y, double fontSize, string? fontFamily = null, string? fontWeight = null, string? color = null)
+    public void DrawText(string text, double x, double y, double fontSize, string? fontFamily = null, string? fontWeight = null, Color? color = null)
     {
         if (string.IsNullOrEmpty(text))
             return;
@@ -130,7 +128,7 @@ public class SkiaDrawingContext : IDrawingContext
         using var paint = new SKPaint
         {
             IsAntialias = true,
-            Color = ParseColor(color, SKColors.Black)
+            Color = color.HasValue ? ToSKColor(color.Value) : SKColors.Black
         };
         
         // 获取字体度量信息
@@ -337,11 +335,12 @@ public class SkiaDrawingContext : IDrawingContext
         return _chineseTypeface;
     }
     
-    private static SKColor ParseColor(string? color, SKColor defaultColor)
+    /// <summary>
+    /// 将 Color 转换为 SKColor
+    /// </summary>
+    private static SKColor ToSKColor(Color color)
     {
-        if (string.IsNullOrEmpty(color))
-            return defaultColor;
-        return SKColor.TryParse(color, out var result) ? result : defaultColor;
+        return new SKColor(color.R, color.G, color.B, color.A);
     }
     
     /// <summary>

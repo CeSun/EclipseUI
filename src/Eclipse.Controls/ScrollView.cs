@@ -111,17 +111,17 @@ public class ScrollView : InputElementBase
     /// <summary>
     /// 滚动条颜色
     /// </summary>
-    public string? ScrollBarColor { get; set; } = "#808080";
+    public Color? ScrollBarColor { get; set; } = Color.Gray;
     
     /// <summary>
     /// 滚动条悬停颜色
     /// </summary>
-    public string? ScrollBarHoverColor { get; set; } = "#606060";
+    public Color? ScrollBarHoverColor { get; set; } = Color.DarkGray;
     
     /// <summary>
     /// 滚动条背景颜色
     /// </summary>
-    public string? ScrollBarTrackColor { get; set; } = "#F0F0F0";
+    public Color? ScrollBarTrackColor { get; set; } = Color.LightGray;
     
     /// <summary>
     /// 滚动条圆角半径
@@ -131,7 +131,7 @@ public class ScrollView : InputElementBase
     /// <summary>
     /// 背景颜色
     /// </summary>
-    public string? BackgroundColor { get; set; }
+    public Color? BackgroundColor { get; set; }
     
     /// <summary>
     /// 内容内边距
@@ -317,7 +317,7 @@ public class ScrollView : InputElementBase
         var scaledCornerRadius = ScrollBarCornerRadius * context.Scale;
         
         // 绘制背景
-        if (!string.IsNullOrEmpty(BackgroundColor))
+        if (BackgroundColor.HasValue)
         {
             context.DrawRectangle(bounds, BackgroundColor);
         }
@@ -412,17 +412,17 @@ public class ScrollView : InputElementBase
         _verticalThumbBounds = new Rect(scrollBarBounds.X, thumbY, scrollBarWidth, thumbHeight);
         
         // 绘制滚动条背景
-        var trackColor = ApplyOpacity(ScrollBarTrackColor ?? "#F0F0F0", opacity * 0.5);
+        var trackColor = (ScrollBarTrackColor ?? Color.LightGray).WithAlpha(opacity * 0.5);
         context.DrawRectangle(scrollBarBounds, trackColor, null, 0, cornerRadius);
         
         // 绘制滚动滑块
         var thumbColor = _verticalThumbDragging 
-            ? (ScrollBarHoverColor ?? "#606060") 
+            ? (ScrollBarHoverColor ?? Color.DarkGray) 
             : (_verticalScrollBarHovered 
-                ? (ScrollBarHoverColor ?? "#606060") 
-                : (ScrollBarColor ?? "#808080"));
+                ? (ScrollBarHoverColor ?? Color.DarkGray) 
+                : (ScrollBarColor ?? Color.Gray));
         
-        thumbColor = ApplyOpacity(thumbColor, opacity);
+        thumbColor = thumbColor.WithAlpha(opacity);
         
         var thumbBounds = new Rect(
             scrollBarBounds.X,
@@ -452,17 +452,17 @@ public class ScrollView : InputElementBase
         _horizontalThumbBounds = new Rect(thumbX, scrollBarBounds.Y, thumbWidth, scrollBarWidth);
         
         // 绘制滚动条背景
-        var trackColor = ApplyOpacity(ScrollBarTrackColor ?? "#F0F0F0", opacity * 0.5);
+        var trackColor = (ScrollBarTrackColor ?? Color.LightGray).WithAlpha(opacity * 0.5);
         context.DrawRectangle(scrollBarBounds, trackColor, null, 0, cornerRadius);
         
         // 绘制滚动滑块
         var thumbColor = _horizontalThumbDragging 
-            ? (ScrollBarHoverColor ?? "#606060") 
+            ? (ScrollBarHoverColor ?? Color.DarkGray) 
             : (_horizontalScrollBarHovered 
-                ? (ScrollBarHoverColor ?? "#606060") 
-                : (ScrollBarColor ?? "#808080"));
+                ? (ScrollBarHoverColor ?? Color.DarkGray) 
+                : (ScrollBarColor ?? Color.Gray));
         
-        thumbColor = ApplyOpacity(thumbColor, opacity);
+        thumbColor = thumbColor.WithAlpha(opacity);
         
         var thumbBounds = new Rect(
             thumbX,
@@ -473,25 +473,9 @@ public class ScrollView : InputElementBase
         context.DrawRectangle(thumbBounds, thumbColor, null, 0, cornerRadius);
     }
     
-    private string ApplyOpacity(string color, double opacity)
+    private static Color ApplyOpacity(Color color, double opacity)
     {
-        // 解析颜色并应用透明度
-        if (color.StartsWith("#") && color.Length == 7)
-        {
-            try
-            {
-                int r = Convert.ToInt32(color.Substring(1, 2), 16);
-                int g = Convert.ToInt32(color.Substring(3, 2), 16);
-                int b = Convert.ToInt32(color.Substring(5, 2), 16);
-                int a = (int)(255 * opacity);
-                return $"#{a:X2}{r:X2}{g:X2}{b:X2}";
-            }
-            catch
-            {
-                return color;
-            }
-        }
-        return color;
+        return color.WithAlpha(opacity);
     }
     
     #endregion

@@ -2,12 +2,13 @@ using Eclipse.Core;
 using Eclipse.Core.Abstractions;
 using Eclipse.Input;
 using Eclipse.Rendering;
+using System;
 using System.Collections.Generic;
 
 namespace Eclipse.Controls;
 
 /// <summary>
-/// 可交互控件基�?- 支持输入事件
+/// 可交互控件基类 - 支持输入事件
 /// </summary>
 public abstract class InteractiveControl : InputElementBase
 {
@@ -27,7 +28,7 @@ public abstract class InteractiveControl : InputElementBase
     }
     
     /// <summary>
-    /// 安排控件位置和尺�?
+    /// 安排控件位置和尺寸
     /// </summary>
     public virtual void Arrange(Rect finalBounds, IDrawingContext context)
     {
@@ -60,16 +61,16 @@ public class StackLayout : InputElementBase
     public Orientation Orientation { get; set; } = Orientation.Vertical;
     
     /// <summary>
-    /// 子元素间�?
+    /// 子元素间距
     /// </summary>
     public double Spacing { get; set; } = 0;
     
     /// <summary>
-    /// 内边�?
+    /// 内边距
     /// </summary>
     public double Padding { get; set; } = 0;
     
-    public string? BackgroundColor { get; set; }
+    public Color? BackgroundColor { get; set; }
     
     private Size _desiredSize = Size.Zero;
     
@@ -95,7 +96,7 @@ public class StackLayout : InputElementBase
     public override void Build(IBuildContext context) { }
     
     /// <summary>
-    /// 测量布局所需尺寸 - 实现真正�?Measure 机制
+    /// 测量布局所需尺寸 - 实现真正的 Measure 机制
     /// </summary>
     public Size Measure(Size availableSize, IDrawingContext context)
     {
@@ -118,7 +119,7 @@ public class StackLayout : InputElementBase
         double maxChildWidth = 0;
         double maxChildHeight = 0;
         
-        // 测量每个子元�?
+        // 测量每个子元素
         foreach (var child in Children)
         {
             Size childSize;
@@ -173,7 +174,7 @@ public class StackLayout : InputElementBase
             }
         }
         
-        // 添加内边�?
+        // 添加内边距
         totalWidth += paddingValue * 2;
         totalHeight += paddingValue * 2;
         
@@ -182,7 +183,7 @@ public class StackLayout : InputElementBase
     }
     
     /// <summary>
-    /// 安排子元素位�?- 实现真正�?Arrange 机制
+    /// 安排子元素位置 - 实现真正的 Arrange 机制
     /// </summary>
     public void Arrange(Rect finalBounds, IDrawingContext context)
     {
@@ -205,7 +206,7 @@ public class StackLayout : InputElementBase
                 Size childSize = GetChildDesiredSize(child, context);
                 var childBounds = new Rect(contentBounds.X, y, contentBounds.Width, childSize.Height);
                 
-                // 安排子元�?
+                // 安排子元素
                 ArrangeChild(child, childBounds, context);
                 
                 y += childSize.Height + spacingValue;
@@ -219,7 +220,7 @@ public class StackLayout : InputElementBase
                 Size childSize = GetChildDesiredSize(child, context);
                 var childBounds = new Rect(x, contentBounds.Y, childSize.Width, contentBounds.Height);
                 
-                // 安排子元�?
+                // 安排子元素
                 ArrangeChild(child, childBounds, context);
                 
                 x += childSize.Width + spacingValue;
@@ -277,7 +278,7 @@ public class StackLayout : InputElementBase
         var spacingValue = Spacing * context.Scale;
         var paddingValue = Padding * context.Scale;
         
-        if (!string.IsNullOrEmpty(BackgroundColor))
+        if (BackgroundColor.HasValue)
         {
             context.DrawRectangle(bounds, BackgroundColor);
         }
@@ -313,7 +314,7 @@ public class StackLayout : InputElementBase
     }
     
     /// <summary>
-    /// 测量子元素高�?- 使用真正�?Measure 机制而非硬编�?
+    /// 测量子元素高度 - 使用真正的 Measure 机制而非硬编码
     /// </summary>
     private double MeasureChildHeight(IComponent component, IDrawingContext context)
     {
@@ -386,7 +387,7 @@ public class Label : ComponentBase
     /// </summary>
     public double FontSize { get; set; } = 14;
     
-    public string? Color { get; set; }
+    public Color? Color { get; set; }
     public string? FontWeight { get; set; }
     public string? FontFamily { get; set; }
     public TextAlignment TextAlignment { get; set; } = TextAlignment.Left;
@@ -394,7 +395,7 @@ public class Label : ComponentBase
     /// <summary>
     /// 背景颜色
     /// </summary>
-    public string? BackgroundColor { get; set; }
+    public Color? BackgroundColor { get; set; }
     
     /// <summary>
     /// 内边距
@@ -418,7 +419,7 @@ public class Label : ComponentBase
         var scaledPadding = Padding * context.Scale;
         var textWidth = context.MeasureText(Text, scaledFontSize, FontFamily);
         
-        // 行高通常是字体大小的 1.2-1.5 �?
+        // 行高通常是字体大小的 1.2-1.5 倍
         var lineHeight = scaledFontSize * 1.3;
         
         _desiredSize = new Size(textWidth + scaledPadding * 2, lineHeight + scaledPadding * 2);
@@ -434,7 +435,7 @@ public class Label : ComponentBase
         var scaledPadding = Padding * context.Scale;
         
         // 绘制背景
-        if (!string.IsNullOrEmpty(BackgroundColor))
+        if (BackgroundColor.HasValue)
         {
             context.DrawRectangle(bounds, BackgroundColor);
         }
@@ -463,7 +464,7 @@ public class Label : ComponentBase
                 x = textBounds.X + textBounds.Width - textWidth;
             }
             
-            // y 是文本视觉中心，文本从顶部开�?
+            // y 是文本视觉中心，文本从顶部开始
             var y = textBounds.Y + scaledFontSize * 0.5;
             context.DrawText(Text, x, y, scaledFontSize, FontFamily, FontWeight, Color);
         }
@@ -482,44 +483,44 @@ public class Button : InteractiveControl
     private bool _isPressed = false;
     private bool _isHovered = false;
     
-    // === 文本属�?===
+    // === 文本属性 ===
     public string? Text { get; set; }
     public double FontSize { get; set; } = 14;
     public string? FontFamily { get; set; }
-    public string? TextColor { get; set; } = "White";
+    public Color? TextColor { get; set; } = Color.White;
     
     // === 背景颜色（各状态） ===
     /// <summary>
     /// 默认背景颜色
     /// </summary>
-    public string? BackgroundColor { get; set; } = "#007AFF";
+    public Color? BackgroundColor { get; set; } = Color.SystemBlue;
     
     /// <summary>
     /// 鼠标悬停时的背景颜色
     /// </summary>
-    public string? HoverBackgroundColor { get; set; }
+    public Color? HoverBackgroundColor { get; set; }
     
     /// <summary>
     /// 按下时的背景颜色
     /// </summary>
-    public string? PressedBackgroundColor { get; set; }
+    public Color? PressedBackgroundColor { get; set; }
     
     /// <summary>
     /// 禁用时的背景颜色
     /// </summary>
-    public string? DisabledBackgroundColor { get; set; } = "#CCCCCC";
+    public Color? DisabledBackgroundColor { get; set; } = Color.LightGray;
     
     // === 文本颜色（各状态） ===
     /// <summary>
     /// 禁用时的文本颜色
     /// </summary>
-    public string? DisabledTextColor { get; set; } = "#888888";
+    public Color? DisabledTextColor { get; set; } = Color.Gray;
     
-    // === 边框属�?===
+    // === 边框属性 ===
     /// <summary>
     /// 边框颜色
     /// </summary>
-    public string? BorderColor { get; set; }
+    public Color? BorderColor { get; set; }
     
     /// <summary>
     /// 边框宽度
@@ -592,57 +593,29 @@ public class Button : InteractiveControl
     /// <summary>
     /// 获取当前状态的背景颜色
     /// </summary>
-    private string GetCurrentBackgroundColor()
+    private Color GetCurrentBackgroundColor()
     {
         if (!IsEnabled)
-            return DisabledBackgroundColor ?? "#CCCCCC";
+            return DisabledBackgroundColor ?? Color.LightGray;
         
         if (_isPressed)
-            return PressedBackgroundColor ?? DarkenColor(BackgroundColor ?? "#007AFF", 0.2);
+            return PressedBackgroundColor ?? (BackgroundColor ?? Color.SystemBlue).Darken(0.2);
         
         if (_isHovered)
-            return HoverBackgroundColor ?? DarkenColor(BackgroundColor ?? "#007AFF", 0.1);
+            return HoverBackgroundColor ?? (BackgroundColor ?? Color.SystemBlue).Darken(0.1);
         
-        return BackgroundColor ?? "#007AFF";
+        return BackgroundColor ?? Color.SystemBlue;
     }
     
     /// <summary>
     /// 获取当前状态的文本颜色
     /// </summary>
-    private string GetCurrentTextColor()
+    private Color GetCurrentTextColor()
     {
         if (!IsEnabled)
-            return DisabledTextColor ?? "#888888";
+            return DisabledTextColor ?? Color.Gray;
         
-        return TextColor ?? "White";
-    }
-    
-    /// <summary>
-    /// 颜色加深（用于悬停和按下状态）
-    /// </summary>
-    private static string DarkenColor(string hexColor, double amount)
-    {
-        try
-        {
-            // 解析十六进制颜色
-            if (hexColor.StartsWith("#"))
-                hexColor = hexColor.Substring(1);
-            
-            int r = Convert.ToInt32(hexColor.Substring(0, 2), 16);
-            int g = Convert.ToInt32(hexColor.Substring(2, 2), 16);
-            int b = Convert.ToInt32(hexColor.Substring(4, 2), 16);
-            
-            // 加深
-            r = (int)(r * (1 - amount));
-            g = (int)(g * (1 - amount));
-            b = (int)(b * (1 - amount));
-            
-            return $"#{r:X2}{g:X2}{b:X2}";
-        }
-        catch
-        {
-            return hexColor;
-        }
+        return TextColor ?? Color.White;
     }
     
     /// <summary>
@@ -659,7 +632,7 @@ public class Button : InteractiveControl
         var scaledFontSize = FontSize * context.Scale;
         var textWidth = context.MeasureText(Text, scaledFontSize, FontFamily);
         
-        // 添加内边距（水平�?20px�?
+        // 添加内边距（水平约 20px）
         var buttonWidth = textWidth + 40 * context.Scale;
         var buttonHeight = 44 * context.Scale;
         
@@ -681,7 +654,7 @@ public class Button : InteractiveControl
         context.DrawRoundRect(bounds, bgColor, scaledCornerRadius);
         
         // 绘制边框
-        if (BorderWidth > 0 && !string.IsNullOrEmpty(BorderColor))
+        if (BorderWidth > 0 && BorderColor.HasValue)
         {
             context.DrawRectangle(bounds, null, BorderColor, BorderWidth * context.Scale, scaledCornerRadius);
         }
@@ -694,7 +667,7 @@ public class Button : InteractiveControl
                 bounds.Y - 2 * context.Scale,
                 bounds.Width + 4 * context.Scale,
                 bounds.Height + 4 * context.Scale);
-            context.DrawRectangle(focusBounds, null, "#007AFF", 2 * context.Scale, scaledCornerRadius + 2);
+            context.DrawRectangle(focusBounds, null, Color.SystemBlue, 2 * context.Scale, scaledCornerRadius + 2);
         }
         
         // 绘制文本
@@ -740,7 +713,7 @@ public class CheckBox : InteractiveControl
     }
     
     public string? Label { get; set; }
-    public string? CheckedColor { get; set; }
+    public Color? CheckedColor { get; set; }
     public double Size { get; set; } = 20;
     
     public event EventHandler<ValueChangedEventArgs<bool>>? CheckedChanged;
@@ -785,7 +758,7 @@ public class CheckBox : InteractiveControl
         
         var scaledSize = Size * context.Scale;
         var checkBounds = new Rect(bounds.X, bounds.Y, scaledSize, scaledSize);
-        var color = IsChecked ? (CheckedColor ?? "#007AFF") : "#CCCCCC";
+        var color = IsChecked ? (CheckedColor ?? Color.SystemBlue) : Color.LightGray;
         context.DrawRoundRect(checkBounds, color, 4 * context.Scale);
         
         if (!string.IsNullOrEmpty(Label))
@@ -805,17 +778,17 @@ public class Image : ComponentBase
     private string? _loadedImageKey;
     
     /// <summary>
-    /// 图片源路�?
+    /// 图片源路径
     /// </summary>
     public string? Source { get; set; }
     
     /// <summary>
-    /// 宽度�?1 表示自动�?
+    /// 宽度（-1 表示自动）
     /// </summary>
     public double Width { get; set; } = -1;
     
     /// <summary>
-    /// 高度�?1 表示自动�?
+    /// 高度（-1 表示自动）
     /// </summary>
     public double Height { get; set; } = -1;
     
@@ -828,10 +801,10 @@ public class Image : ComponentBase
     
     public override void Render(IDrawingContext context, Rect bounds)
     {
-        // 如果没有图片源，显示占位�?
+        // 如果没有图片源，显示占位符
         if (string.IsNullOrEmpty(Source))
         {
-            context.DrawRectangle(bounds, "#EEEEEE");
+            context.DrawRectangle(bounds, Color.LightGray);
             return;
         }
         
@@ -844,7 +817,7 @@ public class Image : ComponentBase
         // 如果加载失败，显示占位符
         if (_loadedImageKey == null)
         {
-            context.DrawRectangle(bounds, "#EEEEEE");
+            context.DrawRectangle(bounds, Color.LightGray);
             return;
         }
         
@@ -855,7 +828,7 @@ public class Image : ComponentBase
 
 public class Container : ComponentBase
 {
-    public string? BackgroundColor { get; set; }
+    public Color? BackgroundColor { get; set; }
     public double Padding { get; set; } = 0;
     public double CornerRadius { get; set; } = 0;
     
@@ -863,9 +836,9 @@ public class Container : ComponentBase
     
     public override void Render(IDrawingContext context, Rect bounds)
     {
-        if (!string.IsNullOrEmpty(BackgroundColor))
+        if (BackgroundColor.HasValue)
         {
-            context.DrawRoundRect(bounds, BackgroundColor, CornerRadius * context.Scale);
+            context.DrawRoundRect(bounds, BackgroundColor.Value, CornerRadius * context.Scale);
         }
         
         var contentBounds = new Rect(

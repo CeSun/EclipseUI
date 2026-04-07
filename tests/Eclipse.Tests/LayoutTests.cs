@@ -1,4 +1,4 @@
-using Eclipse.Controls;
+﻿using Eclipse.Controls;
 using Eclipse.Input;
 using Eclipse.Rendering;
 using Xunit;
@@ -19,7 +19,7 @@ public class LayoutTests
         public double Width => 800;
         public double Height => 600;
         
-        public void Clear(string? color = null) { }
+        public void Clear(Color? color = null) { }
         
         public double MeasureText(string text, double fontSize, string? fontFamily = null)
         {
@@ -27,10 +27,10 @@ public class LayoutTests
             return text.Length * fontSize * 0.6;
         }
         
-        public void DrawRectangle(Rect bounds, string? fillColor, string? strokeColor = null, double strokeWidth = 0, double cornerRadius = 0) { }
-        public void DrawRoundRect(Rect bounds, string fillColor, double cornerRadius) { }
-        public void DrawLine(double x1, double y1, double x2, double y2, string color, double strokeWidth) { }
-        public void DrawText(string text, double x, double y, double fontSize, string? fontFamily = null, string? fontWeight = null, string? color = null) { }
+        public void DrawRectangle(Rect bounds, Color? fillColor, Color? strokeColor = null, double strokeWidth = 0, double cornerRadius = 0) { }
+        public void DrawRoundRect(Rect bounds, Color fillColor, double cornerRadius) { }
+        public void DrawLine(double x1, double y1, double x2, double y2, Color color, double strokeWidth) { }
+        public void DrawText(string text, double x, double y, double fontSize, string? fontFamily = null, string? fontWeight = null, Color? color = null) { }
         public void DrawImage(string imageKey, Rect bounds, Stretch stretch) { }
         public string? LoadImage(string source) => null;
         public Size GetImageSize(string imageKey) => Size.Zero;

@@ -69,12 +69,12 @@ public class TextInput : InteractiveControl
     /// <summary>
     /// 背景颜色
     /// </summary>
-    public string? BackgroundColor { get; set; } = "#FFFFFF";
+    public Color? BackgroundColor { get; set; } = Color.White;
     
     /// <summary>
     /// 边框颜色（聚焦时）
     /// </summary>
-    public string? FocusBorderColor { get; set; } = "#007AFF";
+    public Color? FocusBorderColor { get; set; } = Color.SystemBlue;
     
     /// <summary>
     /// 圆角半径
@@ -144,12 +144,12 @@ public class TextInput : InteractiveControl
     /// <summary>
     /// 选择背景颜色
     /// </summary>
-    public string? SelectionBackgroundColor { get; set; } = "#B3D7FF";
+    public Color? SelectionBackgroundColor { get; set; } = Color.SystemBlue.WithAlpha(0.3);
     
     /// <summary>
     /// 选择文本颜色
     /// </summary>
-    public string? SelectionTextColor { get; set; } = "#000000";
+    public Color? SelectionTextColor { get; set; } = Color.Black;
     
     /// <summary>
     /// 文本变化事件
@@ -814,11 +814,11 @@ public class TextInput : InteractiveControl
         var scaledPadding = Padding * context.Scale;
         
         // 绘制背景
-        var bgColor = BackgroundColor ?? "#FFFFFF";
+        var bgColor = BackgroundColor ?? Color.White;
         context.DrawRoundRect(bounds, bgColor, scaledCornerRadius);
         
         // 绘制边框（聚焦时使用蓝色）
-        var borderColor = IsFocused ? (FocusBorderColor ?? "#007AFF") : "#CCCCCC";
+        var borderColor = IsFocused ? (FocusBorderColor ?? Color.SystemBlue) : Color.LightGray;
         context.DrawRectangle(bounds, null, borderColor, 1 * context.Scale, scaledCornerRadius);
         
         // 计算文本绘制区域
@@ -934,7 +934,7 @@ public class TextInput : InteractiveControl
             endX - startX,
             scaledFontSize);
         
-        context.DrawRectangle(selectionRect, SelectionBackgroundColor ?? "#B3D7FF");
+        context.DrawRectangle(selectionRect, SelectionBackgroundColor ?? Color.SystemBlue.WithAlpha(0.3));
     }
     
     /// <summary>

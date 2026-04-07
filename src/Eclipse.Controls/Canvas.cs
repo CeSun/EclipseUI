@@ -41,7 +41,7 @@ public static class Canvas
 /// </summary>
 public class CanvasLayout : InputElementBase
 {
-    public string? BackgroundColor { get; set; }
+    public Color? BackgroundColor { get; set; }
     
     public override bool IsVisible => true;
     
@@ -115,7 +115,7 @@ public class CanvasLayout : InputElementBase
     {
         UpdateBounds(bounds);
         
-        if (!string.IsNullOrEmpty(BackgroundColor))
+        if (BackgroundColor.HasValue)
         {
             context.DrawRectangle(bounds, BackgroundColor);
         }

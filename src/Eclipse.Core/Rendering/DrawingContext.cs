@@ -26,27 +26,27 @@ public interface IDrawingContext
     /// <summary>
     /// 清空画布
     /// </summary>
-    void Clear(string? color = null);
+    void Clear(Color? color = null);
     
     /// <summary>
     /// 绘制矩形
     /// </summary>
-    void DrawRectangle(Rect bounds, string? fillColor, string? strokeColor = null, double strokeWidth = 0, double cornerRadius = 0);
+    void DrawRectangle(Rect bounds, Color? fillColor, Color? strokeColor = null, double strokeWidth = 0, double cornerRadius = 0);
     
     /// <summary>
     /// 绘制圆角矩形
     /// </summary>
-    void DrawRoundRect(Rect bounds, string fillColor, double cornerRadius);
+    void DrawRoundRect(Rect bounds, Color fillColor, double cornerRadius);
     
     /// <summary>
     /// 绘制线条
     /// </summary>
-    void DrawLine(double x1, double y1, double x2, double y2, string color, double strokeWidth);
+    void DrawLine(double x1, double y1, double x2, double y2, Color color, double strokeWidth);
     
     /// <summary>
     /// 绘制文本
     /// </summary>
-    void DrawText(string text, double x, double y, double fontSize, string? fontFamily = null, string? fontWeight = null, string? color = null);
+    void DrawText(string text, double x, double y, double fontSize, string? fontFamily = null, string? fontWeight = null, Color? color = null);
     
     /// <summary>
     /// 测量文本宽度
@@ -74,4 +74,53 @@ public interface IDrawingContext
     /// <param name="imageKey">图片缓存键</param>
     /// <returns>图片尺寸，无效键返回 Size.Zero</returns>
     Size GetImageSize(string imageKey);
+}
+
+/// <summary>
+/// IDrawingContext 扩展方法
+/// </summary>
+public static class DrawingContextExtensions
+{
+    /// <summary>
+    /// 绘制矩形（兼容 string 参数）
+    /// </summary>
+    public static void DrawRectangle(this IDrawingContext context, Rect bounds, string? fillColor, string? strokeColor = null, double strokeWidth = 0, double cornerRadius = 0)
+    {
+        var fill = fillColor != null ? Color.Parse(fillColor) : (Color?)null;
+        var stroke = strokeColor != null ? Color.Parse(strokeColor) : (Color?)null;
+        context.DrawRectangle(bounds, fill, stroke, strokeWidth, cornerRadius);
+    }
+    
+    /// <summary>
+    /// 绘制圆角矩形（兼容 string 参数）
+    /// </summary>
+    public static void DrawRoundRect(this IDrawingContext context, Rect bounds, string fillColor, double cornerRadius)
+    {
+        context.DrawRoundRect(bounds, Color.Parse(fillColor), cornerRadius);
+    }
+    
+    /// <summary>
+    /// 绘制线条（兼容 string 参数）
+    /// </summary>
+    public static void DrawLine(this IDrawingContext context, double x1, double y1, double x2, double y2, string color, double strokeWidth)
+    {
+        context.DrawLine(x1, y1, x2, y2, Color.Parse(color), strokeWidth);
+    }
+    
+    /// <summary>
+    /// 绘制文本（兼容 string 参数）
+    /// </summary>
+    public static void DrawText(this IDrawingContext context, string text, double x, double y, double fontSize, string? fontFamily = null, string? fontWeight = null, string? color = null)
+    {
+        var textColor = color != null ? Color.Parse(color) : (Color?)null;
+        context.DrawText(text, x, y, fontSize, fontFamily, fontWeight, textColor);
+    }
+    
+    /// <summary>
+    /// 清空画布（兼容 string 参数）
+    /// </summary>
+    public static void Clear(this IDrawingContext context, string? color)
+    {
+        context.Clear(color != null ? Color.Parse(color) : null);
+    }
 }

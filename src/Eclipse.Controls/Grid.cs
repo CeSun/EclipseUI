@@ -62,7 +62,7 @@ public class GridLayout : InputElementBase
     /// <summary>
     /// 背景颜色
     /// </summary>
-    public string? BackgroundColor { get; set; }
+    public Color? BackgroundColor { get; set; }
     
     /// <summary>
     /// 内边距
@@ -242,7 +242,7 @@ public class GridLayout : InputElementBase
         var scaledColumnSpacing = ColumnSpacing * context.Scale;
         
         // 绘制背景
-        if (!string.IsNullOrEmpty(BackgroundColor))
+        if (BackgroundColor.HasValue)
         {
             context.DrawRectangle(bounds, BackgroundColor);
         }
