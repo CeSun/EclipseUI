@@ -201,8 +201,9 @@ public class ScrollView : InputElementBase
 
         _contentSize = new Size(maxWidth + Padding * 2 * context.Scale, maxHeight + Padding * 2 * context.Scale);
 
-        // ScrollView 返回父布局提供的可用空间作为视口大小
-        // 只有当父布局没有提供可用空间时，才使用内容大小
+        // ScrollView 应该返回视口大小，而不是内容大小
+        // 如果父布局提供了可用空间，就使用该空间（作为视口）
+        // 否则使用内容大小（作为最小尺寸）
         double viewportWidth = availableSize.IsEmpty || availableSize.Width <= 0
             ? _contentSize.Width
             : availableSize.Width;
@@ -210,10 +211,9 @@ public class ScrollView : InputElementBase
             ? _contentSize.Height
             : availableSize.Height;
 
-        // 不要用内容大小限制视口，视口可以小于内容（需要滚动）
-        // 但视口不应小于合理的最小值
-        viewportWidth = Math.Max(viewportWidth, 50 * context.Scale);
-        viewportHeight = Math.Max(viewportHeight, 50 * context.Scale);
+        // 视口大小不应超过内容大小（否则不需要滚动）
+        viewportWidth = Math.Min(viewportWidth, _contentSize.Width);
+        viewportHeight = Math.Min(viewportHeight, _contentSize.Height);
 
         return new Size(viewportWidth, viewportHeight);
     }
