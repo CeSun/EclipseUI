@@ -34,7 +34,7 @@ namespace Eclipse.Generator
             // 收集所有 EUI 文件的组件信息（用于识别自定义组件）
             var allComponentsInfo = parsedFiles.Collect().Select((files, _) =>
             {
-                var components = new Dictionary<string, string>(); // ClassName -> Namespace
+                var builder = ImmutableDictionary.CreateBuilder<string, string>(); // ClassName -> Namespace
                 foreach (var file in files)
                 {
                     // 先解析 @namespace 指令
@@ -44,9 +44,9 @@ namespace Eclipse.Generator
                         // 暂时用占位符，后续在 GenerateSource 中用 MSBuild 配置推断
                         ns = $"__pending__:{file.Path}";
                     }
-                    components[file.ClassName] = ns;
+                    builder[file.ClassName] = ns;
                 }
-                return new AllComponentsInfo { Components = components };
+                return new AllComponentsInfo { Components = builder.ToImmutable() };
             });
 
             // 结合 Compilation、配置、解析后的文件和所有组件信息
@@ -61,23 +61,27 @@ namespace Eclipse.Generator
                 // 推断命名空间（如果还没确定）
                 string @namespace = file.Parsed.Namespace ?? InferNamespace(file.Path, file.AdditionalText, optionsProvider);
                 
-                // 更新组件信息中的命名空间
+                // 更新组件信息中的命名空间（创建新的 ImmutableDictionary 以保持不可变性）
+                AllComponentsInfo updatedComponents = allComponents;
                 if (allComponents.Components.TryGetValue(file.ClassName, out var cachedNs) && cachedNs.StartsWith("__pending__:"))
                 {
-                    allComponents.Components[file.ClassName] = @namespace;
+                    updatedComponents = new AllComponentsInfo 
+                    { 
+                        Components = allComponents.Components.SetItem(file.ClassName, @namespace) 
+                    };
                 }
                 
                 // 类型查找缓存（在 compilation 级别共享）
-                var typeCache = new TypeLookupCache(compilation, allComponents);
+                var typeCache = new TypeLookupCache(compilation, updatedComponents);
                 
-                GenerateSource(spc, optionsProvider, typeCache, file, @namespace, allComponents);
+                GenerateSource(spc, optionsProvider, typeCache, file, @namespace, updatedComponents);
             });
         }
 
         // 存储所有组件信息
         private class AllComponentsInfo
         {
-            public Dictionary<string, string> Components { get; set; } = new();
+            public ImmutableDictionary<string, string> Components { get; set; } = ImmutableDictionary<string, string>.Empty;
         }
 
         private void GenerateSource(SourceProductionContext context, 

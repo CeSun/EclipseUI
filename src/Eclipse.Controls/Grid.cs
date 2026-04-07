@@ -37,7 +37,6 @@ public static class Grid
 /// </summary>
 public class GridLayout : InputElementBase
 {
-    private Rect _bounds;
     private Size _desiredSize = Size.Zero;
     
     /// <summary>
@@ -71,9 +70,6 @@ public class GridLayout : InputElementBase
     public double Padding { get; set; } = 0;
     
     public override bool IsVisible => true;
-    public override Rect Bounds => _bounds;
-    
-    public void UpdateBounds(Rect bounds) => _bounds = bounds;
     
     protected override IEnumerable<IInputElement> GetInputChildren()
     {
@@ -176,7 +172,7 @@ public class GridLayout : InputElementBase
     /// </summary>
     public void Arrange(Rect finalBounds, IDrawingContext context)
     {
-        _bounds = finalBounds;
+        UpdateBounds(finalBounds);
         
         var scaledPadding = Padding * context.Scale;
         var scaledRowSpacing = RowSpacing * context.Scale;

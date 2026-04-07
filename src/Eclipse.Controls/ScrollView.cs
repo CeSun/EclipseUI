@@ -163,9 +163,6 @@ public class ScrollView : InputElementBase
     #region 输入元素接口实现
     
     public override bool IsVisible => true;
-    public override Rect Bounds => _bounds;
-    
-    public void UpdateBounds(Rect bounds) => _bounds = bounds;
     
     protected override IEnumerable<IInputElement> GetInputChildren()
     {

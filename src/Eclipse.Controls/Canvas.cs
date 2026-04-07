@@ -41,14 +41,9 @@ public static class Canvas
 /// </summary>
 public class CanvasLayout : InputElementBase
 {
-    private Rect _bounds;
-    
     public string? BackgroundColor { get; set; }
     
     public override bool IsVisible => true;
-    public override Rect Bounds => _bounds;
-    
-    public void UpdateBounds(Rect bounds) => _bounds = bounds;
     
     protected override IEnumerable<IInputElement> GetInputChildren()
     {
@@ -68,7 +63,7 @@ public class CanvasLayout : InputElementBase
     /// </summary>
     public void Arrange(Rect finalBounds, IDrawingContext context)
     {
-        _bounds = finalBounds;
+        UpdateBounds(finalBounds);
         
         foreach (var child in Children)
         {

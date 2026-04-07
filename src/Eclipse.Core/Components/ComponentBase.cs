@@ -34,7 +34,7 @@ namespace Eclipse.Core
         /// <summary>
         /// 更新组件边界（在 Render 时调用）
         /// </summary>
-        protected void UpdateBounds(Rect bounds) => _bounds = bounds;
+        public void UpdateBounds(Rect bounds) => _bounds = bounds;
         
         /// <summary>
         /// 是否需要重建（脏标记）

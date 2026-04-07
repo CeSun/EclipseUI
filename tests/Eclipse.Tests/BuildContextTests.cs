@@ -71,7 +71,7 @@ public class BuildContextTests
         // Assert
         // 由于没有调用 BeginChildContent，容器没有子组件
         var root = (TestContainer)context.RootComponent!;
-        Assert.Equal(0, root.Children.Count);
+        Assert.Empty(root.Children);
     }
 }
 
