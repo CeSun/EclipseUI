@@ -349,9 +349,7 @@ public sealed class InputManager
         {
             // 不可见或禁用时跳过整个元素（包括子元素）
             if (!inputElement.IsVisible || !inputElement.IsInputEnabled)
-            {
                 return null;
-            }
         }
         
         // 先检查子元素 (后渲染的在上面) - 即使 IsHitTestVisible=false 也要检查子元素
@@ -373,13 +371,11 @@ public sealed class InputManager
             }
         }
         
-        // 如果自己也是 IInputElement，检查自己（但受 IsHitTestVisible 控制）
+        // 如果自己也是 IInputElement ，检查自己（但受 IsHitTestVisible 控制）
         if (component is IInputElement selfElement)
         {
             if (selfElement.IsHitTestVisible && selfElement.HitTest(point))
-            {
                 return selfElement;
-            }
         }
         
         return null;
@@ -516,6 +512,7 @@ public sealed class InputManager
         Vector delta,
         KeyModifiers modifiers)
     {
+        Console.WriteLine($"[InputManager] RaisePointerWheel: target={target.GetType().Name}");
         var args = new PointerWheelEventArgs(pointer, position, delta)
         {
             KeyModifiers = modifiers
@@ -523,6 +520,7 @@ public sealed class InputManager
         
         args.RoutedEvent = ComponentBase.PointerWheelChangedEvent;
         target.RaiseEvent(args);
+        Console.WriteLine($"[InputManager] RaisePointerWheel: event raised, Handled={args.Handled}");
         
         PointerWheel?.Invoke(this, args);
     }

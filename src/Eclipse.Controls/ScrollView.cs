@@ -99,6 +99,16 @@ public class ScrollView : ComponentBase
     public override Rect Bounds => _bounds;
     
     /// <summary>
+    /// 固定宽度（-1 表示自动）
+    /// </summary>
+    public double Width { get; set; } = -1;
+    
+    /// <summary>
+    /// 固定高度（-1 表示自动）
+    /// </summary>
+    public double Height { get; set; } = -1;
+    
+    /// <summary>
     /// 视口宽度
     /// </summary>
     public double ViewportWidth => _bounds.Width;
@@ -197,23 +207,30 @@ public class ScrollView : ComponentBase
         double maxWidth = 0;
         double maxHeight = 0;
 
+        Console.WriteLine($"[ScrollView] Measure: Children.Count={Children.Count}");
         foreach (var child in Children)
         {
             var childSize = child.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity), context);
+            Console.WriteLine($"[ScrollView] Measure: child {child.GetType().Name} size={childSize}");
             maxWidth = Math.Max(maxWidth, childSize.Width);
             maxHeight = Math.Max(maxHeight, childSize.Height);
         }
 
         _contentSize = new Size(maxWidth + Padding * 2 * context.Scale, maxHeight + Padding * 2 * context.Scale);
+        Console.WriteLine($"[ScrollView] Measure: _contentSize={_contentSize}, availableSize={availableSize}");
 
         // ScrollView 返回父布局提供的可用空间作为视口大小
-        // 只有当父布局没有提供可用空间时，才使用内容大小
-        double viewportWidth = availableSize.IsEmpty || availableSize.Width <= 0
-            ? _contentSize.Width
-            : availableSize.Width;
-        double viewportHeight = availableSize.IsEmpty || availableSize.Height <= 0
-            ? _contentSize.Height
-            : availableSize.Height;
+        // 如果设置了固定宽高，优先使用固定宽高
+        double viewportWidth = Width > 0 
+            ? Width * context.Scale 
+            : (availableSize.IsEmpty || availableSize.Width <= 0
+                ? _contentSize.Width
+                : availableSize.Width);
+        double viewportHeight = Height > 0 
+            ? Height * context.Scale 
+            : (availableSize.IsEmpty || availableSize.Height <= 0
+                ? _contentSize.Height
+                : availableSize.Height);
 
         // 不要用内容大小限制视口，视口可以小于内容（需要滚动）
         // 但视口不应小于合理的最小值
@@ -228,12 +245,15 @@ public class ScrollView : ComponentBase
     /// </summary>
     public override void Arrange(Rect finalBounds, IDrawingContext context)
     {
+        Console.WriteLine($"[ScrollView] Arrange: finalBounds=X={finalBounds.X},Y={finalBounds.Y},W={finalBounds.Width},H={finalBounds.Height}, _contentSize={_contentSize}");
         _bounds = finalBounds;
         base.Arrange(finalBounds, context);
+        Console.WriteLine($"[ScrollView] Arrange: _bounds set to X={_bounds.X},Y={_bounds.Y},W={_bounds.Width},H={_bounds.Height}");
         
         // 计算最大滚动范围
         _maxScrollX = Math.Max(0, _contentSize.Width - finalBounds.Width);
         _maxScrollY = Math.Max(0, _contentSize.Height - finalBounds.Height);
+        Console.WriteLine($"[ScrollView] Arrange: _maxScrollX={_maxScrollX}, _maxScrollY={_maxScrollY}");
         
         // 限制滚动范围
         _scrollX = Math.Clamp(_scrollX, 0, _maxScrollX);
@@ -260,6 +280,7 @@ public class ScrollView : ComponentBase
     public override void Render(IDrawingContext context, Rect bounds)
     {
         UpdateBounds(bounds);
+        _bounds = bounds;  // 同步更新 ScrollView 自己的 _bounds 字段
 
         var scaledPadding = Padding * context.Scale;
         var scaledScrollBarWidth = ScrollBarWidth * context.Scale;
@@ -586,25 +607,46 @@ public class ScrollView : ComponentBase
     
     private void OnPointerWheelChanged(object? sender, PointerWheelEventArgs e)
     {
-        if (!IsInputEnabled) return;
-        
+        Console.WriteLine($"[ScrollView] OnPointerWheelChanged: IsInputEnabled={IsInputEnabled}, _maxScrollY={_maxScrollY}, _maxScrollX={_maxScrollX}, deltaY={e.Delta.Y}, deltaX={e.Delta.X}");
+        if (!IsInputEnabled)
+        {
+            Console.WriteLine($"[ScrollView] OnPointerWheelChanged: IsInputEnabled=false, skip");
+            return;
+        }
+
         // 计算滚动增量
         var deltaY = -e.Delta.Y * ScrollStep;
         var deltaX = -e.Delta.X * ScrollStep;
-        
+
+        Console.WriteLine($"[ScrollView] OnPointerWheelChanged: deltaY after scroll step={deltaY}, deltaX after scroll step={deltaX}");
+
         // 优先处理垂直滚动
         if (_maxScrollY > 0 && Math.Abs(deltaY) > 0.001)
         {
+            Console.WriteLine($"[ScrollView] OnPointerWheelChanged: will scroll vertically, deltaY={deltaY}");
             ScrollBy(0, deltaY);
             e.Handled = true;
+            Console.WriteLine($"[ScrollView] OnPointerWheelChanged: scrolled vertically, new scrollY={_scrollY}, Handled={e.Handled}");
         }
-        
+        else
+        {
+            Console.WriteLine($"[ScrollView] OnPointerWheelChanged: skipping vertical scroll: _maxScrollY={_maxScrollY}, Math.Abs(deltaY)={Math.Abs(deltaY)}");
+        }
+
         // 水平滚动（如果有水平滚动条或按住 Shift）
         if (_maxScrollX > 0 && Math.Abs(deltaX) > 0.001)
         {
+            Console.WriteLine($"[ScrollView] OnPointerWheelChanged: will scroll horizontally, deltaX={deltaX}");
             ScrollBy(deltaX, 0);
             e.Handled = true;
+            Console.WriteLine($"[ScrollView] OnPointerWheelChanged: scrolled horizontally, new scrollX={_scrollX}, Handled={e.Handled}");
         }
+        else
+        {
+            Console.WriteLine($"[ScrollView] OnPointerWheelChanged: skipping horizontal scroll: _maxScrollX={_maxScrollX}, Math.Abs(deltaX)={Math.Abs(deltaX)}");
+        }
+
+        Console.WriteLine($"[ScrollView] OnPointerWheelChanged: done, final Handled={e.Handled}");
     }
     
     private void OnPointerPressedHandler(object? sender, PointerPressedEventArgs e)

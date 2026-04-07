@@ -33,7 +33,7 @@
     <Label Text="" FontSize="8" />
     
     <Label Text="ScrollView 滚动视图:" FontSize="14" FontWeight="Bold" />
-    <ScrollView BackgroundColor="#F0F0F0">
+    <ScrollView BackgroundColor="#F0F0F0" Height="200">
         <StackLayout Spacing="8" Padding="10">
             <Label Text="滚动项 1" BackgroundColor="#FFF" Padding="8" />
             <Label Text="滚动项 2" BackgroundColor="#FFF" Padding="8" />

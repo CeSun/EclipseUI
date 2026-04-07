@@ -536,9 +536,18 @@ public class WindowImpl : IDisposable
             _inputManager.SetRootElementForRender(firstChild);
         }
         
-        // 创建 DrawingContext 并渲染
+        // 执行布局流程：Measure -> Arrange -> Render
+        var availableSize = new Size(width, height);
         var drawingContext = new SkiaDrawingContext(canvas, width, height, _scaling);
+        
+        // 1. 测量
+        _content.Measure(availableSize, drawingContext);
+        
+        // 2. 安排
         var bounds = new Rect(0, 0, width, height);
+        _content.Arrange(bounds, drawingContext);
+        
+        // 3. 渲染
         _content.Render(drawingContext, bounds);
         
         canvas.Flush();

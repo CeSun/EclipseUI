@@ -20,6 +20,8 @@ internal static class EventRouter
         var routedEvent = e.RoutedEvent;
         e.OriginalSource = source;
         
+
+        
         switch (routedEvent.RoutingStrategy)
         {
             case RoutingStrategy.Direct:

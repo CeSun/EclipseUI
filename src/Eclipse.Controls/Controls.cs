@@ -136,29 +136,33 @@ public class StackLayout : ComponentBase
         var contentBounds = new Rect(
             finalBounds.X + paddingValue,
             finalBounds.Y + paddingValue,
-            finalBounds.Width - paddingValue * 2,
-            finalBounds.Height - paddingValue * 2);
+            Math.Max(0, finalBounds.Width - paddingValue * 2),
+            Math.Max(0, finalBounds.Height - paddingValue * 2));
         
         if (Orientation == Orientation.Vertical)
         {
             double y = contentBounds.Y;
+            double remainingHeight = contentBounds.Height;
             foreach (var child in Children)
             {
-                Size childSize = child.Measure(new Size(contentBounds.Width, contentBounds.Height), context);
+                Size childSize = child.Measure(new Size(contentBounds.Width, Math.Max(0, remainingHeight)), context);
                 var childBounds = new Rect(contentBounds.X, y, contentBounds.Width, childSize.Height);
                 child.Arrange(childBounds, context);
                 y += childSize.Height + spacingValue;
+                remainingHeight -= childSize.Height + spacingValue;
             }
         }
         else
         {
             double x = contentBounds.X;
+            double remainingWidth = contentBounds.Width;
             foreach (var child in Children)
             {
-                Size childSize = child.Measure(new Size(contentBounds.Width, contentBounds.Height), context);
+                Size childSize = child.Measure(new Size(Math.Max(0, remainingWidth), contentBounds.Height), context);
                 var childBounds = new Rect(x, contentBounds.Y, childSize.Width, contentBounds.Height);
                 child.Arrange(childBounds, context);
                 x += childSize.Width + spacingValue;
+                remainingWidth -= childSize.Width + spacingValue;
             }
         }
     }

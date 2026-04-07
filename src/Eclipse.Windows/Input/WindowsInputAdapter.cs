@@ -227,20 +227,28 @@ internal sealed class WindowsInputAdapter
     private void OnPointerWheel(IntPtr wParam, IntPtr lParam)
     {
         var delta = NativeMethods.GET_WHEEL_DELTA_WPARAM(wParam) / 120.0;
-        var x = NativeMethods.GET_X_LPARAM(lParam);
-        var y = NativeMethods.GET_Y_LPARAM(lParam);
+        var screenX = NativeMethods.GET_X_LPARAM(lParam);
+        var screenY = NativeMethods.GET_Y_LPARAM(lParam);
         var keyModifiers = GetKeyModifiers(wParam);
         
-        _inputManager.ProcessPointerWheel(Pointer.Mouse, new Point(x, y), new Vector(0, delta), keyModifiers);
+        // WM_MOUSEWHEEL uses screen coordinates, convert to client coordinates
+        var pt = new NativeMethods.POINT { x = screenX, y = screenY };
+        NativeMethods.ScreenToClient(_hwnd, ref pt);
+        
+        _inputManager.ProcessPointerWheel(Pointer.Mouse, new Point(pt.x, pt.y), new Vector(0, delta), keyModifiers);
     }
     
     private void OnPointerWheelHorizontal(IntPtr wParam, IntPtr lParam)
     {
         var delta = NativeMethods.GET_WHEEL_DELTA_WPARAM(wParam) / 120.0;
-        var x = NativeMethods.GET_X_LPARAM(lParam);
-        var y = NativeMethods.GET_Y_LPARAM(lParam);
+        var screenX = NativeMethods.GET_X_LPARAM(lParam);
+        var screenY = NativeMethods.GET_Y_LPARAM(lParam);
         
-        _inputManager.ProcessPointerWheel(Pointer.Mouse, new Point(x, y), new Vector(delta, 0));
+        // WM_MOUSEHWHEEL uses screen coordinates, convert to client coordinates
+        var pt = new NativeMethods.POINT { x = screenX, y = screenY };
+        NativeMethods.ScreenToClient(_hwnd, ref pt);
+        
+        _inputManager.ProcessPointerWheel(Pointer.Mouse, new Point(pt.x, pt.y), new Vector(delta, 0));
     }
     
     private void OnTouch(IntPtr wParam, IntPtr lParam)
@@ -420,6 +428,17 @@ internal static class NativeMethods
     
     [DllImport("user32.dll")]
     public static extern void CloseTouchInputHandle(IntPtr hTouchInput);
+    
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool ScreenToClient(IntPtr hWnd, ref POINT lpPoint);
+    
+    [StructLayout(LayoutKind.Sequential)]
+    public struct POINT
+    {
+        public int x;
+        public int y;
+    }
     
     public static int GET_X_LPARAM(IntPtr lParam) => (short)(lParam.ToInt64() & 0xFFFF);
     public static int GET_Y_LPARAM(IntPtr lParam) => (short)((lParam.ToInt64() >> 16) & 0xFFFF);
