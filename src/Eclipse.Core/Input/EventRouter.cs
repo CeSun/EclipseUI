@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Eclipse.Core;
 
 namespace Eclipse.Input;
 
@@ -76,7 +77,7 @@ internal static class EventRouter
     
     private static void InvokeHandlers(IInputElement element, RoutedEventArgs e)
     {
-        if (element is InputElementBase inputElement)
+        if (element is ComponentBase inputElement)
         {
             inputElement.InvokeHandlersInternal(e);
         }

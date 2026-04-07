@@ -48,7 +48,7 @@ public static class Grid
 /// <summary>
 /// 网格布局控件
 /// </summary>
-public class GridLayout : InputElementBase
+public class GridLayout : ComponentBase
 {
     /// <summary>
     /// 行定义

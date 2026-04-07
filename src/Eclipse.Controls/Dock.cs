@@ -40,7 +40,7 @@ public enum Dock
 /// <summary>
 /// Dock 布局面板 - 子元素可以停靠在上、下、左、右或填充剩余空间
 /// </summary>
-public class DockPanel : InputElementBase
+public class DockPanel : ComponentBase
 {
     /// <summary>
     /// 背景颜色

@@ -269,6 +269,7 @@ public class ComponentLifecycleTests
 
     internal class LifecycleTestComponent : ComponentBase
     {
+        public override bool IsVisible => true;
         public int InitializeCount { get; private set; }
         public int MountCount { get; private set; }
         public int UnmountCount { get; private set; }
@@ -314,6 +315,7 @@ public class ComponentLifecycleTests
 
     internal class RebuildTestComponent : ComponentBase
     {
+        public override bool IsVisible => true;
         public int BuildCount { get; private set; }
 
         public override void Build(IBuildContext context)

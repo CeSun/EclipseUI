@@ -336,7 +336,7 @@ public abstract class ComponentBase : IComponent
 控件实现 `Measure()` 和 `Arrange()` 方法：
 
 ```csharp
-public class StackLayout : InputElementBase
+public class StackLayout : ComponentBase
 {
     public Size Measure(Size availableSize, IDrawingContext context);
     public void Arrange(Rect finalBounds, IDrawingContext context);

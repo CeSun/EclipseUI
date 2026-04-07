@@ -10,7 +10,7 @@ namespace Eclipse.Core
     /// <summary>
     /// 组件基类 - 定义组件的核心接口和默认实现
     /// </summary>
-    public abstract class ComponentBase : IComponent
+    public abstract class ComponentBase : IComponent, IInputElement
     {
         private static int _nextId = 0;
         private readonly int _id;
@@ -52,7 +52,7 @@ namespace Eclipse.Core
         /// <summary>
         /// 组件的边界矩形
         /// </summary>
-        public Rect Bounds => _bounds;
+        public virtual Rect Bounds => _bounds;
 
         /// <summary>
         /// 更新组件边界（在 Render 时调用）
@@ -217,6 +217,316 @@ namespace Eclipse.Core
             foreach (var child in _children) child.Dispose();
             _children.Clear();
             StateChanged = null;
+        }
+
+        // === 路由事件定义 ===
+
+        public static readonly RoutedEvent<PointerPressedEventArgs> PointerPressedEvent =
+            RoutedEvent<PointerPressedEventArgs>.Register<ComponentBase>(
+                nameof(PointerPressed),
+                RoutingStrategy.Bubble);
+
+        public static readonly RoutedEvent<PointerPressedEventArgs> PreviewPointerPressedEvent =
+            RoutedEvent<PointerPressedEventArgs>.Register<ComponentBase>(
+                nameof(PreviewPointerPressed),
+                RoutingStrategy.Tunnel);
+
+        public static readonly RoutedEvent<PointerEventArgs> PointerMovedEvent =
+            RoutedEvent<PointerEventArgs>.Register<ComponentBase>(
+                nameof(PointerMoved),
+                RoutingStrategy.Bubble);
+
+        public static readonly RoutedEvent<PointerEventArgs> PreviewPointerMovedEvent =
+            RoutedEvent<PointerEventArgs>.Register<ComponentBase>(
+                nameof(PreviewPointerMoved),
+                RoutingStrategy.Tunnel);
+
+        public static readonly RoutedEvent<PointerReleasedEventArgs> PointerReleasedEvent =
+            RoutedEvent<PointerReleasedEventArgs>.Register<ComponentBase>(
+                nameof(PointerReleased),
+                RoutingStrategy.Bubble);
+
+        public static readonly RoutedEvent<PointerReleasedEventArgs> PreviewPointerReleasedEvent =
+            RoutedEvent<PointerReleasedEventArgs>.Register<ComponentBase>(
+                nameof(PreviewPointerReleased),
+                RoutingStrategy.Tunnel);
+
+        public static readonly RoutedEvent<PointerWheelEventArgs> PointerWheelChangedEvent =
+            RoutedEvent<PointerWheelEventArgs>.Register<ComponentBase>(
+                nameof(PointerWheelChanged),
+                RoutingStrategy.Bubble);
+
+        public static readonly RoutedEvent<PointerEventArgs> PointerEnteredEvent =
+            RoutedEvent<PointerEventArgs>.Register<ComponentBase>(
+                nameof(PointerEntered),
+                RoutingStrategy.Direct);
+
+        public static readonly RoutedEvent<PointerEventArgs> PointerExitedEvent =
+            RoutedEvent<PointerEventArgs>.Register<ComponentBase>(
+                nameof(PointerExited),
+                RoutingStrategy.Direct);
+
+        public static readonly RoutedEvent<TappedEventArgs> TappedEvent =
+            RoutedEvent<TappedEventArgs>.Register<ComponentBase>(
+                nameof(Tapped),
+                RoutingStrategy.Bubble);
+
+        // === 键盘事件 ===
+
+        public static readonly RoutedEvent<KeyEventArgs> KeyDownEvent =
+            RoutedEvent<KeyEventArgs>.Register<ComponentBase>(
+                nameof(KeyDown),
+                RoutingStrategy.Bubble);
+
+        public static readonly RoutedEvent<KeyEventArgs> PreviewKeyDownEvent =
+            RoutedEvent<KeyEventArgs>.Register<ComponentBase>(
+                nameof(PreviewKeyDown),
+                RoutingStrategy.Tunnel);
+
+        public static readonly RoutedEvent<KeyEventArgs> KeyUpEvent =
+            RoutedEvent<KeyEventArgs>.Register<ComponentBase>(
+                nameof(KeyUp),
+                RoutingStrategy.Bubble);
+
+        public static readonly RoutedEvent<TextInputEventArgs> TextInputEvent =
+            RoutedEvent<TextInputEventArgs>.Register<ComponentBase>(
+                nameof(TextInput),
+                RoutingStrategy.Bubble);
+
+        // === IME 组合事件 ===
+
+        public static readonly RoutedEvent<CompositionEventArgs> CompositionStartedEvent =
+            RoutedEvent<CompositionEventArgs>.Register<ComponentBase>(
+                nameof(CompositionStarted),
+                RoutingStrategy.Bubble);
+
+        public static readonly RoutedEvent<CompositionEventArgs> CompositionChangedEvent =
+            RoutedEvent<CompositionEventArgs>.Register<ComponentBase>(
+                nameof(CompositionChanged),
+                RoutingStrategy.Bubble);
+
+        public static readonly RoutedEvent<CompositionEventArgs> CompositionEndedEvent =
+            RoutedEvent<CompositionEventArgs>.Register<ComponentBase>(
+                nameof(CompositionEnded),
+                RoutingStrategy.Bubble);
+
+        // === CLR 事件包装 ===
+
+        public event EventHandler<PointerPressedEventArgs> PointerPressed
+        {
+            add => AddHandler(PointerPressedEvent, value);
+            remove => RemoveHandler(PointerPressedEvent, value);
+        }
+
+        public event EventHandler<PointerPressedEventArgs> PreviewPointerPressed
+        {
+            add => AddHandler(PreviewPointerPressedEvent, value);
+            remove => RemoveHandler(PreviewPointerPressedEvent, value);
+        }
+
+        public event EventHandler<PointerEventArgs> PointerMoved
+        {
+            add => AddHandler(PointerMovedEvent, value);
+            remove => RemoveHandler(PointerMovedEvent, value);
+        }
+
+        public event EventHandler<PointerEventArgs> PreviewPointerMoved
+        {
+            add => AddHandler(PreviewPointerMovedEvent, value);
+            remove => RemoveHandler(PreviewPointerMovedEvent, value);
+        }
+
+        public event EventHandler<PointerReleasedEventArgs> PointerReleased
+        {
+            add => AddHandler(PointerReleasedEvent, value);
+            remove => RemoveHandler(PointerReleasedEvent, value);
+        }
+
+        public event EventHandler<PointerReleasedEventArgs> PreviewPointerReleased
+        {
+            add => AddHandler(PreviewPointerReleasedEvent, value);
+            remove => RemoveHandler(PreviewPointerReleasedEvent, value);
+        }
+
+        public event EventHandler<PointerWheelEventArgs> PointerWheelChanged
+        {
+            add => AddHandler(PointerWheelChangedEvent, value);
+            remove => RemoveHandler(PointerWheelChangedEvent, value);
+        }
+
+        public event EventHandler<PointerEventArgs> PointerEntered
+        {
+            add => AddHandler(PointerEnteredEvent, value);
+            remove => RemoveHandler(PointerEnteredEvent, value);
+        }
+
+        public event EventHandler<PointerEventArgs> PointerExited
+        {
+            add => AddHandler(PointerExitedEvent, value);
+            remove => RemoveHandler(PointerExitedEvent, value);
+        }
+
+        public event EventHandler<TappedEventArgs> Tapped
+        {
+            add => AddHandler(TappedEvent, value);
+            remove => RemoveHandler(TappedEvent, value);
+        }
+
+        // === 键盘事件 CLR 包装 ===
+
+        public event EventHandler<KeyEventArgs> KeyDown
+        {
+            add => AddHandler(KeyDownEvent, value);
+            remove => RemoveHandler(KeyDownEvent, value);
+        }
+
+        public event EventHandler<KeyEventArgs> PreviewKeyDown
+        {
+            add => AddHandler(PreviewKeyDownEvent, value);
+            remove => RemoveHandler(PreviewKeyDownEvent, value);
+        }
+
+        public event EventHandler<KeyEventArgs> KeyUp
+        {
+            add => AddHandler(KeyUpEvent, value);
+            remove => RemoveHandler(KeyUpEvent, value);
+        }
+
+        public event EventHandler<TextInputEventArgs> TextInput
+        {
+            add => AddHandler(TextInputEvent, value);
+            remove => RemoveHandler(TextInputEvent, value);
+        }
+
+        // === IME 组合事件 CLR 包装 ===
+
+        public event EventHandler<CompositionEventArgs> CompositionStarted
+        {
+            add => AddHandler(CompositionStartedEvent, value);
+            remove => RemoveHandler(CompositionStartedEvent, value);
+        }
+
+        public event EventHandler<CompositionEventArgs> CompositionChanged
+        {
+            add => AddHandler(CompositionChangedEvent, value);
+            remove => RemoveHandler(CompositionChangedEvent, value);
+        }
+
+        public event EventHandler<CompositionEventArgs> CompositionEnded
+        {
+            add => AddHandler(CompositionEndedEvent, value);
+            remove => RemoveHandler(CompositionEndedEvent, value);
+        }
+
+        // === IInputElement 属性 ===
+
+        public virtual bool IsInputEnabled { get; set; } = true;
+        public virtual bool IsHitTestVisible { get; set; } = true;
+        public virtual bool IsFocusable { get; set; }
+        public virtual bool IsFocused { get; protected set; }
+        public abstract bool IsVisible { get; }
+
+        // IInputElement.Parent 显式实现
+        IInputElement? IInputElement.Parent => Parent as IInputElement;
+        IEnumerable<IInputElement> IInputElement.Children => GetInputChildren();
+
+        protected virtual IEnumerable<IInputElement> GetInputChildren() => Array.Empty<IInputElement>();
+
+        // === 命中测试 ===
+
+        public virtual bool HitTest(Point point)
+        {
+            if (!IsVisible || !IsHitTestVisible || !IsInputEnabled)
+                return false;
+
+            return Bounds.Contains(point);
+        }
+
+        // === 聚焦 ===
+
+        public virtual bool Focus()
+        {
+            if (!IsFocusable || !IsVisible)
+                return false;
+
+            IsFocused = true;
+            return true;
+        }
+
+        protected virtual void OnGotFocus() => IsFocused = true;
+        protected virtual void OnLostFocus() => IsFocused = false;
+
+        /// <summary>
+        /// 设置聚焦状态 (由 FocusManager 调用)
+        /// </summary>
+        internal void SetIsFocused(bool focused)
+        {
+            if (IsFocused == focused)
+                return;
+
+            IsFocused = focused;
+
+            if (focused)
+                OnGotFocus();
+            else
+                OnLostFocus();
+        }
+
+        // === 指针捕获 ===
+
+        public virtual void CapturePointer(Pointer pointer)
+        {
+            pointer.Capture(this);
+        }
+
+        public virtual void ReleasePointerCapture(Pointer pointer)
+        {
+            if (pointer.Captured == this)
+            {
+                pointer.Capture(null);
+            }
+        }
+
+        // === 事件处理 ===
+
+        private readonly Dictionary<RoutedEvent, List<Delegate>> _handlers = new();
+
+        public virtual void AddHandler(RoutedEvent routedEvent, Delegate handler)
+        {
+            if (!_handlers.TryGetValue(routedEvent, out var list))
+            {
+                list = new List<Delegate>();
+                _handlers[routedEvent] = list;
+            }
+            list.Add(handler);
+        }
+
+        public virtual void RemoveHandler(RoutedEvent routedEvent, Delegate handler)
+        {
+            if (_handlers.TryGetValue(routedEvent, out var list))
+            {
+                list.Remove(handler);
+            }
+        }
+
+        public virtual void RaiseEvent(RoutedEventArgs e)
+        {
+            e.Source = this;
+            EventRouter.RaiseEvent(this, e);
+        }
+
+        internal void InvokeHandlersInternal(RoutedEventArgs e)
+        {
+            if (_handlers.TryGetValue(e.RoutedEvent, out var list) && list != null)
+            {
+                foreach (var handler in list)
+                {
+                    if (e.Handled)
+                        break;
+
+                    handler.DynamicInvoke(this, e);
+                }
+            }
         }
     }
 

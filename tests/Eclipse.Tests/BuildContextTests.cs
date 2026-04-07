@@ -81,6 +81,7 @@ public class BuildContextTests
 internal class TestComponent : ComponentBase
 {
     public string? Value { get; set; }
+    public override bool IsVisible => true;
     public override void Build(IBuildContext context) { }
 }
 
@@ -89,5 +90,6 @@ internal class TestComponent : ComponentBase
 /// </summary>
 internal class TestContainer : ComponentBase
 {
+    public override bool IsVisible => true;
     public override void Build(IBuildContext context) { }
 }

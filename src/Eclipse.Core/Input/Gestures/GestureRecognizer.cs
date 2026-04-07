@@ -1,4 +1,5 @@
 using System;
+using Eclipse.Core;
 
 namespace Eclipse.Input.Gestures;
 
@@ -87,7 +88,7 @@ public static class GestureEvents
     /// 长按事件
     /// </summary>
     public static readonly RoutedEvent<HoldingRoutedEventArgs> HoldingEvent =
-        RoutedEvent<HoldingRoutedEventArgs>.Register<InputElementBase>(
+        RoutedEvent<HoldingRoutedEventArgs>.Register<ComponentBase>(
             "Holding",
             RoutingStrategy.Bubble);
     
@@ -95,7 +96,7 @@ public static class GestureEvents
     /// 双击事件
     /// </summary>
     public static readonly RoutedEvent<RoutedEventArgs> DoubleTappedEvent =
-        RoutedEvent<RoutedEventArgs>.Register<InputElementBase>(
+        RoutedEvent<RoutedEventArgs>.Register<ComponentBase>(
             "DoubleTapped",
             RoutingStrategy.Bubble);
 }

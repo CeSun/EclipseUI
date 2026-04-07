@@ -586,6 +586,8 @@ namespace Eclipse.Generator
             WriteLine($"public partial class {className} : {baseClass}");
             WriteLine("{");
             indent++;
+            WriteLine("public override bool IsVisible => true;");
+            WriteLine();
             foreach (var (type, name) in parsed.Injections)
             {
                 WriteLine("[Inject]");

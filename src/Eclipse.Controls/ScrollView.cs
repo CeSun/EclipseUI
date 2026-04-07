@@ -9,7 +9,7 @@ namespace Eclipse.Controls;
 /// <summary>
 /// 滚动视图 - 可滚动容器，支持水平和垂直滚动
 /// </summary>
-public class ScrollView : InputElementBase
+public class ScrollView : ComponentBase
 {
     private Rect _bounds;
     private Size _contentSize = Size.Zero;

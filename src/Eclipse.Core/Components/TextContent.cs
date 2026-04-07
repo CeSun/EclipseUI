@@ -7,6 +7,7 @@ namespace Eclipse.Core;
 public class TextContent : ComponentBase
 {
     public string? Text { get; set; }
+    public override bool IsVisible => true;
     public double FontSize { get; set; } = 14;
     public string? FontFamily { get; set; }
     

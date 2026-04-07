@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Eclipse.Core;
 
 namespace Eclipse.Input;
 
@@ -131,7 +132,7 @@ public sealed class FocusManager
     
     private void SetIsFocused(IInputElement element, bool focused)
     {
-        if (element is InputElementBase inputElement)
+        if (element is ComponentBase inputElement)
         {
             inputElement.SetIsFocused(focused);
         }

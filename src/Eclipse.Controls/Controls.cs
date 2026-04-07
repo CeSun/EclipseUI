@@ -10,7 +10,7 @@ namespace Eclipse.Controls;
 /// <summary>
 /// 可交互控件基类 - 支持输入事件
 /// </summary>
-public abstract class InteractiveControl : InputElementBase
+public abstract class InteractiveControl : ComponentBase
 {
     public bool IsEnabled { get; set; } = true;
     
@@ -40,7 +40,7 @@ public abstract class InteractiveControl : InputElementBase
 /// <summary>
 /// 垂直堆叠布局
 /// </summary>
-public class StackLayout : InputElementBase
+public class StackLayout : ComponentBase
 {
     public Orientation Orientation { get; set; } = Orientation.Vertical;
     public double Spacing { get; set; } = 0;
@@ -220,6 +220,7 @@ public class HStack : StackLayout
 public class Label : ComponentBase
 {
     public string? Text { get; set; }
+    public override bool IsVisible => true;
     public double FontSize { get; set; } = 14;
     public Color Color { get; set; } = Color.Black;
     public string? FontWeight { get; set; }
@@ -519,6 +520,7 @@ public class CheckBox : InteractiveControl
 
 public class Image : ComponentBase
 {
+    public override bool IsVisible => true;
     private string? _loadedImageKey;
 
     public string? Source { get; set; }
@@ -566,6 +568,7 @@ public class Image : ComponentBase
 
 public class Container : ComponentBase
 {
+    public override bool IsVisible => true;
     public Color BackgroundColor { get; set; } = Color.Transparent;
     public double Padding { get; set; } = 0;
     public double CornerRadius { get; set; } = 0;

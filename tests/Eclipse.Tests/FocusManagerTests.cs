@@ -1,3 +1,4 @@
+using Eclipse.Core;
 using Eclipse.Input;
 using Xunit;
 
@@ -11,7 +12,7 @@ public class FocusManagerTests
     /// <summary>
     /// 测试用的输入元素
     /// </summary>
-    private class TestInputElement : InputElementBase
+    private class TestInputElement : ComponentBase
     {
         private Rect _bounds = new Rect(0, 0, 100, 100);
         private bool _isVisible = true;

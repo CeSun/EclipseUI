@@ -285,6 +285,7 @@ public class AttachedPropertyTests
 
     internal class TestComponent : Eclipse.Core.ComponentBase
     {
+        public override bool IsVisible => true;
         public override void Build(Eclipse.Core.Abstractions.IBuildContext context) { }
     }
 }

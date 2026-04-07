@@ -55,7 +55,7 @@ public static class Canvas
 /// <summary>
 /// 绝对定位布局控件
 /// </summary>
-public class CanvasLayout : InputElementBase
+public class CanvasLayout : ComponentBase
 {
     public Color BackgroundColor { get; set; } = Color.Transparent;
     

@@ -1,3 +1,4 @@
+using Eclipse.Core;
 using Eclipse.Input;
 using Xunit;
 using InputPointer = Eclipse.Input.Pointer;
@@ -12,7 +13,7 @@ public class EventRouterTests
     /// <summary>
     /// 测试用的输入元素
     /// </summary>
-    private class TestInputElement : InputElementBase
+    private class TestInputElement : ComponentBase
     {
         private Rect _bounds = new Rect(0, 0, 100, 100);
         
@@ -45,7 +46,7 @@ public class EventRouterTests
         public override string ToString() => Name;
     }
     
-    // 辅助方法：使用反射设�?RoutedEvent
+    // 辅助方法：使用反射设�?RoutedEvent
     private static void SetRoutedEvent(RoutedEventArgs args, RoutedEvent routedEvent)
     {
         var prop = typeof(RoutedEventArgs).GetProperty("RoutedEvent");
@@ -66,12 +67,12 @@ public class EventRouterTests
         parent.AddChild(child);
         
         var args = new PointerPressedEventArgs(InputPointer.Mouse, new Point(50, 50));
-        SetRoutedEvent(args, InputElementBase.PointerPressedEvent);
+        SetRoutedEvent(args, ComponentBase.PointerPressedEvent);
         
         // Act
         child.RaiseEvent(args);
         
-        // Assert - 事件应该�?Child -> Parent -> Root 传播
+        // Assert - 事件应该�?Child -> Parent -> Root 传播
         Assert.Equal(3, child.EventLog.Count + parent.EventLog.Count + root.EventLog.Count);
         Assert.Contains(("PointerPressed", child), child.EventLog);
         Assert.Contains(("PointerPressed", parent), parent.EventLog);
@@ -89,16 +90,16 @@ public class EventRouterTests
         root.AddChild(parent);
         parent.AddChild(child);
         
-        // Parent 处理事件并设�?Handled
+        // Parent 处理事件并设�?Handled
         parent.PointerPressed += (s, e) => e.Handled = true;
         
         var args = new PointerPressedEventArgs(InputPointer.Mouse, new Point(50, 50));
-        SetRoutedEvent(args, InputElementBase.PointerPressedEvent);
+        SetRoutedEvent(args, ComponentBase.PointerPressedEvent);
         
         // Act
         child.RaiseEvent(args);
         
-        // Assert - 事件应该停止�?Parent
+        // Assert - 事件应该停止�?Parent
         Assert.Contains(("PointerPressed", child), child.EventLog);
         Assert.Contains(("PointerPressed", parent), parent.EventLog);
         Assert.DoesNotContain(("PointerPressed", root), root.EventLog);
@@ -118,12 +119,12 @@ public class EventRouterTests
         parent.AddChild(child);
         
         var args = new PointerPressedEventArgs(InputPointer.Mouse, new Point(50, 50));
-        SetRoutedEvent(args, InputElementBase.PreviewPointerPressedEvent);
+        SetRoutedEvent(args, ComponentBase.PreviewPointerPressedEvent);
         
         // Act
         child.RaiseEvent(args);
         
-        // Assert - 事件应该�?Root -> Parent -> Child 传播
+        // Assert - 事件应该�?Root -> Parent -> Child 传播
         Assert.Contains(("PreviewPointerPressed", root), root.EventLog);
         Assert.Contains(("PreviewPointerPressed", parent), parent.EventLog);
         Assert.Contains(("PreviewPointerPressed", child), child.EventLog);
@@ -140,16 +141,16 @@ public class EventRouterTests
         root.AddChild(parent);
         parent.AddChild(child);
         
-        // Parent 处理 Preview 事件并设�?Handled
+        // Parent 处理 Preview 事件并设�?Handled
         parent.PreviewPointerPressed += (s, e) => e.Handled = true;
         
         var args = new PointerPressedEventArgs(InputPointer.Mouse, new Point(50, 50));
-        SetRoutedEvent(args, InputElementBase.PreviewPointerPressedEvent);
+        SetRoutedEvent(args, ComponentBase.PreviewPointerPressedEvent);
         
         // Act
         child.RaiseEvent(args);
         
-        // Assert - 事件应该停止�?Parent，不会到�?Child
+        // Assert - 事件应该停止�?Parent，不会到�?Child
         Assert.Contains(("PreviewPointerPressed", root), root.EventLog);
         Assert.Contains(("PreviewPointerPressed", parent), parent.EventLog);
         Assert.DoesNotContain(("PreviewPointerPressed", child), child.EventLog);
@@ -169,7 +170,7 @@ public class EventRouterTests
         parent.AddChild(child);
         
         var args = new PointerEventArgs(InputPointer.Mouse, new Point(50, 50));
-        SetRoutedEvent(args, InputElementBase.PointerEnteredEvent);
+        SetRoutedEvent(args, ComponentBase.PointerEnteredEvent);
         
         // Act
         child.RaiseEvent(args);
@@ -186,26 +187,26 @@ public class EventRouterTests
     public void RoutedEvent_ShouldHaveCorrectProperties()
     {
         // Assert
-        Assert.Equal("PointerPressed", InputElementBase.PointerPressedEvent.Name);
-        Assert.Equal(RoutingStrategy.Bubble, InputElementBase.PointerPressedEvent.RoutingStrategy);
-        Assert.Equal(typeof(InputElementBase), InputElementBase.PointerPressedEvent.OwnerType);
+        Assert.Equal("PointerPressed", ComponentBase.PointerPressedEvent.Name);
+        Assert.Equal(RoutingStrategy.Bubble, ComponentBase.PointerPressedEvent.RoutingStrategy);
+        Assert.Equal(typeof(ComponentBase), ComponentBase.PointerPressedEvent.OwnerType);
     }
     
     [Fact]
     public void RoutedEvent_TunnelEvent_ShouldHaveCorrectStrategy()
     {
         // Assert
-        Assert.Equal(RoutingStrategy.Tunnel, InputElementBase.PreviewPointerPressedEvent.RoutingStrategy);
+        Assert.Equal(RoutingStrategy.Tunnel, ComponentBase.PreviewPointerPressedEvent.RoutingStrategy);
     }
     
     [Fact]
     public void RoutedEvent_DirectEvent_ShouldHaveCorrectStrategy()
     {
         // Assert
-        Assert.Equal(RoutingStrategy.Direct, InputElementBase.PointerEnteredEvent.RoutingStrategy);
+        Assert.Equal(RoutingStrategy.Direct, ComponentBase.PointerEnteredEvent.RoutingStrategy);
     }
     
-    // === Source �?OriginalSource 测试 ===
+    // === Source �?OriginalSource 测试 ===
     
     [Fact]
     public void RoutedEventArgs_ShouldSetOriginalSource()
@@ -217,7 +218,7 @@ public class EventRouterTests
         child.PointerPressed += (s, e) => receivedArgs = e;
         
         var args = new PointerPressedEventArgs(InputPointer.Mouse, new Point(50, 50));
-        SetRoutedEvent(args, InputElementBase.PointerPressedEvent);
+        SetRoutedEvent(args, ComponentBase.PointerPressedEvent);
         
         // Act
         child.RaiseEvent(args);
@@ -239,17 +240,17 @@ public class EventRouterTests
         root.AddChild(child);
         
         var args = new KeyEventArgs(Key.Enter, 13);
-        SetRoutedEvent(args, InputElementBase.KeyDownEvent);
+        SetRoutedEvent(args, ComponentBase.KeyDownEvent);
         
         // Act
         child.RaiseEvent(args);
         
-        // Assert - KeyDown �?Bubble 事件
+        // Assert - KeyDown �?Bubble 事件
         Assert.Contains(("KeyDown", child), child.EventLog);
         Assert.Contains(("KeyDown", root), root.EventLog);
     }
     
-    // === 添加/移除处理器测�?===
+    // === 添加/移除处理器测�?===
     
     [Fact]
     public void AddHandler_ShouldReceiveEvent()
@@ -258,10 +259,10 @@ public class EventRouterTests
         var element = new TestInputElement { IsHitTestVisible = true };
         
         int callCount = 0;
-        element.AddHandler(InputElementBase.PointerPressedEvent, new EventHandler<PointerPressedEventArgs>((s, e) => callCount++));
+        element.AddHandler(ComponentBase.PointerPressedEvent, new EventHandler<PointerPressedEventArgs>((s, e) => callCount++));
         
         var args = new PointerPressedEventArgs(InputPointer.Mouse, new Point(50, 50));
-        SetRoutedEvent(args, InputElementBase.PointerPressedEvent);
+        SetRoutedEvent(args, ComponentBase.PointerPressedEvent);
         
         // Act
         element.RaiseEvent(args);
@@ -279,11 +280,11 @@ public class EventRouterTests
         int callCount = 0;
         var handler = new EventHandler<PointerPressedEventArgs>((s, e) => callCount++);
         
-        element.AddHandler(InputElementBase.PointerPressedEvent, handler);
-        element.RemoveHandler(InputElementBase.PointerPressedEvent, handler);
+        element.AddHandler(ComponentBase.PointerPressedEvent, handler);
+        element.RemoveHandler(ComponentBase.PointerPressedEvent, handler);
         
         var args = new PointerPressedEventArgs(InputPointer.Mouse, new Point(50, 50));
-        SetRoutedEvent(args, InputElementBase.PointerPressedEvent);
+        SetRoutedEvent(args, ComponentBase.PointerPressedEvent);
         
         // Act
         element.RaiseEvent(args);
@@ -299,12 +300,12 @@ public class EventRouterTests
         var element = new TestInputElement { IsHitTestVisible = true };
         
         var calls = new List<int>();
-        element.AddHandler(InputElementBase.PointerPressedEvent, new EventHandler<PointerPressedEventArgs>((s, e) => calls.Add(1)));
-        element.AddHandler(InputElementBase.PointerPressedEvent, new EventHandler<PointerPressedEventArgs>((s, e) => calls.Add(2)));
-        element.AddHandler(InputElementBase.PointerPressedEvent, new EventHandler<PointerPressedEventArgs>((s, e) => calls.Add(3)));
+        element.AddHandler(ComponentBase.PointerPressedEvent, new EventHandler<PointerPressedEventArgs>((s, e) => calls.Add(1)));
+        element.AddHandler(ComponentBase.PointerPressedEvent, new EventHandler<PointerPressedEventArgs>((s, e) => calls.Add(2)));
+        element.AddHandler(ComponentBase.PointerPressedEvent, new EventHandler<PointerPressedEventArgs>((s, e) => calls.Add(3)));
         
         var args = new PointerPressedEventArgs(InputPointer.Mouse, new Point(50, 50));
-        SetRoutedEvent(args, InputElementBase.PointerPressedEvent);
+        SetRoutedEvent(args, ComponentBase.PointerPressedEvent);
         
         // Act
         element.RaiseEvent(args);
@@ -320,15 +321,15 @@ public class EventRouterTests
         var element = new TestInputElement { IsHitTestVisible = true };
         
         var calls = new List<int>();
-        element.AddHandler(InputElementBase.PointerPressedEvent, new EventHandler<PointerPressedEventArgs>((s, e) => 
+        element.AddHandler(ComponentBase.PointerPressedEvent, new EventHandler<PointerPressedEventArgs>((s, e) => 
         {
             calls.Add(1);
             e.Handled = true;
         }));
-        element.AddHandler(InputElementBase.PointerPressedEvent, new EventHandler<PointerPressedEventArgs>((s, e) => calls.Add(2)));
+        element.AddHandler(ComponentBase.PointerPressedEvent, new EventHandler<PointerPressedEventArgs>((s, e) => calls.Add(2)));
         
         var args = new PointerPressedEventArgs(InputPointer.Mouse, new Point(50, 50));
-        SetRoutedEvent(args, InputElementBase.PointerPressedEvent);
+        SetRoutedEvent(args, ComponentBase.PointerPressedEvent);
         
         // Act
         element.RaiseEvent(args);

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Eclipse.Core;
 using Eclipse.Core.Abstractions;
 
 namespace Eclipse.Input;
@@ -402,7 +403,7 @@ public sealed class InputManager
             ClickCount = clickCount
         };
         
-        var previewEvent = InputElementBase.PreviewPointerPressedEvent;
+        var previewEvent = ComponentBase.PreviewPointerPressedEvent;
         previewArgs.RoutedEvent = previewEvent;
         target.RaiseEvent(previewArgs);
         
@@ -417,7 +418,7 @@ public sealed class InputManager
             ClickCount = clickCount
         };
         
-        args.RoutedEvent = InputElementBase.PointerPressedEvent;
+        args.RoutedEvent = ComponentBase.PointerPressedEvent;
         target.RaiseEvent(args);
         
         PointerPressed?.Invoke(this, args);
@@ -437,7 +438,7 @@ public sealed class InputManager
             KeyModifiers = modifiers
         };
         
-        previewArgs.RoutedEvent = InputElementBase.PreviewPointerMovedEvent;
+        previewArgs.RoutedEvent = ComponentBase.PreviewPointerMovedEvent;
         target.RaiseEvent(previewArgs);
         
         if (previewArgs.Handled)
@@ -450,7 +451,7 @@ public sealed class InputManager
             KeyModifiers = modifiers
         };
         
-        args.RoutedEvent = InputElementBase.PointerMovedEvent;
+        args.RoutedEvent = ComponentBase.PointerMovedEvent;
         target.RaiseEvent(args);
         
         PointerMoved?.Invoke(this, args);
@@ -470,7 +471,7 @@ public sealed class InputManager
             KeyModifiers = modifiers
         };
         
-        previewArgs.RoutedEvent = InputElementBase.PreviewPointerReleasedEvent;
+        previewArgs.RoutedEvent = ComponentBase.PreviewPointerReleasedEvent;
         target.RaiseEvent(previewArgs);
         
         if (previewArgs.Handled)
@@ -484,7 +485,7 @@ public sealed class InputManager
             InitialPressPosition = GetOrCreateState(pointer).PressPosition
         };
         
-        args.RoutedEvent = InputElementBase.PointerReleasedEvent;
+        args.RoutedEvent = ComponentBase.PointerReleasedEvent;
         target.RaiseEvent(args);
         
         PointerReleased?.Invoke(this, args);
@@ -494,7 +495,7 @@ public sealed class InputManager
     {
         var args = new PointerEventArgs(pointer, position)
         {
-            RoutedEvent = InputElementBase.PointerEnteredEvent
+            RoutedEvent = ComponentBase.PointerEnteredEvent
         };
         target.RaiseEvent(args);
     }
@@ -503,7 +504,7 @@ public sealed class InputManager
     {
         var args = new PointerEventArgs(pointer, position)
         {
-            RoutedEvent = InputElementBase.PointerExitedEvent
+            RoutedEvent = ComponentBase.PointerExitedEvent
         };
         target.RaiseEvent(args);
     }
@@ -520,7 +521,7 @@ public sealed class InputManager
             KeyModifiers = modifiers
         };
         
-        args.RoutedEvent = InputElementBase.PointerWheelChangedEvent;
+        args.RoutedEvent = ComponentBase.PointerWheelChangedEvent;
         target.RaiseEvent(args);
         
         PointerWheel?.Invoke(this, args);
@@ -533,7 +534,7 @@ public sealed class InputManager
             TapCount = tapCount
         };
         
-        args.RoutedEvent = InputElementBase.TappedEvent;
+        args.RoutedEvent = ComponentBase.TappedEvent;
         target.RaiseEvent(args);
     }
     
@@ -543,7 +544,7 @@ public sealed class InputManager
     {
         // Tunnel
         var previewArgs = new KeyEventArgs(key, keyCode, modifiers) { IsRepeat = isRepeat };
-        previewArgs.RoutedEvent = InputElementBase.PreviewKeyDownEvent;
+        previewArgs.RoutedEvent = ComponentBase.PreviewKeyDownEvent;
         target.RaiseEvent(previewArgs);
         
         if (previewArgs.Handled)
@@ -551,7 +552,7 @@ public sealed class InputManager
         
         // Bubble
         var args = new KeyEventArgs(key, keyCode, modifiers) { IsRepeat = isRepeat };
-        args.RoutedEvent = InputElementBase.KeyDownEvent;
+        args.RoutedEvent = ComponentBase.KeyDownEvent;
         target.RaiseEvent(args);
         
         KeyDown?.Invoke(this, args);
@@ -560,7 +561,7 @@ public sealed class InputManager
     private void RaiseKeyUp(IInputElement target, Key key, int keyCode, KeyModifiers modifiers)
     {
         var args = new KeyEventArgs(key, keyCode, modifiers);
-        args.RoutedEvent = InputElementBase.KeyUpEvent;
+        args.RoutedEvent = ComponentBase.KeyUpEvent;
         target.RaiseEvent(args);
         
         KeyUp?.Invoke(this, args);
@@ -569,7 +570,7 @@ public sealed class InputManager
     private void RaiseTextInput(IInputElement target, string text)
     {
         var args = new TextInputEventArgs(text);
-        args.RoutedEvent = InputElementBase.TextInputEvent;
+        args.RoutedEvent = ComponentBase.TextInputEvent;
         target.RaiseEvent(args);
         
         TextInput?.Invoke(this, args);
@@ -580,7 +581,7 @@ public sealed class InputManager
     private void RaiseCompositionStarted(IInputElement target)
     {
         var args = new CompositionEventArgs();
-        args.RoutedEvent = InputElementBase.CompositionStartedEvent;
+        args.RoutedEvent = ComponentBase.CompositionStartedEvent;
         target.RaiseEvent(args);
         
         CompositionStarted?.Invoke(this, args);
@@ -589,7 +590,7 @@ public sealed class InputManager
     private void RaiseCompositionChanged(IInputElement target, string compositionText, int cursorPosition)
     {
         var args = new CompositionEventArgs(compositionText, cursorPosition);
-        args.RoutedEvent = InputElementBase.CompositionChangedEvent;
+        args.RoutedEvent = ComponentBase.CompositionChangedEvent;
         target.RaiseEvent(args);
         
         CompositionChanged?.Invoke(this, args);
@@ -598,7 +599,7 @@ public sealed class InputManager
     private void RaiseCompositionEnded(IInputElement target)
     {
         var args = new CompositionEventArgs();
-        args.RoutedEvent = InputElementBase.CompositionEndedEvent;
+        args.RoutedEvent = ComponentBase.CompositionEndedEvent;
         target.RaiseEvent(args);
         
         CompositionEnded?.Invoke(this, args);
