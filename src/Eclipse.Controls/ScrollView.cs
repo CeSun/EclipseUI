@@ -798,6 +798,13 @@ public class ScrollView : ComponentBase
         {
             _verticalThumbDragging = false;
             _horizontalThumbDragging = false;
+
+            // 释放指针捕获
+            if (e.Pointer.Captured == this)
+            {
+                e.Pointer.Capture(null);
+            }
+
             e.Handled = true;
             StateHasChanged();
         }
