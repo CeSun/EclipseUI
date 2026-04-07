@@ -13,27 +13,43 @@ public static class Canvas
     /// <summary>
     /// 左边距
     /// </summary>
-    public static readonly AttachedProperty<double> Left = new("Canvas.Left", 0);
+    public static readonly AttachedProperty<double> LeftProperty = new("Canvas.Left", 0);
     
     /// <summary>
     /// 上边距
     /// </summary>
-    public static readonly AttachedProperty<double> Top = new("Canvas.Top", 0);
+    public static readonly AttachedProperty<double> TopProperty = new("Canvas.Top", 0);
     
     /// <summary>
     /// 右边距
     /// </summary>
-    public static readonly AttachedProperty<double> Right = new("Canvas.Right", 0);
+    public static readonly AttachedProperty<double> RightProperty = new("Canvas.Right", 0);
     
     /// <summary>
     /// 下边距
     /// </summary>
-    public static readonly AttachedProperty<double> Bottom = new("Canvas.Bottom", 0);
+    public static readonly AttachedProperty<double> BottomProperty = new("Canvas.Bottom", 0);
     
     /// <summary>
     /// Z 顺序
     /// </summary>
-    public static readonly AttachedProperty<int> ZIndex = new("Canvas.ZIndex", 0);
+    public static readonly AttachedProperty<int> ZIndexProperty = new("Canvas.ZIndex", 0);
+    
+    // 便捷访问器
+    public static double GetLeft(IComponent element) => element.Get(LeftProperty);
+    public static void SetLeft(IComponent element, double value) => element.Set(LeftProperty, value);
+    
+    public static double GetTop(IComponent element) => element.Get(TopProperty);
+    public static void SetTop(IComponent element, double value) => element.Set(TopProperty, value);
+    
+    public static double GetRight(IComponent element) => element.Get(RightProperty);
+    public static void SetRight(IComponent element, double value) => element.Set(RightProperty, value);
+    
+    public static double GetBottom(IComponent element) => element.Get(BottomProperty);
+    public static void SetBottom(IComponent element, double value) => element.Set(BottomProperty, value);
+    
+    public static int GetZIndex(IComponent element) => element.Get(ZIndexProperty);
+    public static void SetZIndex(IComponent element, int value) => element.Set(ZIndexProperty, value);
 }
 
 /// <summary>
@@ -67,10 +83,10 @@ public class CanvasLayout : InputElementBase
         
         foreach (var child in Children)
         {
-            var left = child.Get(Canvas.Left);
-            var top = child.Get(Canvas.Top);
-            var right = child.Get(Canvas.Right);
-            var bottom = child.Get(Canvas.Bottom);
+            var left = child.Get(Canvas.LeftProperty);
+            var top = child.Get(Canvas.TopProperty);
+            var right = child.Get(Canvas.RightProperty);
+            var bottom = child.Get(Canvas.BottomProperty);
             
             // 获取子元素尺寸
             var childSize = MeasureChild(child, context);
@@ -122,10 +138,10 @@ public class CanvasLayout : InputElementBase
         
         foreach (var child in Children)
         {
-            var left = child.Get(Canvas.Left);
-            var top = child.Get(Canvas.Top);
-            var right = child.Get(Canvas.Right);
-            var bottom = child.Get(Canvas.Bottom);
+            var left = child.Get(Canvas.LeftProperty);
+            var top = child.Get(Canvas.TopProperty);
+            var right = child.Get(Canvas.RightProperty);
+            var bottom = child.Get(Canvas.BottomProperty);
             
             var childSize = MeasureChild(child, context);
             

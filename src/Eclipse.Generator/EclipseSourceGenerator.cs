@@ -298,6 +298,12 @@ namespace Eclipse.Generator
                 return new PropertyTypeInfo { TypeName = "double", IsNumeric = true };
             }
 
+            // DockPanel 附加属性：Dock 是枚举类型
+            if (typeName == "DockPanel" && propertyName == "Dock")
+            {
+                return new PropertyTypeInfo { TypeName = "Dock", IsEnum = true, EnumTypeName = "Dock" };
+            }
+
             return null;
         }
 
@@ -557,6 +563,7 @@ namespace Eclipse.Generator
             WriteLine("using Eclipse.Rendering;");
             WriteLine("using Eclipse.Core;");
             WriteLine("using Eclipse.Core.Abstractions;");
+            WriteLine("using Eclipse.Controls;");
             foreach (var @using in parsed.Usings)
                 WriteLine($"using {@using};");
 
@@ -707,11 +714,12 @@ namespace Eclipse.Generator
                 }
                 else if (attr.IsAttached)
                 {
-                    // 附加属性：element.Set(Grid.Row, value)
-                    // 需要根据附加属性名称推断类型
+                    // 附加属性：element.Set(Grid.DockProperty, value)
+                    // 属性名加上 Property 后缀
+                    var propertyName = attr.AttachedPropertyName + "Property";
                     var attachedType = GetAttachedPropertyType(attr.AttachedTypeName, attr.AttachedPropertyName);
                     var value = attr.IsBinding ? attr.Value : ConvertLiteralValue(attr.Value, attachedType);
-                    WriteLine($"{varName}.Set({attr.AttachedTypeName}.{attr.AttachedPropertyName}, {value});");
+                    WriteLine($"{varName}.Set({attr.AttachedTypeName}.{propertyName}, {value});");
                 }
                 else if (attr.IsEvent)
                 {

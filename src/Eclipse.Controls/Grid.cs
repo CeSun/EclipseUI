@@ -1,4 +1,4 @@
-using Eclipse.Core;
+﻿using Eclipse.Core;
 using Eclipse.Core.Abstractions;
 using Eclipse.Input;
 using Eclipse.Rendering;
@@ -14,22 +14,35 @@ public static class Grid
     /// <summary>
     /// 所在行
     /// </summary>
-    public static readonly AttachedProperty<int> Row = new("Grid.Row", 0);
+    public static readonly AttachedProperty<int> RowProperty = new("Grid.Row", 0);
     
     /// <summary>
     /// 所在列
     /// </summary>
-    public static readonly AttachedProperty<int> Column = new("Grid.Column", 0);
+    public static readonly AttachedProperty<int> ColumnProperty = new("Grid.Column", 0);
     
     /// <summary>
     /// 占用行数
     /// </summary>
-    public static readonly AttachedProperty<int> RowSpan = new("Grid.RowSpan", 1);
+    public static readonly AttachedProperty<int> RowSpanProperty = new("Grid.RowSpan", 1);
     
     /// <summary>
     /// 占用列数
     /// </summary>
-    public static readonly AttachedProperty<int> ColumnSpan = new("Grid.ColumnSpan", 1);
+    public static readonly AttachedProperty<int> ColumnSpanProperty = new("Grid.ColumnSpan", 1);
+    
+    // 便捷访问器
+    public static int GetRow(IComponent element) => element.Get(RowProperty);
+    public static void SetRow(IComponent element, int value) => element.Set(RowProperty, value);
+    
+    public static int GetColumn(IComponent element) => element.Get(ColumnProperty);
+    public static void SetColumn(IComponent element, int value) => element.Set(ColumnProperty, value);
+    
+    public static int GetRowSpan(IComponent element) => element.Get(RowSpanProperty);
+    public static void SetRowSpan(IComponent element, int value) => element.Set(RowSpanProperty, value);
+    
+    public static int GetColumnSpan(IComponent element) => element.Get(ColumnSpanProperty);
+    public static void SetColumnSpan(IComponent element, int value) => element.Set(ColumnSpanProperty, value);
 }
 
 /// <summary>
@@ -203,10 +216,10 @@ public class GridLayout : InputElementBase
         // 遍历所有子元素，根据附加属性安排位置
         foreach (var child in Children)
         {
-            var row = child.Get(Grid.Row);
-            var col = child.Get(Grid.Column);
-            var rowSpan = child.Get(Grid.RowSpan);
-            var colSpan = child.Get(Grid.ColumnSpan);
+            var row = child.Get(Grid.RowProperty);
+            var col = child.Get(Grid.ColumnProperty);
+            var rowSpan = child.Get(Grid.RowSpanProperty);
+            var colSpan = child.Get(Grid.ColumnSpanProperty);
             
             // 计算子元素边界
             double childX = col < columnWidths.Length ? colXPositions[col] : colXPositions[0];
@@ -272,10 +285,10 @@ public class GridLayout : InputElementBase
         // 遍历所有子元素，根据附加属性渲染
         foreach (var child in Children)
         {
-            var row = child.Get(Grid.Row);
-            var col = child.Get(Grid.Column);
-            var rowSpan = child.Get(Grid.RowSpan);
-            var colSpan = child.Get(Grid.ColumnSpan);
+            var row = child.Get(Grid.RowProperty);
+            var col = child.Get(Grid.ColumnProperty);
+            var rowSpan = child.Get(Grid.RowSpanProperty);
+            var colSpan = child.Get(Grid.ColumnSpanProperty);
             
             double childX = col < columnWidths.Length ? colXPositions[col] : colXPositions[0];
             double childY = row < rowHeights.Length ? rowYPositions[row] : rowYPositions[0];
@@ -327,7 +340,7 @@ public class GridLayout : InputElementBase
                 
                 foreach (var child in Children)
                 {
-                    var row = child.Get(Grid.Row);
+                    var row = child.Get(Grid.RowProperty);
                     if (row == i)
                     {
                         var size = MeasureChild(child, context);
@@ -392,7 +405,7 @@ public class GridLayout : InputElementBase
                 
                 foreach (var child in Children)
                 {
-                    var col = child.Get(Grid.Column);
+                    var col = child.Get(Grid.ColumnProperty);
                     if (col == i)
                     {
                         var size = MeasureChild(child, context);
