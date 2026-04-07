@@ -34,6 +34,8 @@ public class LayoutTests
         public void DrawImage(string imageKey, Rect bounds, Stretch stretch) { }
         public string? LoadImage(string source) => null;
         public Size GetImageSize(string imageKey) => Size.Zero;
+        public void PushClip(Rect bounds) { }
+        public void PopClip() { }
     }
     
     private readonly TestDrawingContext _context = new();
