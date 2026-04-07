@@ -184,94 +184,47 @@ public class ScrollView : InputElementBase
     
     /// <summary>
     /// 测量内容所需尺寸
+    /// ScrollView 应该使用 availableSize 作为视口大小，而不是内容大小
     /// </summary>
-    public Size Measure(Size availableSize, IDrawingContext context)
+    public override Size Measure(Size availableSize, IDrawingContext context)
     {
-        // 测量所有子元素以确定内容大小
+        // 测量所有子元素以确定内容大小（使用无限空间测量内容实际尺寸）
         double maxWidth = 0;
         double maxHeight = 0;
-        
+
         foreach (var child in Children)
         {
-            Size childSize;
-            if (child is InteractiveControl interactiveControl)
-            {
-                childSize = interactiveControl.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity), context);
-            }
-            else if (child is StackLayout stackLayout)
-            {
-                childSize = stackLayout.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity), context);
-            }
-            else if (child is Label label)
-            {
-                childSize = label.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity), context);
-            }
-            else if (child is GridLayout gridLayout)
-            {
-                childSize = gridLayout.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity), context);
-            }
-            else if (child is ComponentBase componentBase)
-            {
-                // ComponentBase 类型：测量其子元素
-                childSize = MeasureComponentBaseChildren(componentBase, context);
-            }
-            else
-            {
-                childSize = new Size(100 * context.Scale, 100 * context.Scale);
-            }
-            
+            var childSize = child.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity), context);
             maxWidth = Math.Max(maxWidth, childSize.Width);
             maxHeight = Math.Max(maxHeight, childSize.Height);
         }
-        
+
         _contentSize = new Size(maxWidth + Padding * 2 * context.Scale, maxHeight + Padding * 2 * context.Scale);
-        
-        // 返回内容大小而不是 availableSize
-        return _contentSize;
-    }
-    
-    /// <summary>
-    /// 测量 ComponentBase 子元素
-    /// </summary>
-    private Size MeasureComponentBaseChildren(ComponentBase component, IDrawingContext context)
-    {
-        double maxWidth = 0;
-        double maxHeight = 0;
-        foreach (var child in component.Children)
-        {
-            Size childSize;
-            if (child is InteractiveControl interactiveControl)
-            {
-                childSize = interactiveControl.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity), context);
-            }
-            else if (child is StackLayout stackLayout)
-            {
-                childSize = stackLayout.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity), context);
-            }
-            else if (child is Label label)
-            {
-                childSize = label.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity), context);
-            }
-            else if (child is GridLayout gridLayout)
-            {
-                childSize = gridLayout.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity), context);
-            }
-            else
-            {
-                childSize = new Size(100 * context.Scale, 100 * context.Scale);
-            }
-            maxWidth = Math.Max(maxWidth, childSize.Width);
-            maxHeight += childSize.Height;
-        }
-        return new Size(maxWidth, maxHeight);
+
+        // ScrollView 返回父布局提供的可用空间作为视口大小
+        // 只有当父布局没有提供可用空间时，才使用内容大小
+        double viewportWidth = availableSize.IsEmpty || availableSize.Width <= 0
+            ? _contentSize.Width
+            : availableSize.Width;
+        double viewportHeight = availableSize.IsEmpty || availableSize.Height <= 0
+            ? _contentSize.Height
+            : availableSize.Height;
+
+        // 不要用内容大小限制视口，视口可以小于内容（需要滚动）
+        // 但视口不应小于合理的最小值
+        viewportWidth = Math.Max(viewportWidth, 50 * context.Scale);
+        viewportHeight = Math.Max(viewportHeight, 50 * context.Scale);
+
+        return new Size(viewportWidth, viewportHeight);
     }
     
     /// <summary>
     /// 安排子元素位置
     /// </summary>
-    public void Arrange(Rect finalBounds, IDrawingContext context)
+    public override void Arrange(Rect finalBounds, IDrawingContext context)
     {
         _bounds = finalBounds;
+        base.Arrange(finalBounds, context);
         
         // 计算最大滚动范围
         _maxScrollX = Math.Max(0, _contentSize.Width - finalBounds.Width);
@@ -281,26 +234,17 @@ public class ScrollView : InputElementBase
         _scrollX = Math.Clamp(_scrollX, 0, _maxScrollX);
         _scrollY = Math.Clamp(_scrollY, 0, _maxScrollY);
         
-        // 安排子元素
+        // 安排子元素 - 子元素应该占据内容区域，而不是视口
+        var scaledPadding = Padding * context.Scale;
+        var contentBounds = new Rect(
+            finalBounds.X + scaledPadding,
+            finalBounds.Y + scaledPadding,
+            _contentSize.Width - scaledPadding * 2,
+            _contentSize.Height - scaledPadding * 2);
+        
         foreach (var child in Children)
         {
-            ArrangeChild(child, finalBounds, context);
-        }
-    }
-    
-    private void ArrangeChild(IComponent child, Rect bounds, IDrawingContext context)
-    {
-        if (child is InteractiveControl interactiveControl)
-        {
-            interactiveControl.Arrange(bounds, context);
-        }
-        else if (child is StackLayout stackLayout)
-        {
-            stackLayout.Arrange(bounds, context);
-        }
-        else if (child is GridLayout gridLayout)
-        {
-            gridLayout.Arrange(bounds, context);
+            child.Arrange(contentBounds, context);
         }
     }
     
@@ -311,45 +255,56 @@ public class ScrollView : InputElementBase
     public override void Render(IDrawingContext context, Rect bounds)
     {
         UpdateBounds(bounds);
-        
+
         var scaledPadding = Padding * context.Scale;
         var scaledScrollBarWidth = ScrollBarWidth * context.Scale;
         var scaledCornerRadius = ScrollBarCornerRadius * context.Scale;
-        
+
         // 绘制背景
         if (BackgroundColor != Color.Transparent)
         {
             context.DrawRectangle(bounds, BackgroundColor);
         }
-        
+
         // 视口区域（子元素可见区域）
         var viewportBounds = new Rect(
             bounds.X + scaledPadding,
             bounds.Y + scaledPadding,
             bounds.Width - scaledPadding * 2,
             bounds.Height - scaledPadding * 2);
-        
-        // 渲染子元素（应用滚动偏移）
-        // 每个子元素根据其在内容中的位置和滚动偏移来渲染
-        double childY = 0;
-        foreach (var child in Children)
+
+        // 推入裁剪区域，只在视口内渲染
+        context.PushClip(viewportBounds);
+
+        try
         {
-            // 获取子元素尺寸
-            var childSize = GetChildRenderSize(child, context);
-            
-            // 计算子元素在视口中的位置（考虑滚动偏移）
-            var childX = viewportBounds.X;
-            var renderY = viewportBounds.Y + childY - _scrollY;
-            var renderHeight = childSize.Height;
-            
-            // 只有当子元素在视口内时才渲染
-            if (renderY + renderHeight >= viewportBounds.Y && renderY <= viewportBounds.Y + viewportBounds.Height)
+            // 渲染子元素（应用滚动偏移）
+            // 每个子元素根据其在内容中的位置和滚动偏移来渲染
+            double childY = 0;
+            foreach (var child in Children)
             {
-                var childBounds = new Rect(childX, renderY, viewportBounds.Width, renderHeight);
-                child.Render(context, childBounds);
+                // 获取子元素尺寸
+                var childSize = GetChildRenderSize(child);
+
+                // 计算子元素在视口中的位置（考虑滚动偏移）
+                var childX = viewportBounds.X;
+                var renderY = viewportBounds.Y + childY - _scrollY;
+                var renderHeight = childSize.Height;
+
+                // 只有当子元素在视口内时才渲染
+                if (renderY + renderHeight >= viewportBounds.Y && renderY <= viewportBounds.Y + viewportBounds.Height)
+                {
+                    var childBounds = new Rect(childX, renderY, viewportBounds.Width, renderHeight);
+                    child.Render(context, childBounds);
+                }
+
+                childY += childSize.Height;
             }
-            
-            childY += childSize.Height;
+        }
+        finally
+        {
+            // 弹出裁剪区域
+            context.PopClip();
         }
         
         // 更新滚动条可见性状态
@@ -372,20 +327,16 @@ public class ScrollView : InputElementBase
     
     /// <summary>
     /// 获取子元素渲染尺寸
+    /// 使用 Arrange 后的 Bounds，避免重复测量
     /// </summary>
-    private Size GetChildRenderSize(IComponent child, IDrawingContext context)
+    private Size GetChildRenderSize(IComponent child)
     {
-        if (child is InteractiveControl interactiveControl)
-            return interactiveControl.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity), context);
-        if (child is StackLayout stackLayout)
-            return stackLayout.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity), context);
-        if (child is Label label)
-            return label.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity), context);
-        if (child is GridLayout gridLayout)
-            return gridLayout.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity), context);
-        if (child is ComponentBase componentBase)
-            return MeasureComponentBaseChildren(componentBase, context);
-        return new Size(100 * context.Scale, 100 * context.Scale);
+        // 使用 Arrange 后的 Bounds（Bounds 在 ComponentBase 中定义）
+        if (child is ComponentBase component && !component.Bounds.IsEmpty)
+        {
+            return new Size(component.Bounds.Width, component.Bounds.Height);
+        }
+        return Size.Zero;
     }
     
     private void UpdateScrollBarVisibility()

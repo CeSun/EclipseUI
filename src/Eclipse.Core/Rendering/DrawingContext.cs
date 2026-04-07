@@ -67,4 +67,14 @@ public interface IDrawingContext
     /// 获取图片原始尺寸
     /// </summary>
     Size GetImageSize(string imageKey);
+
+    /// <summary>
+    /// 推入裁剪区域
+    /// </summary>
+    void PushClip(Rect bounds);
+
+    /// <summary>
+    /// 弹出裁剪区域
+    /// </summary>
+    void PopClip();
 }

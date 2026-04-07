@@ -10,12 +10,10 @@ public class TextContent : ComponentBase
     public double FontSize { get; set; } = 14;
     public string? FontFamily { get; set; }
     
-    private Size _desiredSize = Size.Zero;
-    
     /// <summary>
     /// 测量文本所需尺寸
     /// </summary>
-    public Size Measure(Size availableSize, IDrawingContext context)
+    public override Size Measure(Size availableSize, IDrawingContext context)
     {
         if (string.IsNullOrEmpty(Text))
         {

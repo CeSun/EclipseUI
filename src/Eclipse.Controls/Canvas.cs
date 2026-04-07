@@ -75,11 +75,32 @@ public class CanvasLayout : InputElementBase
     public override void Build(IBuildContext context) { }
     
     /// <summary>
+    /// 测量 Canvas 所需尺寸 - 基于子元素的最大边界
+    /// </summary>
+    public override Size Measure(Size availableSize, IDrawingContext context)
+    {
+        double maxWidth = 0;
+        double maxHeight = 0;
+        
+        foreach (var child in Children)
+        {
+            var childSize = child.Measure(availableSize, context);
+            var left = child.Get(Canvas.LeftProperty);
+            var top = child.Get(Canvas.TopProperty);
+            
+            maxWidth = Math.Max(maxWidth, left + childSize.Width);
+            maxHeight = Math.Max(maxHeight, top + childSize.Height);
+        }
+        
+        return new Size(maxWidth, maxHeight);
+    }
+    
+    /// <summary>
     /// 安排子元素位置（绝对定位）
     /// </summary>
-    public void Arrange(Rect finalBounds, IDrawingContext context)
+    public override void Arrange(Rect finalBounds, IDrawingContext context)
     {
-        UpdateBounds(finalBounds);
+        base.Arrange(finalBounds, context);
         
         foreach (var child in Children)
         {
@@ -89,7 +110,7 @@ public class CanvasLayout : InputElementBase
             var bottom = child.Get(Canvas.BottomProperty);
             
             // 获取子元素尺寸
-            var childSize = MeasureChild(child, context);
+            var childSize = child.Measure(Size.Empty, context);
             
             double childX, childY;
             double childWidth = childSize.Width;
@@ -123,7 +144,7 @@ public class CanvasLayout : InputElementBase
             }
             
             var childBounds = new Rect(childX, childY, childWidth, childHeight);
-            ArrangeChild(child, childBounds, context);
+            child.Arrange(childBounds, context);
         }
     }
     
@@ -143,7 +164,7 @@ public class CanvasLayout : InputElementBase
             var right = child.Get(Canvas.RightProperty);
             var bottom = child.Get(Canvas.BottomProperty);
             
-            var childSize = MeasureChild(child, context);
+            var childSize = child.Measure(Size.Empty, context);
             
             double childX, childY;
             double childWidth = childSize.Width;
@@ -176,36 +197,8 @@ public class CanvasLayout : InputElementBase
             }
             
             var childBounds = new Rect(childX, childY, childWidth, childHeight);
+            child.Arrange(childBounds, context);
             child.Render(context, childBounds);
-        }
-    }
-    
-    private Size MeasureChild(IComponent child, IDrawingContext context)
-    {
-        if (child is InteractiveControl interactiveControl)
-        {
-            return interactiveControl.Measure(Size.Empty, context);
-        }
-        else if (child is StackLayout stackLayout)
-        {
-            return stackLayout.Measure(Size.Empty, context);
-        }
-        else if (child is Label label)
-        {
-            return label.Measure(Size.Empty, context);
-        }
-        return new Size(100 * context.Scale, 40 * context.Scale);
-    }
-    
-    private void ArrangeChild(IComponent child, Rect bounds, IDrawingContext context)
-    {
-        if (child is InteractiveControl interactiveControl)
-        {
-            interactiveControl.Arrange(bounds, context);
-        }
-        else if (child is StackLayout stackLayout)
-        {
-            stackLayout.Arrange(bounds, context);
         }
     }
 }

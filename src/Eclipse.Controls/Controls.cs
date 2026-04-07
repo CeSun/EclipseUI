@@ -12,22 +12,12 @@ namespace Eclipse.Controls;
 /// </summary>
 public abstract class InteractiveControl : InputElementBase
 {
-    protected Size _desiredSize = new(100, 40);
-    
     public bool IsEnabled { get; set; } = true;
     
     public override bool IsInputEnabled => IsEnabled;
     public override bool IsVisible => true;
     
-    public virtual Size Measure(Size availableSize, IDrawingContext context)
-    {
-        return _desiredSize;
-    }
-    
-    public virtual void Arrange(Rect finalBounds, IDrawingContext context)
-    {
-        UpdateBounds(finalBounds);
-    }
+    // Measure 和 Arrange 现在在 ComponentBase 中定义，子类可以根据需要重写
     
     protected override IEnumerable<IInputElement> GetInputChildren()
     {
@@ -67,8 +57,6 @@ public class StackLayout : InputElementBase
     /// </summary>
     public double Height { get; set; } = -1;
     
-    private Size _desiredSize = Size.Zero;
-    
     public override bool IsVisible => true;
     
     public StackLayout()
@@ -89,7 +77,7 @@ public class StackLayout : InputElementBase
     
     public override void Build(IBuildContext context) { }
     
-    public Size Measure(Size availableSize, IDrawingContext context)
+    public override Size Measure(Size availableSize, IDrawingContext context)
     {
         if (Children.Count == 0)
         {
@@ -109,7 +97,7 @@ public class StackLayout : InputElementBase
         
         foreach (var child in Children)
         {
-            Size childSize = GetChildSize(child, contentAvailableSize, context);
+            Size childSize = child.Measure(contentAvailableSize, context);
             
             if (Orientation == Orientation.Vertical)
             {
@@ -138,9 +126,9 @@ public class StackLayout : InputElementBase
         return _desiredSize;
     }
     
-    public void Arrange(Rect finalBounds, IDrawingContext context)
+    public override void Arrange(Rect finalBounds, IDrawingContext context)
     {
-        UpdateBounds(finalBounds);
+        base.Arrange(finalBounds, context);
         
         var spacingValue = Spacing * context.Scale;
         var paddingValue = Padding * context.Scale;
@@ -156,9 +144,9 @@ public class StackLayout : InputElementBase
             double y = contentBounds.Y;
             foreach (var child in Children)
             {
-                Size childSize = GetChildSize(child, new Size(contentBounds.Width, contentBounds.Height), context);
+                Size childSize = child.Measure(new Size(contentBounds.Width, contentBounds.Height), context);
                 var childBounds = new Rect(contentBounds.X, y, contentBounds.Width, childSize.Height);
-                ArrangeChild(child, childBounds, context);
+                child.Arrange(childBounds, context);
                 y += childSize.Height + spacingValue;
             }
         }
@@ -167,44 +155,12 @@ public class StackLayout : InputElementBase
             double x = contentBounds.X;
             foreach (var child in Children)
             {
-                Size childSize = GetChildSize(child, new Size(contentBounds.Width, contentBounds.Height), context);
+                Size childSize = child.Measure(new Size(contentBounds.Width, contentBounds.Height), context);
                 var childBounds = new Rect(x, contentBounds.Y, childSize.Width, contentBounds.Height);
-                ArrangeChild(child, childBounds, context);
+                child.Arrange(childBounds, context);
                 x += childSize.Width + spacingValue;
             }
         }
-    }
-    
-    private Size GetChildSize(IComponent child, Size availableSize, IDrawingContext context)
-    {
-        if (child is InteractiveControl interactiveControl)
-            return interactiveControl.Measure(availableSize, context);
-        if (child is StackLayout stackLayout)
-            return stackLayout.Measure(availableSize, context);
-        if (child is DockPanel dockPanel)
-            return dockPanel.Measure(availableSize, context);
-        if (child is Label label)
-            return label.Measure(availableSize, context);
-        if (child is TextContent textContent)
-            return textContent.Measure(availableSize, context);
-        if (child is ScrollView scrollView)
-            return scrollView.Measure(availableSize, context);
-        if (child is ComponentBase componentBase)
-        {
-            double height = 0;
-            foreach (var c in componentBase.Children)
-                height += GetChildSize(c, availableSize, context).Height;
-            return new Size(100 * context.Scale, height > 0 ? height : 40 * context.Scale);
-        }
-        return new Size(40 * context.Scale, 40 * context.Scale);
-    }
-    
-    private void ArrangeChild(IComponent child, Rect bounds, IDrawingContext context)
-    {
-        if (child is InteractiveControl interactiveControl)
-            interactiveControl.Arrange(bounds, context);
-        else if (child is StackLayout stackLayout)
-            stackLayout.Arrange(bounds, context);
     }
     
     public override void Render(IDrawingContext context, Rect bounds)
@@ -228,21 +184,9 @@ public class StackLayout : InputElementBase
             double y = contentBounds.Y;
             foreach (var child in Children)
             {
-                var childHeight = GetChildSize(child, new Size(contentBounds.Width, contentBounds.Height), context).Height;
+                var childHeight = child.Measure(new Size(contentBounds.Width, contentBounds.Height), context).Height;
                 var childBounds = new Rect(contentBounds.X, y, contentBounds.Width, childHeight);
-                
-                // 对 ScrollView 和 DockPanel 调用 Measure 和 Arrange
-                if (child is ScrollView scrollView)
-                {
-                    scrollView.Measure(new Size(contentBounds.Width, contentBounds.Height), context);
-                    scrollView.Arrange(childBounds, context);
-                }
-                else if (child is DockPanel dockPanel)
-                {
-                    dockPanel.Measure(new Size(contentBounds.Width, contentBounds.Height), context);
-                    dockPanel.Arrange(childBounds, context);
-                }
-                
+                child.Arrange(childBounds, context);
                 child.Render(context, childBounds);
                 y += childHeight + spacingValue;
             }
@@ -254,19 +198,7 @@ public class StackLayout : InputElementBase
             foreach (var child in Children)
             {
                 var childBounds = new Rect(x, contentBounds.Y, childWidth, contentBounds.Height);
-                
-                // 对 ScrollView 和 DockPanel 调用 Measure 和 Arrange
-                if (child is ScrollView scrollViewH)
-                {
-                    scrollViewH.Measure(new Size(childWidth, contentBounds.Height), context);
-                    scrollViewH.Arrange(childBounds, context);
-                }
-                else if (child is DockPanel dockPanelH)
-                {
-                    dockPanelH.Measure(new Size(childWidth, contentBounds.Height), context);
-                    dockPanelH.Arrange(childBounds, context);
-                }
-                
+                child.Arrange(childBounds, context);
                 child.Render(context, childBounds);
                 x += childWidth + spacingValue;
             }
@@ -296,9 +228,7 @@ public class Label : ComponentBase
     public Color BackgroundColor { get; set; } = Color.Transparent;
     public double Padding { get; set; } = 0;
     
-    private Size _desiredSize = Size.Zero;
-    
-    public Size Measure(Size availableSize, IDrawingContext context)
+    public override Size Measure(Size availableSize, IDrawingContext context)
     {
         if (string.IsNullOrEmpty(Text))
         {
@@ -590,14 +520,29 @@ public class CheckBox : InteractiveControl
 public class Image : ComponentBase
 {
     private string? _loadedImageKey;
-    
+
     public string? Source { get; set; }
     public double Width { get; set; } = -1;
     public double Height { get; set; } = -1;
     public Stretch Stretch { get; set; } = Stretch.Uniform;
-    
+
+    public override Size Measure(Size availableSize, IDrawingContext context)
+    {
+        var scaledWidth = Width > 0 ? Width * context.Scale : availableSize.Width;
+        var scaledHeight = Height > 0 ? Height * context.Scale : availableSize.Height;
+
+        // If fixed size is specified, use it
+        if (Width > 0 && Height > 0)
+            return new Size(scaledWidth, scaledHeight);
+
+        // Otherwise, return available space or default size
+        return new Size(
+            Width > 0 ? scaledWidth : 100 * context.Scale,
+            Height > 0 ? scaledHeight : 100 * context.Scale);
+    }
+
     public override void Build(IBuildContext context) { }
-    
+
     public override void Render(IDrawingContext context, Rect bounds)
     {
         if (string.IsNullOrEmpty(Source))
@@ -605,16 +550,16 @@ public class Image : ComponentBase
             context.DrawRectangle(bounds, Color.LightGray);
             return;
         }
-        
+
         if (_loadedImageKey == null || !string.Equals(_loadedImageKey, Source, StringComparison.OrdinalIgnoreCase))
             _loadedImageKey = context.LoadImage(Source);
-        
+
         if (_loadedImageKey == null)
         {
             context.DrawRectangle(bounds, Color.LightGray);
             return;
         }
-        
+
         context.DrawImage(_loadedImageKey, bounds, Stretch);
     }
 }
@@ -624,30 +569,74 @@ public class Container : ComponentBase
     public Color BackgroundColor { get; set; } = Color.Transparent;
     public double Padding { get; set; } = 0;
     public double CornerRadius { get; set; } = 0;
-    
+
     /// <summary>
     /// 固定宽度（-1 表示自动）
     /// </summary>
     public double Width { get; set; } = -1;
-    
+
     /// <summary>
     /// 固定高度（-1 表示自动）
     /// </summary>
     public double Height { get; set; } = -1;
-    
+
+    public override Size Measure(Size availableSize, IDrawingContext context)
+    {
+        var scaledPadding = Padding * context.Scale;
+
+        // If fixed size is specified, use it
+        if (Width > 0 && Height > 0)
+            return new Size(Width * context.Scale, Height * context.Scale);
+
+        // Otherwise, measure children
+        double maxWidth = 0;
+        double maxHeight = 0;
+
+        foreach (var child in Children)
+        {
+            var childSize = child.Measure(
+                new Size(availableSize.Width - scaledPadding * 2, availableSize.Height - scaledPadding * 2),
+                context);
+            maxWidth = Math.Max(maxWidth, childSize.Width);
+            maxHeight = Math.Max(maxHeight, childSize.Height);
+        }
+
+        return new Size(
+            maxWidth + scaledPadding * 2,
+            maxHeight + scaledPadding * 2);
+    }
+
+    public override void Arrange(Rect finalBounds, IDrawingContext context)
+    {
+        UpdateBounds(finalBounds);
+
+        var scaledPadding = Padding * context.Scale;
+        var contentBounds = new Rect(
+            finalBounds.X + scaledPadding,
+            finalBounds.Y + scaledPadding,
+            finalBounds.Width - scaledPadding * 2,
+            finalBounds.Height - scaledPadding * 2);
+
+        // Arrange children
+        foreach (var child in Children)
+        {
+            child.Arrange(contentBounds, context);
+        }
+    }
+
     public override void Build(IBuildContext context) { }
-    
+
     public override void Render(IDrawingContext context, Rect bounds)
     {
         if (BackgroundColor != Color.Transparent)
             context.DrawRoundRect(bounds, BackgroundColor, CornerRadius * context.Scale);
-        
+
         var contentBounds = new Rect(
             bounds.X + Padding * context.Scale,
             bounds.Y + Padding * context.Scale,
             bounds.Width - Padding * 2 * context.Scale,
             bounds.Height - Padding * 2 * context.Scale);
-        
+
         foreach (var child in Children)
             child.Render(context, contentBounds);
     }

@@ -307,4 +307,22 @@ public class SkiaDrawingContext : IDrawingContext
         }
         _imageCache.Clear();
     }
+
+    /// <summary>
+    /// 推入裁剪区域
+    /// </summary>
+    public void PushClip(Rect bounds)
+    {
+        var skRect = new SKRect((float)bounds.X, (float)bounds.Y, (float)(bounds.X + bounds.Width), (float)(bounds.Y + bounds.Height));
+        _canvas.Save();
+        _canvas.ClipRect(skRect);
+    }
+
+    /// <summary>
+    /// 弹出裁剪区域
+    /// </summary>
+    public void PopClip()
+    {
+        _canvas.Restore();
+    }
 }

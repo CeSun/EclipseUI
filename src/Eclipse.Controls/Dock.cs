@@ -90,7 +90,7 @@ public class DockPanel : InputElementBase
     /// <summary>
     /// 测量布局所需尺寸
     /// </summary>
-    public Size Measure(Size availableSize, IDrawingContext context)
+    public override Size Measure(Size availableSize, IDrawingContext context)
     {
         var paddingValue = Padding * context.Scale;
         var spacingValue = Spacing * context.Scale;
@@ -149,9 +149,9 @@ public class DockPanel : InputElementBase
     /// <summary>
     /// 安排子元素位置
     /// </summary>
-    public void Arrange(Rect finalBounds, IDrawingContext context)
+    public override void Arrange(Rect finalBounds, IDrawingContext context)
     {
-        UpdateBounds(finalBounds);
+        base.Arrange(finalBounds, context);
         
         var paddingValue = Padding * context.Scale;
         var spacingValue = Spacing * context.Scale;
@@ -183,7 +183,7 @@ public class DockPanel : InputElementBase
                 childBounds = new Rect(x, y, width, height);
                 
                 // 安排子元素
-                ArrangeChild(child, childBounds, context);
+                child.Arrange(childBounds, context);
                 
                 // 后续没有子元素了
                 break;
@@ -219,7 +219,7 @@ public class DockPanel : InputElementBase
             }
             
             // 安排子元素
-            ArrangeChild(child, childBounds, context);
+            child.Arrange(childBounds, context);
         }
     }
     
@@ -384,23 +384,6 @@ public class DockPanel : InputElementBase
         }
         
         return new Size(maxWidth, maxHeight > 0 ? maxHeight : 100 * context.Scale);
-    }
-    
-    /// <summary>
-    /// 安排子元素
-    /// </summary>
-    private void ArrangeChild(IComponent child, Rect bounds, IDrawingContext context)
-    {
-        if (child is InteractiveControl interactiveControl)
-            interactiveControl.Arrange(bounds, context);
-        else if (child is StackLayout stackLayout)
-            stackLayout.Arrange(bounds, context);
-        else if (child is DockPanel dockPanel)
-            dockPanel.Arrange(bounds, context);
-        else if (child is ScrollView scrollView)
-            scrollView.Arrange(bounds, context);
-        else if (child is GridLayout gridLayout)
-            gridLayout.Arrange(bounds, context);
     }
     
     // === 附加属性 ===

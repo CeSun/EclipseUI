@@ -6,8 +6,12 @@ using Eclipse.Rendering;
 namespace Eclipse.Core.Abstractions
 {
     /// <summary>
-    /// 组件基类接口
+    /// 组件接口类型标记 - 实际功能由 ComponentBase 提供
     /// </summary>
+    /// <remarks>
+    /// 此接口仅用于类型引用和泛型约束，所有功能实现都在 ComponentBase 中。
+    /// 这样设计是为了保持引用的灵活性，同时避免接口和基类的重复定义。
+    /// </remarks>
     public interface IComponent : IDisposable
     {
         ComponentId Id { get; }
@@ -19,23 +23,16 @@ namespace Eclipse.Core.Abstractions
         void OnParametersSet();
         void OnMounted();
         void OnUnmounted();
-        
-        /// <summary>
-        /// 渲染组件
-        /// </summary>
         void Render(IDrawingContext context, Rect bounds);
-        
-        /// <summary>
-        /// 添加子组件
-        /// </summary>
         void AddChild(IComponent child);
-        
-        /// <summary>
-        /// 移除子组件
-        /// </summary>
         void RemoveChild(IComponent child);
+        Size Measure(Size availableSize, IDrawingContext context);
+        void Arrange(Rect finalBounds, IDrawingContext context);
     }
 
+    /// <summary>
+    /// 组件ID
+    /// </summary>
     public readonly struct ComponentId : IEquatable<ComponentId>
     {
         private readonly int _value;
@@ -50,10 +47,12 @@ namespace Eclipse.Core.Abstractions
         public static bool operator !=(ComponentId left, ComponentId right) => !left.Equals(right);
     }
 
+    /// <summary>
+    /// 带属性的组件接口
+    /// </summary>
     public interface IComponent<TProps> : IComponent where TProps : class
     {
         void SetProps(TProps props);
         TProps GetProps();
     }
-
-    }
+}

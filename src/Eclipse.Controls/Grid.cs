@@ -50,8 +50,6 @@ public static class Grid
 /// </summary>
 public class GridLayout : InputElementBase
 {
-    private Size _desiredSize = Size.Zero;
-    
     /// <summary>
     /// 行定义
     /// </summary>
@@ -150,7 +148,7 @@ public class GridLayout : InputElementBase
     /// <summary>
     /// 测量网格所需尺寸
     /// </summary>
-    public Size Measure(Size availableSize, IDrawingContext context)
+    public override Size Measure(Size availableSize, IDrawingContext context)
     {
         var scaledPadding = Padding * context.Scale;
         var scaledRowSpacing = RowSpacing * context.Scale;
@@ -183,9 +181,9 @@ public class GridLayout : InputElementBase
     /// <summary>
     /// 安排子元素位置
     /// </summary>
-    public void Arrange(Rect finalBounds, IDrawingContext context)
+    public override void Arrange(Rect finalBounds, IDrawingContext context)
     {
-        UpdateBounds(finalBounds);
+        base.Arrange(finalBounds, context);
         
         var scaledPadding = Padding * context.Scale;
         var scaledRowSpacing = RowSpacing * context.Scale;
@@ -443,38 +441,19 @@ public class GridLayout : InputElementBase
     }
     
     /// <summary>
-    /// 测量子元素尺寸
+    /// 测量子元素 - 现在直接调用子元素的 Measure 方法
     /// </summary>
     private Size MeasureChild(IComponent child, IDrawingContext context)
     {
-        if (child is InteractiveControl interactiveControl)
-        {
-            return interactiveControl.Measure(Size.Empty, context);
-        }
-        else if (child is StackLayout stackLayout)
-        {
-            return stackLayout.Measure(Size.Empty, context);
-        }
-        else if (child is Label label)
-        {
-            return label.Measure(Size.Empty, context);
-        }
-        return new Size(100 * context.Scale, 40 * context.Scale);
+        return child.Measure(Size.Empty, context);
     }
     
     /// <summary>
-    /// 安排子元素
+    /// 安排子元素 - 现在直接调用子元素的 Arrange 方法
     /// </summary>
     private void ArrangeChild(IComponent child, Rect bounds, IDrawingContext context)
     {
-        if (child is InteractiveControl interactiveControl)
-        {
-            interactiveControl.Arrange(bounds, context);
-        }
-        else if (child is StackLayout stackLayout)
-        {
-            stackLayout.Arrange(bounds, context);
-        }
+        child.Arrange(bounds, context);
     }
 }
 
