@@ -94,6 +94,11 @@ public class ScrollView : ComponentBase
     public Size ContentSize => _contentSize;
     
     /// <summary>
+    /// 边界矩形 - 覆盖以使用 ScrollView 自己的 _bounds
+    /// </summary>
+    public override Rect Bounds => _bounds;
+    
+    /// <summary>
     /// 视口宽度
     /// </summary>
     public double ViewportWidth => _bounds.Width;
@@ -562,7 +567,7 @@ public class ScrollView : ComponentBase
         if (!IsVisible || !IsHitTestVisible)
             return false;
         
-        return Bounds.Contains(point);
+        return _bounds.Contains(point);
     }
     
     /// <summary>
