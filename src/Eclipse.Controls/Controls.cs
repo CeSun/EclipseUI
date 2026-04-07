@@ -218,6 +218,14 @@ public class StackLayout : InputElementBase
             {
                 var childHeight = GetChildSize(child, new Size(contentBounds.Width, contentBounds.Height), context).Height;
                 var childBounds = new Rect(contentBounds.X, y, contentBounds.Width, childHeight);
+                
+                // 对 ScrollView 调用 Measure 和 Arrange
+                if (child is ScrollView scrollView)
+                {
+                    scrollView.Measure(new Size(contentBounds.Width, contentBounds.Height), context);
+                    scrollView.Arrange(childBounds, context);
+                }
+                
                 child.Render(context, childBounds);
                 y += childHeight + spacingValue;
             }
@@ -229,6 +237,14 @@ public class StackLayout : InputElementBase
             foreach (var child in Children)
             {
                 var childBounds = new Rect(x, contentBounds.Y, childWidth, contentBounds.Height);
+                
+                // 对 ScrollView 调用 Measure 和 Arrange
+                if (child is ScrollView scrollView)
+                {
+                    scrollView.Measure(new Size(childWidth, contentBounds.Height), context);
+                    scrollView.Arrange(childBounds, context);
+                }
+                
                 child.Render(context, childBounds);
                 x += childWidth + spacingValue;
             }

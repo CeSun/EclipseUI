@@ -322,17 +322,34 @@ public class ScrollView : InputElementBase
             context.DrawRectangle(bounds, BackgroundColor);
         }
         
-        // 计算内容可见区域
-        var contentBounds = new Rect(
-            bounds.X + scaledPadding - _scrollX,
-            bounds.Y + scaledPadding - _scrollY,
-            _contentSize.Width,
-            _contentSize.Height);
+        // 视口区域（子元素可见区域）
+        var viewportBounds = new Rect(
+            bounds.X + scaledPadding,
+            bounds.Y + scaledPadding,
+            bounds.Width - scaledPadding * 2,
+            bounds.Height - scaledPadding * 2);
         
-        // 绘制子元素（应用滚动偏移）
+        // 渲染子元素（应用滚动偏移）
+        // 每个子元素根据其在内容中的位置和滚动偏移来渲染
+        double childY = 0;
         foreach (var child in Children)
         {
-            child.Render(context, contentBounds);
+            // 获取子元素尺寸
+            var childSize = GetChildRenderSize(child, context);
+            
+            // 计算子元素在视口中的位置（考虑滚动偏移）
+            var childX = viewportBounds.X;
+            var renderY = viewportBounds.Y + childY - _scrollY;
+            var renderHeight = childSize.Height;
+            
+            // 只有当子元素在视口内时才渲染
+            if (renderY + renderHeight >= viewportBounds.Y && renderY <= viewportBounds.Y + viewportBounds.Height)
+            {
+                var childBounds = new Rect(childX, renderY, viewportBounds.Width, renderHeight);
+                child.Render(context, childBounds);
+            }
+            
+            childY += childSize.Height;
         }
         
         // 更新滚动条可见性状态
@@ -351,6 +368,24 @@ public class ScrollView : InputElementBase
         {
             DrawHorizontalScrollBar(context, bounds, scaledScrollBarWidth, scaledCornerRadius, opacity);
         }
+    }
+    
+    /// <summary>
+    /// 获取子元素渲染尺寸
+    /// </summary>
+    private Size GetChildRenderSize(IComponent child, IDrawingContext context)
+    {
+        if (child is InteractiveControl interactiveControl)
+            return interactiveControl.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity), context);
+        if (child is StackLayout stackLayout)
+            return stackLayout.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity), context);
+        if (child is Label label)
+            return label.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity), context);
+        if (child is GridLayout gridLayout)
+            return gridLayout.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity), context);
+        if (child is ComponentBase componentBase)
+            return MeasureComponentBaseChildren(componentBase, context);
+        return new Size(100 * context.Scale, 100 * context.Scale);
     }
     
     private void UpdateScrollBarVisibility()
