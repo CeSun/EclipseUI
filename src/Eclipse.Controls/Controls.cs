@@ -4,7 +4,6 @@ using Eclipse.Input;
 using Eclipse.Rendering;
 using System;
 using System.Collections.Generic;
-using Color = System.Drawing.Color;
 
 namespace Eclipse.Controls;
 
@@ -333,7 +332,7 @@ public class Button : InteractiveControl
     public double FontSize { get; set; } = 14;
     public string? FontFamily { get; set; }
     public Color TextColor { get; set; } = Color.White;
-    public Color BackgroundColor { get; set; } = Color.FromArgb(0, 122, 255);
+    public Color BackgroundColor { get; set; } = Color.SystemBlue;
     public Color? HoverBackgroundColor { get; set; }
     public Color? PressedBackgroundColor { get; set; }
     public Color DisabledBackgroundColor { get; set; } = Color.LightGray;
@@ -401,20 +400,12 @@ public class Button : InteractiveControl
             return DisabledBackgroundColor;
         
         if (_isPressed)
-            return PressedBackgroundColor ?? DarkenColor(BackgroundColor, 0.2f);
+            return PressedBackgroundColor ?? BackgroundColor.Darken(0.2);
         
         if (_isHovered)
-            return HoverBackgroundColor ?? DarkenColor(BackgroundColor, 0.1f);
+            return HoverBackgroundColor ?? BackgroundColor.Darken(0.1);
         
         return BackgroundColor;
-    }
-    
-    private static Color DarkenColor(Color color, float amount)
-    {
-        int r = (int)(color.R * (1 - amount));
-        int g = (int)(color.G * (1 - amount));
-        int b = (int)(color.B * (1 - amount));
-        return Color.FromArgb(color.A, r, g, b);
     }
     
     private Color GetCurrentTextColor()
@@ -459,7 +450,7 @@ public class Button : InteractiveControl
                 bounds.Y - 2 * context.Scale,
                 bounds.Width + 4 * context.Scale,
                 bounds.Height + 4 * context.Scale);
-            context.DrawRectangle(focusBounds, Color.Transparent, Color.FromArgb(0, 122, 255), 2 * context.Scale, scaledCornerRadius + 2);
+            context.DrawRectangle(focusBounds, Color.Transparent, Color.SystemBlue, 2 * context.Scale, scaledCornerRadius + 2);
         }
         
         if (!string.IsNullOrEmpty(Text))
@@ -504,7 +495,7 @@ public class CheckBox : InteractiveControl
     }
     
     public string? Label { get; set; }
-    public Color CheckedColor { get; set; } = Color.FromArgb(0, 122, 255);
+    public Color CheckedColor { get; set; } = Color.SystemBlue;
     public double Size { get; set; } = 20;
     
     public event EventHandler<ValueChangedEventArgs<bool>>? CheckedChanged;

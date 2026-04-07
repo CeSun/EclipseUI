@@ -19,7 +19,7 @@ public class LayoutTests
         public double Width => 800;
         public double Height => 600;
         
-        public void Clear(System.Drawing.Color color) { }
+        public void Clear(Color color) { }
         
         public double MeasureText(string text, double fontSize, string? fontFamily = null)
         {
@@ -27,10 +27,10 @@ public class LayoutTests
             return text.Length * fontSize * 0.6;
         }
         
-        public void DrawRectangle(Rect bounds, System.Drawing.Color fillColor, System.Drawing.Color? strokeColor = null, double strokeWidth = 0, double cornerRadius = 0) { }
-        public void DrawRoundRect(Rect bounds, System.Drawing.Color fillColor, double cornerRadius) { }
-        public void DrawLine(double x1, double y1, double x2, double y2, System.Drawing.Color color, double strokeWidth) { }
-        public void DrawText(string text, double x, double y, double fontSize, string? fontFamily = null, string? fontWeight = null, System.Drawing.Color color = default) { }
+        public void DrawRectangle(Rect bounds, Color fillColor, Color? strokeColor = null, double strokeWidth = 0, double cornerRadius = 0) { }
+        public void DrawRoundRect(Rect bounds, Color fillColor, double cornerRadius) { }
+        public void DrawLine(double x1, double y1, double x2, double y2, Color color, double strokeWidth) { }
+        public void DrawText(string text, double x, double y, double fontSize, string? fontFamily = null, string? fontWeight = null, Color color = default) { }
         public void DrawImage(string imageKey, Rect bounds, Stretch stretch) { }
         public string? LoadImage(string source) => null;
         public Size GetImageSize(string imageKey) => Size.Zero;
@@ -350,7 +350,7 @@ public class LayoutTests
         var container = new Container();
         
         // Assert
-        Assert.Equal(System.Drawing.Color.Transparent, container.BackgroundColor);
+        Assert.Equal(Color.Transparent, container.BackgroundColor);
         Assert.Equal(0, container.Padding);
         Assert.Equal(0, container.CornerRadius);
     }

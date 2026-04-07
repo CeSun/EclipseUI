@@ -6,7 +6,6 @@ using SkiaSharp;
 using System;
 using System.Collections.Concurrent;
 using System.IO;
-using Color = System.Drawing.Color;
 
 namespace Eclipse.Skia;
 
@@ -19,7 +18,6 @@ public class SkiaDrawingContext : IDrawingContext
     private static readonly HarfBuzzTextRenderer _textRenderer = new();
     private static SKTypeface? _chineseTypeface;
     
-    // 图片缓存
     private static readonly ConcurrentDictionary<string, SKImage> _imageCache = new();
     
     public double Scale { get; }
@@ -126,10 +124,7 @@ public class SkiaDrawingContext : IDrawingContext
             Color = color != default ? ToSKColor(color) : SKColors.Black
         };
         
-        // 获取字体度量信息
         var metrics = font.Metrics;
-        
-        // y 参数表示文本视觉中心
         var visualCenter = (metrics.Top + metrics.Bottom) / 2;
         var baseline = (float)(y - visualCenter);
         
@@ -146,9 +141,6 @@ public class SkiaDrawingContext : IDrawingContext
         return _textRenderer.MeasureText(text, font);
     }
     
-    /// <summary>
-    /// 加载图片并返回缓存键
-    /// </summary>
     public string? LoadImage(string source)
     {
         if (string.IsNullOrEmpty(source))
@@ -297,7 +289,7 @@ public class SkiaDrawingContext : IDrawingContext
     }
     
     /// <summary>
-    /// 将 System.Drawing.Color 转换为 SKColor
+    /// 将 Color 转换为 SKColor
     /// </summary>
     private static SKColor ToSKColor(Color color)
     {

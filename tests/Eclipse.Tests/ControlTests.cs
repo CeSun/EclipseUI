@@ -1,7 +1,6 @@
 using Eclipse.Controls;
 using Eclipse.Rendering;
 using Xunit;
-using Color = System.Drawing.Color;
 
 namespace Eclipse.Tests;
 
@@ -75,7 +74,7 @@ public class ControlTests
         var button = new Button();
 
         // Assert
-        Assert.Equal(Color.FromArgb(0, 122, 255), button.BackgroundColor);
+        Assert.Equal(Color.SystemBlue, button.BackgroundColor);
         Assert.Equal(Color.White, button.TextColor);
         Assert.Equal(14, button.FontSize);
         Assert.Equal(4, button.CornerRadius);

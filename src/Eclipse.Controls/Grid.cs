@@ -3,7 +3,6 @@ using Eclipse.Core.Abstractions;
 using Eclipse.Input;
 using Eclipse.Rendering;
 using System.Collections.Generic;
-using Color = System.Drawing.Color;
 
 namespace Eclipse.Controls;
 

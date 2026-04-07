@@ -53,27 +53,27 @@ namespace Eclipse.Generator
             var withCompilation = parsedFiles.Combine(context.CompilationProvider);
             var withConfig = withCompilation.Combine(context.AnalyzerConfigOptionsProvider);
             var withAllComponents = withConfig.Combine(allComponentsInfo);
-            
+
             context.RegisterSourceOutput(withAllComponents, (spc, source) =>
             {
                 var (((file, compilation), optionsProvider), allComponents) = source;
-                
+
                 // 推断命名空间（如果还没确定）
                 string @namespace = file.Parsed.Namespace ?? InferNamespace(file.Path, file.AdditionalText, optionsProvider);
-                
+
                 // 更新组件信息中的命名空间（创建新的 ImmutableDictionary 以保持不可变性）
                 AllComponentsInfo updatedComponents = allComponents;
                 if (allComponents.Components.TryGetValue(file.ClassName, out var cachedNs) && cachedNs.StartsWith("__pending__:"))
                 {
-                    updatedComponents = new AllComponentsInfo 
-                    { 
-                        Components = allComponents.Components.SetItem(file.ClassName, @namespace) 
+                    updatedComponents = new AllComponentsInfo
+                    {
+                        Components = allComponents.Components.SetItem(file.ClassName, @namespace)
                     };
                 }
-                
+
                 // 类型查找缓存（在 compilation 级别共享）
                 var typeCache = new TypeLookupCache(compilation, updatedComponents);
-                
+
                 GenerateSource(spc, optionsProvider, typeCache, file, @namespace, updatedComponents);
             });
         }
@@ -84,20 +84,20 @@ namespace Eclipse.Generator
             public ImmutableDictionary<string, string> Components { get; set; } = ImmutableDictionary<string, string>.Empty;
         }
 
-        private void GenerateSource(SourceProductionContext context, 
-            AnalyzerConfigOptionsProvider optionsProvider, 
-            TypeLookupCache typeCache, 
+        private void GenerateSource(SourceProductionContext context,
+            AnalyzerConfigOptionsProvider optionsProvider,
+            TypeLookupCache typeCache,
             ParsedEuiFile file,
             string @namespace,
             AllComponentsInfo allComponents)
         {
             var className = file.ClassName;
             var parsed = file.Parsed;
-            
+
             // 一次性解析 markup，同时收集类型信息
             List<MarkupNode> nodes;
             HashSet<string> controlTypes;
-            
+
             if (!string.IsNullOrWhiteSpace(parsed.Markup))
             {
                 var parseResult = ParseMarkupAndCollectTypes(parsed.Markup, file.Path, context);
@@ -114,10 +114,10 @@ namespace Eclipse.Generator
                 nodes = new List<MarkupNode>();
                 controlTypes = new HashSet<string>();
             }
-            
+
             // 获取这些类型的属性信息
             var propertyTypes = GetPropertyTypes(typeCache, controlTypes, parsed.Usings, file.Path, context);
-            
+
             var generatedCode = GenerateComponentCode(@namespace, className, parsed, nodes, propertyTypes, typeCache, usings: parsed.Usings);
             var hintName = $"{className}.eui.g.cs";
             context.AddSource(hintName, SourceText.From(generatedCode, Encoding.UTF8));
@@ -134,9 +134,9 @@ namespace Eclipse.Generator
                 var parser = new EclipseMarkupParser(markup);
                 var nodes = parser.Parse();
                 var controlTypes = new HashSet<string>();
-                
+
                 CollectControlTypesFromNodes(nodes, controlTypes);
-                
+
                 return (nodes, controlTypes);
             }
             catch (Exception ex)
@@ -149,7 +149,7 @@ namespace Eclipse.Generator
                     "Eclipse",
                     DiagnosticSeverity.Error,
                     true);
-                
+
                 context.ReportDiagnostic(Diagnostic.Create(descriptor, Location.None, filePath, ex.Message));
                 return null;
             }
@@ -181,14 +181,14 @@ namespace Eclipse.Generator
         /// 使用缓存的类型查找获取属性类型信息
         /// </summary>
         private Dictionary<(string Control, string Property), PropertyTypeInfo> GetPropertyTypes(
-            TypeLookupCache cache, 
-            HashSet<string> controlTypes, 
+            TypeLookupCache cache,
+            HashSet<string> controlTypes,
             List<string> usings,
             string filePath,
             SourceProductionContext context)
         {
             var result = new Dictionary<(string, string), PropertyTypeInfo>();
-            
+
             foreach (var typeName in controlTypes)
             {
                 // 检查是否是自定义组件
@@ -200,7 +200,7 @@ namespace Eclipse.Generator
                     {
                         var fullTypeName = $"{componentNs}.{typeName}";
                         var typeSymbol = cache.FindTypeSymbol(fullTypeName, usings);
-                        
+
                         if (typeSymbol != null)
                         {
                             // 找到了 partial class，读取其属性
@@ -214,7 +214,7 @@ namespace Eclipse.Generator
                     }
                     continue;
                 }
-                
+
                 // 标准控件
                 var controlTypeSymbol = cache.FindTypeSymbol(typeName, usings);
                 if (controlTypeSymbol == null)
@@ -227,21 +227,21 @@ namespace Eclipse.Generator
                         "Eclipse",
                         DiagnosticSeverity.Warning,
                         true);
-                    
+
                     context.ReportDiagnostic(Diagnostic.Create(descriptor, Location.None, typeName, filePath));
                     continue;
                 }
-                
+
                 foreach (var prop in GetAllSettableProperties(controlTypeSymbol))
                 {
                     var info = CreatePropertyTypeInfo(prop.Type);
                     result[(typeName, prop.Name)] = info;
                 }
             }
-            
+
             return result;
         }
-        
+
         private PropertyTypeInfo CreatePropertyTypeInfo(ITypeSymbol propType)
         {
             return new PropertyTypeInfo
@@ -251,8 +251,8 @@ namespace Eclipse.Generator
                 IsNumeric = IsNumericType(propType),
                 IsBoolean = propType.SpecialType == SpecialType.System_Boolean,
                 IsString = propType.SpecialType == SpecialType.System_String,
-                EnumTypeName = propType.TypeKind == TypeKind.Enum 
-                    ? propType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat) 
+                EnumTypeName = propType.TypeKind == TypeKind.Enum
+                    ? propType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)
                     : null
             };
         }
@@ -275,7 +275,7 @@ namespace Eclipse.Generator
                 current = current.BaseType;
             }
         }
-        
+
         /// <summary>
         /// 推断附加属性的类型
         /// </summary>
@@ -283,24 +283,24 @@ namespace Eclipse.Generator
         {
             if (string.IsNullOrEmpty(typeName) || string.IsNullOrEmpty(propertyName))
                 return null;
-            
+
             // Grid 附加属性：Row, Column, RowSpan, ColumnSpan 都是 int
-            if (typeName == "Grid" && 
+            if (typeName == "Grid" &&
                 (propertyName == "Row" || propertyName == "Column" || propertyName == "RowSpan" || propertyName == "ColumnSpan"))
             {
                 return new PropertyTypeInfo { TypeName = "int", IsNumeric = true };
             }
-            
+
             // Canvas 附加属性：Left, Top, Right, Bottom, ZIndex 都是 double
             if (typeName == "Canvas" &&
                 (propertyName == "Left" || propertyName == "Top" || propertyName == "Right" || propertyName == "Bottom" || propertyName == "ZIndex"))
             {
                 return new PropertyTypeInfo { TypeName = "double", IsNumeric = true };
             }
-            
+
             return null;
         }
-        
+
         /// <summary>
         /// 推断属性对应的变化事件名
         /// </summary>
@@ -317,7 +317,7 @@ namespace Eclipse.Generator
                 _ => $"{propertyName}Changed"
             };
         }
-        
+
         /// <summary>
         /// 推断事件参数类型（用于双向绑定）
         /// </summary>
@@ -332,7 +332,7 @@ namespace Eclipse.Generator
                 _ => "ValueChangedEventArgs<object>"
             };
         }
-        
+
         private bool IsNumericType(ITypeSymbol type)
         {
             return type.SpecialType switch
@@ -355,22 +355,22 @@ namespace Eclipse.Generator
         private string InferNamespace(string filePath, AdditionalText additionalText, AnalyzerConfigOptionsProvider optionsProvider)
         {
             var options = optionsProvider.GetOptions(additionalText);
-            
+
             string rootNamespace = "";
             if (options.TryGetValue("build_property.rootnamespace", out var rn) && !string.IsNullOrEmpty(rn))
             {
                 rootNamespace = rn;
             }
-            
+
             string projectDir = "";
             if (options.TryGetValue("build_property.projectdir", out var pd) && !string.IsNullOrEmpty(pd))
             {
                 projectDir = pd;
             }
-            
+
             var fileDir = Path.GetDirectoryName(filePath) ?? "";
             string relativeNs = "";
-            
+
             if (!string.IsNullOrEmpty(projectDir))
             {
                 var relativePath = GetRelativePath(projectDir, fileDir);
@@ -382,7 +382,7 @@ namespace Eclipse.Generator
                         .Trim('.');
                 }
             }
-            
+
             if (!string.IsNullOrEmpty(rootNamespace) && !string.IsNullOrEmpty(relativeNs))
             {
                 return $"{rootNamespace}.{relativeNs}";
@@ -395,7 +395,7 @@ namespace Eclipse.Generator
             {
                 return relativeNs;
             }
-            
+
             return "Eclipse.Generated";
         }
 
@@ -403,19 +403,19 @@ namespace Eclipse.Generator
         {
             if (string.IsNullOrEmpty(basePath) || string.IsNullOrEmpty(targetPath))
                 return "";
-            
+
             try
             {
                 var baseUri = new Uri(basePath.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar);
                 var targetUri = new Uri(targetPath.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar);
-                
+
                 if (!baseUri.IsBaseOf(targetUri))
                     return "";
-                
+
                 var result = Uri.UnescapeDataString(baseUri.MakeRelativeUri(targetUri).ToString()
                     .Replace('/', Path.DirectorySeparatorChar))
                     .TrimEnd(Path.DirectorySeparatorChar);
-                
+
                 return result ?? "";
             }
             catch
@@ -465,13 +465,13 @@ namespace Eclipse.Generator
         {
             var codeIndex = content.IndexOf("@code");
             if (codeIndex < 0) return string.Empty;
-            
+
             var blockStart = content.IndexOf('{', codeIndex);
             if (blockStart < 0)
             {
                 throw new FormatException($"Missing block braces for '@code' at position {codeIndex}, expected '{{'");
             }
-            
+
             var depth = 1;
             var i = blockStart + 1;
             while (i < content.Length && depth > 0)
@@ -480,30 +480,30 @@ namespace Eclipse.Generator
                 else if (content[i] == '}') depth--;
                 i++;
             }
-            
+
             if (depth > 0)
             {
                 throw new FormatException($"Unclosed @code block at position {codeIndex}, expected '}}'");
             }
-            
+
             return content.Substring(blockStart + 1, i - blockStart - 2).Trim();
         }
 
         private string ExtractMarkup(string content)
         {
             var codeIndex = content.IndexOf("@code");
-            
+
             if (codeIndex < 0)
             {
                 return RemoveDirectives(content);
             }
-            
+
             var blockStart = content.IndexOf('{', codeIndex);
             if (blockStart < 0)
             {
                 return RemoveDirectives(content.Substring(0, codeIndex));
             }
-            
+
             var depth = 1;
             var i = blockStart + 1;
             while (i < content.Length && depth > 0)
@@ -512,14 +512,14 @@ namespace Eclipse.Generator
                 else if (content[i] == '}') depth--;
                 i++;
             }
-            
+
             var beforeCode = content.Substring(0, codeIndex);
             var afterCode = content.Substring(i);
-            
+
             var combined = beforeCode + afterCode;
             return RemoveDirectives(combined);
         }
-        
+
         private string RemoveDirectives(string content)
         {
             var lines = content.Split('\n');
@@ -541,25 +541,25 @@ namespace Eclipse.Generator
             return string.Join("\n", markupLines).Trim();
         }
 
-        private string GenerateComponentCode(string @namespace, string className, ParsedEui parsed, 
+        private string GenerateComponentCode(string @namespace, string className, ParsedEui parsed,
             List<MarkupNode> nodes, Dictionary<(string Control, string Property), PropertyTypeInfo> propertyTypes,
             TypeLookupCache typeCache, List<string> usings)
         {
             var sb = new StringBuilder();
             var indent = 0;
             void WriteLine(string line = "") => sb.AppendLine(new string(' ', indent * 4) + line);
-            
+
             sb.AppendLine("// <auto-generated />");
             sb.AppendLine($"// Generated from {className}.eui");
             sb.AppendLine("#nullable enable");
             sb.AppendLine();
             WriteLine("using System;");
-            WriteLine("using System.Drawing;");
+            WriteLine("using Eclipse.Rendering;");
             WriteLine("using Eclipse.Core;");
             WriteLine("using Eclipse.Core.Abstractions;");
             foreach (var @using in parsed.Usings)
                 WriteLine($"using {@using};");
-            
+
             // 添加自定义组件的命名空间（如果有使用）
             var customComponentNamespaces = new HashSet<string>();
             CollectCustomComponentNamespaces(nodes, typeCache, customComponentNamespaces, @namespace);
@@ -568,7 +568,7 @@ namespace Eclipse.Generator
                 if (customNs != @namespace) // 不添加自己的命名空间
                     WriteLine($"using {customNs};");
             }
-            
+
             sb.AppendLine();
             WriteLine($"namespace {@namespace}");
             WriteLine("{");
@@ -644,7 +644,7 @@ namespace Eclipse.Generator
             }
         }
 
-        private void GenerateNodes(List<MarkupNode> nodes, StringBuilder sb, ref int indent, Action<string> WriteLine, 
+        private void GenerateNodes(List<MarkupNode> nodes, StringBuilder sb, ref int indent, Action<string> WriteLine,
             ref int seq, Dictionary<(string Control, string Property), PropertyTypeInfo> propertyTypes)
         {
             foreach (var node in nodes)
@@ -681,16 +681,16 @@ namespace Eclipse.Generator
             }
         }
 
-        private void GenerateControl(ControlNode control, StringBuilder sb, ref int indent, Action<string> WriteLine, 
+        private void GenerateControl(ControlNode control, StringBuilder sb, ref int indent, Action<string> WriteLine,
             ref int seq, Dictionary<(string Control, string Property), PropertyTypeInfo> propertyTypes)
         {
             var controlId = $"new ComponentId({++seq})";
             var varName = $"__{control.TagName.ToLower()}_{seq}";
-            
+
             WriteLine($"using (context.BeginComponent<{control.TagName}>({controlId}, out var {varName}))");
             WriteLine("{");
             indent++;
-            
+
             foreach (var attr in control.Attributes)
             {
                 if (attr.IsTwoWayBinding)
@@ -698,7 +698,7 @@ namespace Eclipse.Generator
                     // 双向绑定：设置属性值 + 事件处理器更新变量
                     // 1. 设置属性
                     WriteLine($"{varName}.{attr.Name} = {attr.Value};");
-                    
+
                     // 2. 生成事件处理器
                     var eventName = GetChangedEventName(attr.Name);
                     var eventArgsType = GetEventArgsType(attr.Name);
@@ -720,20 +720,20 @@ namespace Eclipse.Generator
                 else if (attr.IsBinding)
                 {
                     // 绑定表达式也需要进行类型转换（如颜色值）
-                    var propTypeInfo = propertyTypes.TryGetValue((control.TagName, attr.Name), out var info) 
+                    var propTypeInfo = propertyTypes.TryGetValue((control.TagName, attr.Name), out var info)
                         ? info : null;
                     var convertedValue = ConvertBindingValue(attr.Value, propTypeInfo);
                     WriteLine($"{varName}.{attr.Name} = {convertedValue};");
                 }
                 else
                 {
-                    var propTypeInfo = propertyTypes.TryGetValue((control.TagName, attr.Name), out var info) 
+                    var propTypeInfo = propertyTypes.TryGetValue((control.TagName, attr.Name), out var info)
                         ? info : null;
                     var value = ConvertLiteralValue(attr.Value, propTypeInfo);
                     WriteLine($"{varName}.{attr.Name} = {value};");
                 }
             }
-            
+
             if (control.Children.Count > 0)
             {
                 WriteLine("");
@@ -748,7 +748,7 @@ namespace Eclipse.Generator
             WriteLine("}");
         }
 
-        private void GenerateIf(IfNode ifNode, StringBuilder sb, ref int indent, Action<string> WriteLine, 
+        private void GenerateIf(IfNode ifNode, StringBuilder sb, ref int indent, Action<string> WriteLine,
             ref int seq, Dictionary<(string Control, string Property), PropertyTypeInfo> propertyTypes)
         {
             WriteLine($"if ({ifNode.Condition})");
@@ -768,7 +768,7 @@ namespace Eclipse.Generator
             }
         }
 
-        private void GenerateForeach(ForeachNode foreachNode, StringBuilder sb, ref int indent, Action<string> WriteLine, 
+        private void GenerateForeach(ForeachNode foreachNode, StringBuilder sb, ref int indent, Action<string> WriteLine,
             ref int seq, Dictionary<(string Control, string Property), PropertyTypeInfo> propertyTypes)
         {
             WriteLine($"foreach (var {foreachNode.ItemVar} in {foreachNode.Collection})");
@@ -778,30 +778,30 @@ namespace Eclipse.Generator
             indent--;
             WriteLine("}");
         }
-        
+
         private string ConvertLiteralValue(string value, PropertyTypeInfo? typeInfo)
         {
             // 先检查是否是复杂表达式（包含条件运算符）
             if (value.Contains('?') && value.Contains(':'))
             {
-                return ConvertExpressionValues(value, typeInfo);
+                return ConvertBindingValue(value, typeInfo);
             }
-            
+
             if (!value.StartsWith("\"") || !value.EndsWith("\"") || value.Length < 2)
                 return value;
-            
+
             var innerValue = value.Substring(1, value.Length - 2);
-            
+
             if (typeInfo == null)
                 return value;
-            
+
             // 数字类型：去掉引号
             if (typeInfo.IsNumeric)
             {
                 if (double.TryParse(innerValue, out _))
                     return innerValue;
             }
-            
+
             // 布尔类型：去掉引号
             if (typeInfo.IsBoolean)
             {
@@ -810,25 +810,25 @@ namespace Eclipse.Generator
                 if (innerValue.Equals("false", StringComparison.OrdinalIgnoreCase))
                     return "false";
             }
-            
+
             // 枚举类型：添加枚举类型前缀
             if (typeInfo.IsEnum && !string.IsNullOrEmpty(typeInfo.EnumTypeName))
             {
                 if (!string.IsNullOrEmpty(innerValue) && char.IsLetter(innerValue[0]))
                     return $"{typeInfo.EnumTypeName}.{innerValue}";
             }
-            
+
             // 复杂类型转换
             var typeName = typeInfo.TypeName;
-            
+
             // Color 类型：支持多种格式
-            // "#FF0000" → "ColorTranslator.FromHtml("#FF0000")"
+            // "#FF0000" → "Color.FromHex("#FF0000")"
             // "Red" → "Color.Red"
-            if (typeName == "Color" || typeName == "System.Drawing.Color" || typeName.EndsWith(".Color"))
+            if (typeName == "Color" || typeName == "Eclipse.Rendering.Color" || typeName.EndsWith(".Color"))
             {
                 return ConvertColorValue(innerValue);
             }
-            
+
             switch (typeName)
             {
                 // Thickness 类型：支持多种格式
@@ -837,74 +837,73 @@ namespace Eclipse.Generator
                 // "10,20,30,40" → "new Thickness(10, 20, 30, 40)"
                 case "Thickness":
                     return ConvertThicknessValue(innerValue);
-                
+
                 // Point 类型："10,20" → "new Point(10, 20)"
                 case "Point":
                     return ConvertPointValue(innerValue);
-                
+
                 // Size 类型："100,50" → "new Size(100, 50)"
                 case "Size":
                     return ConvertSizeValue(innerValue);
-                
+
                 // Rect 类型："10,20,100,50" → "new Rect(10, 20, 100, 50)"
                 case "Rect":
                     return ConvertRectValue(innerValue);
-                
+
                 // Vector 类型："10,20" → "new Vector(10, 20)"
                 case "Vector":
                     return ConvertVectorValue(innerValue);
-                
+
                 // TimeSpan 类型："00:01:30" → "TimeSpan.Parse(\"00:01:30\")"
                 case "TimeSpan":
                     return $"TimeSpan.Parse(\"{innerValue}\")";
-                
+
                 // DateTime 类型："2024-01-15" → "DateTime.Parse(\"2024-01-15\")"
                 case "DateTime":
                 case "DateTimeOffset":
                     return $"{typeName}.Parse(\"{innerValue}\")";
-                
+
                 // Guid 类型："..." → "Guid.Parse(\"...\")"
                 case "Guid":
                     return $"Guid.Parse(\"{innerValue}\")";
-                
+
                 // Uri 类型："https://..." → "new Uri(\"https://...\")"
                 case "Uri":
                     return $"new Uri(\"{innerValue}\")";
             }
-            
+
             // 保留字符串字面量
             return value;
         }
 
         /// <summary>
-        /// 转换颜色值到 System.Drawing.Color
+        /// 转换颜色值
         /// </summary>
         private string ConvertColorValue(string value)
         {
             // Hex 格式: #RGB, #RRGGBB, #ARGB, #AARRGGBB
             if (value.StartsWith("#"))
             {
-                return $"ColorTranslator.FromHtml(\"{value}\")";
+                return $"Color.FromHex(\"{value}\")";
             }
-            
+
             // rgb/rgba 格式: rgb(255,0,0), rgba(255,0,0,0.5)
             if (value.StartsWith("rgb", StringComparison.OrdinalIgnoreCase))
             {
-                // 解析 rgb/rgba 格式
-                return ParseRgbColor(value);
+                return $"Color.FromRgbString(\"{value}\")";
             }
-            
+
             // 颜色名称: Red, Blue, Green, White, Black 等
             if (char.IsLetter(value[0]))
             {
                 // 使用 Color 静态属性
                 return $"Color.{value}";
             }
-            
-            // 回退：使用 ColorTranslator.FromHtml
-            return $"ColorTranslator.FromHtml(\"{value}\")";
+
+            // 回退：使用 FromHex
+            return $"Color.FromHex(\"{value}\")";
         }
-        
+
         /// <summary>
         /// 转换绑定表达式中的值（处理条件表达式中的颜色字面量等）
         /// </summary>
@@ -914,13 +913,12 @@ namespace Eclipse.Generator
                 return expression;
             
             var typeName = typeInfo.TypeName;
-            bool isColorType = typeName == "Color" || typeName == "System.Drawing.Color" || typeName.EndsWith(".Color");
+            bool isColorType = typeName == "Color" || typeName == "Eclipse.Rendering.Color" || typeName.EndsWith(".Color");
             
             if (!isColorType)
                 return expression;
             
             // 匹配表达式中的颜色字符串字面量："#RRGGBB" 或 "ColorName"
-            // 使用正则表达式替换
             var result = System.Text.RegularExpressions.Regex.Replace(
                 expression,
                 "\"(#?[A-Za-z0-9]+)\"",
@@ -934,45 +932,6 @@ namespace Eclipse.Generator
         }
         
         /// <summary>
-        /// 转换表达式中的颜色值（处理条件表达式等）
-        /// </summary>
-        private string ConvertExpressionValues(string expression, PropertyTypeInfo? typeInfo)
-        {
-            // 这里的逻辑与 ConvertBindingValue 相同
-            return ConvertBindingValue(expression, typeInfo);
-        }
-        
-        /// <summary>
-        /// 解析 rgb/rgba 颜色格式
-        /// </summary>
-        private string ParseRgbColor(string value)
-        {
-            // rgb(255,0,0) → Color.FromArgb(255, 0, 0)
-            // rgba(255,0,0,0.5) → Color.FromArgb(128, 255, 0, 0)
-            var match = System.Text.RegularExpressions.Regex.Match(
-                value, 
-                @"rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+))?\s*\)",
-                System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-            
-            if (match.Success)
-            {
-                var r = int.Parse(match.Groups[1].Value);
-                var g = int.Parse(match.Groups[2].Value);
-                var b = int.Parse(match.Groups[3].Value);
-                
-                if (match.Groups[4].Success)
-                {
-                    var a = (int)(double.Parse(match.Groups[4].Value) * 255);
-                    return $"Color.FromArgb({a}, {r}, {g}, {b})";
-                }
-                
-                return $"Color.FromArgb({r}, {g}, {b})";
-            }
-            
-            return $"ColorTranslator.FromHtml(\"{value}\")";
-        }
-
-        /// <summary>
         /// 转换 Thickness 值
         /// </summary>
         private string ConvertThicknessValue(string value)
@@ -980,7 +939,7 @@ namespace Eclipse.Generator
             var parts = value.Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(p => p.Trim())
                 .ToArray();
-            
+
             return parts.Length switch
             {
                 1 => $"new Thickness({parts[0]})",
@@ -998,12 +957,12 @@ namespace Eclipse.Generator
             var parts = value.Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(p => p.Trim())
                 .ToArray();
-            
+
             if (parts.Length == 2)
             {
                 return $"new Point({parts[0]}, {parts[1]})";
             }
-            
+
             return $"Point.Parse(\"{value}\")";
         }
 
@@ -1015,12 +974,12 @@ namespace Eclipse.Generator
             var parts = value.Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(p => p.Trim())
                 .ToArray();
-            
+
             if (parts.Length == 2)
             {
                 return $"new Size({parts[0]}, {parts[1]})";
             }
-            
+
             return $"Size.Parse(\"{value}\")";
         }
 
@@ -1032,12 +991,12 @@ namespace Eclipse.Generator
             var parts = value.Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(p => p.Trim())
                 .ToArray();
-            
+
             if (parts.Length == 4)
             {
                 return $"new Rect({parts[0]}, {parts[1]}, {parts[2]}, {parts[3]})";
             }
-            
+
             return $"Rect.Parse(\"{value}\")";
         }
 
@@ -1049,12 +1008,12 @@ namespace Eclipse.Generator
             var parts = value.Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(p => p.Trim())
                 .ToArray();
-            
+
             if (parts.Length == 2)
             {
                 return $"new Vector({parts[0]}, {parts[1]})";
             }
-            
+
             return $"Vector.Parse(\"{value}\")";
         }
 
@@ -1153,10 +1112,10 @@ namespace Eclipse.Generator
             public INamedTypeSymbol? FindTypeSymbol(string typeName, List<string> usings)
             {
                 var cacheKey = (typeName, string.Join("|", usings));
-                
+
                 if (_cache.TryGetValue(cacheKey, out var cached))
                     return cached;
-                
+
                 var result = FindTypeSymbolInternal(typeName, usings);
                 _cache[cacheKey] = result;
                 return result;
@@ -1177,26 +1136,26 @@ namespace Eclipse.Generator
                     var symbol = _compilation.GetTypeByMetadataName(typeName);
                     if (symbol != null) return symbol;
                 }
-                
+
                 foreach (var ns in usings)
                 {
                     var fullName = $"{ns}.{typeName}";
                     var symbol = _compilation.GetTypeByMetadataName(fullName);
                     if (symbol != null) return symbol;
                 }
-                
+
                 var globalSymbol = _compilation.GetTypeByMetadataName(typeName);
                 if (globalSymbol != null) return globalSymbol;
-                
+
                 foreach (var reference in _compilation.References)
                 {
                     var assembly = _compilation.GetAssemblyOrModuleSymbol(reference) as IAssemblySymbol;
                     if (assembly == null) continue;
-                    
+
                     var type = FindTypeInAssembly(assembly, typeName);
                     if (type != null) return type;
                 }
-                
+
                 return null;
             }
 
@@ -1216,13 +1175,13 @@ namespace Eclipse.Generator
                 {
                     if (type.Name == typeName) return type;
                 }
-                
+
                 foreach (var childNs in ns.GetNamespaceMembers())
                 {
                     var found = FindTypeInNamespace(childNs, typeName);
                     if (found != null) return found;
                 }
-                
+
                 return null;
             }
         }
