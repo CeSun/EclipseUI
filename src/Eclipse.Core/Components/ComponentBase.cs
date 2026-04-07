@@ -147,34 +147,39 @@ namespace Eclipse.Core
         public void ClearChildren() { foreach (var child in _children) { child.Parent = null; child.Dispose(); } _children.Clear(); }
 
         /// <summary>
-        /// 测量组件所需尺寸 - 默认实现遍历子元素计算总大小
+        /// 测量组件所需尺寸 - 默认实现测量所有子元素，取最大宽度和高度
         /// </summary>
         public virtual Size Measure(Size availableSize, IDrawingContext context)
         {
             double maxWidth = 0;
             double maxHeight = 0;
-            
+
             foreach (var child in _children)
             {
                 var childSize = child.Measure(availableSize, context);
                 maxWidth = Math.Max(maxWidth, childSize.Width);
-                maxHeight += childSize.Height;
+                maxHeight = Math.Max(maxHeight, childSize.Height);
             }
-            
-            if (maxWidth > 0 && maxHeight > 0)
+
+            if (maxWidth > 0 || maxHeight > 0)
             {
-                return new Size(maxWidth, maxHeight);
+                _desiredSize = new Size(maxWidth, maxHeight);
             }
-            
+
             return _desiredSize;
         }
 
         /// <summary>
-        /// 安排组件位置和尺寸 - 默认实现只更新边界
+        /// 安排组件位置和尺寸 - 默认实现安排所有子元素
         /// </summary>
         public virtual void Arrange(Rect finalBounds, IDrawingContext context)
         {
             UpdateBounds(finalBounds);
+
+            foreach (var child in _children)
+            {
+                child.Arrange(finalBounds, context);
+            }
         }
 
         /// <summary>
