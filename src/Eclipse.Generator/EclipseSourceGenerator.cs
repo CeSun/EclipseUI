@@ -650,6 +650,10 @@ namespace Eclipse.Generator
                 {
                     CollectCustomComponentNamespaces(foreachNode.Body, typeCache, namespaces, currentNamespace);
                 }
+                else if (node is ForNode forNode)
+                {
+                    CollectCustomComponentNamespaces(forNode.Body, typeCache, namespaces, currentNamespace);
+                }
             }
         }
 
@@ -685,6 +689,9 @@ namespace Eclipse.Generator
                         break;
                     case ForeachNode foreachNode:
                         GenerateForeach(foreachNode, sb, ref indent, WriteLine, ref seq, propertyTypes);
+                        break;
+                    case ForNode forNode:
+                        GenerateFor(forNode, sb, ref indent, WriteLine, ref seq, propertyTypes);
                         break;
                 }
             }
@@ -785,6 +792,17 @@ namespace Eclipse.Generator
             WriteLine("{");
             indent++;
             GenerateNodes(foreachNode.Body, sb, ref indent, WriteLine, ref seq, propertyTypes);
+            indent--;
+            WriteLine("}");
+        }
+
+        private void GenerateFor(ForNode forNode, StringBuilder sb, ref int indent, Action<string> WriteLine,
+            ref int seq, Dictionary<(string Control, string Property), PropertyTypeInfo> propertyTypes)
+        {
+            WriteLine($"for ({forNode.Initializer}; {forNode.Condition}; {forNode.Iterator})");
+            WriteLine("{");
+            indent++;
+            GenerateNodes(forNode.Body, sb, ref indent, WriteLine, ref seq, propertyTypes);
             indent--;
             WriteLine("}");
         }

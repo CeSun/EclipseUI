@@ -61,6 +61,14 @@ public class ForeachNode : MarkupNode
     public List<MarkupNode> Body { get; set; } = new();
 }
 
+public class ForNode : MarkupNode
+{
+    public string Initializer { get; set; } = string.Empty;
+    public string Condition { get; set; } = string.Empty;
+    public string Iterator { get; set; } = string.Empty;
+    public List<MarkupNode> Body { get; set; } = new();
+}
+
 public class EclipseMarkupParser
 {
     private readonly string _source;
@@ -239,6 +247,10 @@ public class EclipseMarkupParser
             {
                 return ParseForeachStatement(startPos);
             }
+            else if (keyword == "for")
+            {
+                return ParseForStatement(startPos);
+            }
             else
             {
                 // 未知的 @ 关键字
@@ -401,6 +413,69 @@ public class EclipseMarkupParser
         foreachNode.Body = new EclipseMarkupParser(body).Parse();
         
         return foreachNode;
+    }
+
+    private ForNode ParseForStatement(int startPos)
+    {
+        var forNode = new ForNode();
+        
+        SkipWhitespace();
+        
+        // 检查条件括号是否存在
+        if (Peek() != '(')
+        {
+            throw new FormatException($"Missing condition parentheses for '@for' at position {_position}, expected '('");
+        }
+        
+        Read(); // 读 '('
+        
+        // 解析初始化部分（到第一个分号）
+        var (initializer, foundSemicolon1) = ReadUntilWithCheck(';');
+        if (!foundSemicolon1)
+        {
+            throw new FormatException($"Invalid for syntax at position {startPos}: expected ';' after initializer");
+        }
+        Read(); // 读第一个 ';'
+        forNode.Initializer = initializer.Trim();
+        
+        // 解析条件部分（到第二个分号）
+        var (condition, foundSemicolon2) = ReadUntilWithCheck(';');
+        if (!foundSemicolon2)
+        {
+            throw new FormatException($"Invalid for syntax at position {startPos}: expected ';' after condition");
+        }
+        Read(); // 读第二个 ';'
+        forNode.Condition = condition.Trim();
+        
+        // 解析迭代器部分（到右括号）
+        var (iterator, foundCloseParen) = ReadUntilWithCheck(')');
+        if (!foundCloseParen)
+        {
+            throw new FormatException($"Unclosed for condition at position {startPos}, expected ')'");
+        }
+        Read(); // 读 ')'
+        forNode.Iterator = iterator.Trim();
+        
+        SkipWhitespace();
+        
+        // 检查块花括号是否存在
+        if (Peek() != '{')
+        {
+            throw new FormatException($"Missing block braces for '@for' at position {_position}, expected '{{'");
+        }
+        
+        Read(); // 读 '{'
+        var (body, foundBraceClose) = ReadBlockWithCheck();
+        
+        // 检查块花括号是否闭合
+        if (!foundBraceClose)
+        {
+            throw new FormatException($"Unclosed for block at position {startPos}, expected '}}'");
+        }
+        
+        forNode.Body = new EclipseMarkupParser(body).Parse();
+        
+        return forNode;
     }
 
     private ExpressionNode ParseParenthesizedExpression(int startPos)
