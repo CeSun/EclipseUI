@@ -63,7 +63,7 @@ public class DockPanel : ComponentBase
     public bool LastChildFill { get; set; } = true;
     
     /// <summary>
-    /// 固定高度（用于在 StackLayout 等布局中）
+    /// 固定高度（用于在 StackPanel 等布局中）
     /// </summary>
     public double Height { get; set; } = 200;
     
@@ -313,8 +313,8 @@ public class DockPanel : ComponentBase
             return label.Measure(availableSize, context);
         if (child is ScrollView scrollView)
             return scrollView.Measure(availableSize, context);
-        if (child is GridPanel gridPanel)
-            return gridPanel.Measure(availableSize, context);
+        if (child is Grid grid)
+            return grid.Measure(availableSize, context);
         if (child is Container container)
             return MeasureContainer(container, availableSize, context);
         if (child is ComponentBase componentBase)

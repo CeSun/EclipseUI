@@ -7,10 +7,12 @@ using System.Collections.Generic;
 namespace Eclipse.Controls;
 
 /// <summary>
-/// Grid 附加属性
+/// 网格布局面板
 /// </summary>
-public static class Grid
+public class Grid : ComponentBase
 {
+    // === 附加属性 ===
+    
     /// <summary>
     /// 所在行
     /// </summary>
@@ -43,13 +45,9 @@ public static class Grid
     
     public static int GetColumnSpan(IComponent element) => element.Get(ColumnSpanProperty);
     public static void SetColumnSpan(IComponent element, int value) => element.Set(ColumnSpanProperty, value);
-}
-
-/// <summary>
-/// 网格布局面板
-/// </summary>
-public class GridPanel : ComponentBase
-{
+    
+    // === 控件属性 ===
+    
     /// <summary>
     /// 行定义
     /// </summary>
@@ -214,10 +212,10 @@ public class GridPanel : ComponentBase
         // 遍历所有子元素，根据附加属性安排位置
         foreach (var child in Children)
         {
-            var row = child.Get(Grid.RowProperty);
-            var col = child.Get(Grid.ColumnProperty);
-            var rowSpan = child.Get(Grid.RowSpanProperty);
-            var colSpan = child.Get(Grid.ColumnSpanProperty);
+            var row = child.Get(RowProperty);
+            var col = child.Get(ColumnProperty);
+            var rowSpan = child.Get(RowSpanProperty);
+            var colSpan = child.Get(ColumnSpanProperty);
             
             // 计算子元素边界
             double childX = col < columnWidths.Length ? colXPositions[col] : colXPositions[0];
@@ -283,10 +281,10 @@ public class GridPanel : ComponentBase
         // 遍历所有子元素，根据附加属性渲染
         foreach (var child in Children)
         {
-            var row = child.Get(Grid.RowProperty);
-            var col = child.Get(Grid.ColumnProperty);
-            var rowSpan = child.Get(Grid.RowSpanProperty);
-            var colSpan = child.Get(Grid.ColumnSpanProperty);
+            var row = child.Get(RowProperty);
+            var col = child.Get(ColumnProperty);
+            var rowSpan = child.Get(RowSpanProperty);
+            var colSpan = child.Get(ColumnSpanProperty);
             
             double childX = col < columnWidths.Length ? colXPositions[col] : colXPositions[0];
             double childY = row < rowHeights.Length ? rowYPositions[row] : rowYPositions[0];
@@ -338,7 +336,7 @@ public class GridPanel : ComponentBase
                 
                 foreach (var child in Children)
                 {
-                    var row = child.Get(Grid.RowProperty);
+                    var row = child.Get(RowProperty);
                     if (row == i)
                     {
                         var size = MeasureChild(child, context);
@@ -403,7 +401,7 @@ public class GridPanel : ComponentBase
                 
                 foreach (var child in Children)
                 {
-                    var col = child.Get(Grid.ColumnProperty);
+                    var col = child.Get(ColumnProperty);
                     if (col == i)
                     {
                         var size = MeasureChild(child, context);

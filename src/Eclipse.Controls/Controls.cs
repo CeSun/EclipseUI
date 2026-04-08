@@ -8,7 +8,7 @@ namespace Eclipse.Controls;
 public class StackLayout : StackPanel { }
 
 // 已废弃：请使用 Grid
-public class GridLayout : GridPanel { }
+public class GridLayout : Grid { }
 
 // 已废弃：请使用 Canvas
-public class CanvasLayout : CanvasPanel { }
+public class CanvasLayout : Canvas { }

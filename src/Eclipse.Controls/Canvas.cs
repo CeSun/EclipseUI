@@ -7,10 +7,12 @@ using System.Collections.Generic;
 namespace Eclipse.Controls;
 
 /// <summary>
-/// Canvas 附加属性
+/// 绝对定位布局面板
 /// </summary>
-public static class Canvas
+public class Canvas : ComponentBase
 {
+    // === 附加属性 ===
+    
     /// <summary>
     /// 左边距
     /// </summary>
@@ -51,13 +53,9 @@ public static class Canvas
     
     public static int GetZIndex(IComponent element) => element.Get(ZIndexProperty);
     public static void SetZIndex(IComponent element, int value) => element.Set(ZIndexProperty, value);
-}
-
-/// <summary>
-/// 绝对定位布局面板
-/// </summary>
-public class CanvasPanel : ComponentBase
-{
+    
+    // === 控件属性 ===
+    
     public Color BackgroundColor { get; set; } = Color.Transparent;
     
     public override bool IsVisible => true;
@@ -86,8 +84,8 @@ public class CanvasPanel : ComponentBase
         foreach (var child in Children)
         {
             var childSize = child.Measure(availableSize, context);
-            var left = child.Get(Canvas.LeftProperty);
-            var top = child.Get(Canvas.TopProperty);
+            var left = child.Get(LeftProperty);
+            var top = child.Get(TopProperty);
             
             maxWidth = Math.Max(maxWidth, left + childSize.Width);
             maxHeight = Math.Max(maxHeight, top + childSize.Height);
@@ -105,10 +103,10 @@ public class CanvasPanel : ComponentBase
         
         foreach (var child in Children)
         {
-            var left = child.Get(Canvas.LeftProperty);
-            var top = child.Get(Canvas.TopProperty);
-            var right = child.Get(Canvas.RightProperty);
-            var bottom = child.Get(Canvas.BottomProperty);
+            var left = child.Get(LeftProperty);
+            var top = child.Get(TopProperty);
+            var right = child.Get(RightProperty);
+            var bottom = child.Get(BottomProperty);
             
             // 获取子元素尺寸
             var childSize = child.Measure(Size.Empty, context);
@@ -160,10 +158,10 @@ public class CanvasPanel : ComponentBase
         
         foreach (var child in Children)
         {
-            var left = child.Get(Canvas.LeftProperty);
-            var top = child.Get(Canvas.TopProperty);
-            var right = child.Get(Canvas.RightProperty);
-            var bottom = child.Get(Canvas.BottomProperty);
+            var left = child.Get(LeftProperty);
+            var top = child.Get(TopProperty);
+            var right = child.Get(RightProperty);
+            var bottom = child.Get(BottomProperty);
             
             var childSize = child.Measure(Size.Empty, context);
             
