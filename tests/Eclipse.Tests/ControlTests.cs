@@ -1,19 +1,19 @@
-using Eclipse.Controls;
+﻿using Eclipse.Controls;
 using Eclipse.Rendering;
 using Xunit;
 
 namespace Eclipse.Tests;
 
 /// <summary>
-/// 控件单元测试
+/// 鎺т欢鍗曞厓娴嬭瘯
 /// </summary>
 public class ControlTests
 {
     [Fact]
-    public void StackLayout_DefaultValues_ShouldBeCorrect()
+    public void StackPanel_DefaultValues_ShouldBeCorrect()
     {
         // Arrange & Act
-        var stack = new StackLayout();
+        var stack = new StackPanel();
 
         // Assert
         Assert.Equal(Orientation.Vertical, stack.Orientation);
@@ -23,10 +23,10 @@ public class ControlTests
     }
 
     [Fact]
-    public void StackLayout_CanSetSpacingAndPadding()
+    public void StackPanel_CanSetSpacingAndPadding()
     {
         // Arrange
-        var stack = new StackLayout { Spacing = 16.5, Padding = 8 };
+        var stack = new StackPanel { Spacing = 16.5, Padding = 8 };
 
         // Assert
         Assert.Equal(16.5, stack.Spacing);
@@ -87,11 +87,10 @@ public class ControlTests
         // Arrange
         var button = new Button();
         
-        // Act - 订阅事件
+        // Act - 璁㈤槄浜嬩欢
         button.Click += (s, e) => { };
         
-        // Assert - 无异常即为成功
-        Assert.True(button.IsEnabled);
+        // Assert - 鏃犲紓甯稿嵆涓烘垚鍔?        Assert.True(button.IsEnabled);
     }
 
     [Fact]

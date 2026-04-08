@@ -1,7 +1,7 @@
-@using Eclipse.Controls
+﻿@using Eclipse.Controls
 @using Eclipse.Input
 
-<StackLayout Spacing="16" Padding="20">
+<StackPanel Spacing="16" Padding="20">
     <Label Text="输入控件" FontSize="20" FontWeight="Bold" />
     
     <Label Text="TextInput 文本输入:" FontSize="14" FontWeight="Bold" />
@@ -24,7 +24,7 @@
     <CheckBox Label=@$"选项 A (双向绑定: {_isCheckedA})" @bind-IsChecked=_isCheckedA />
     <CheckBox Label=@$"选项 B (双向绑定: {_isCheckedB})" @bind-IsChecked=_isCheckedB />
     <CheckBox Label="选项 C (禁用)" IsEnabled="false" />
-</StackLayout>
+</StackPanel>
 
 @code {
     private string _inputText = "";

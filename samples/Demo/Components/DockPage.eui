@@ -1,4 +1,4 @@
-<StackLayout Spacing="16" Padding="16">
+﻿<StackPanel Spacing="16" Padding="16">
     <Label Text="DockPanel 布局示例" FontSize="24" FontWeight="Bold" />
     
     <Label Text="1. 基本停靠 (Left, Top, Right, Bottom, Fill)" FontSize="16" />
@@ -28,11 +28,11 @@
     <Label Text="2. 工具栏布局 (Top + Fill)" FontSize="16" />
     
     <DockPanel BackgroundColor="#F5F5F5" Height="200">
-        <StackLayout Orientation="Horizontal" BackgroundColor="#E0E0E0" Padding="8" Spacing="8" Height="44" DockPanel.Dock="Top">
+        <StackPanel Orientation="Horizontal" BackgroundColor="#E0E0E0" Padding="8" Spacing="8" Height="44" DockPanel.Dock="Top">
             <Button Text="文件" CornerRadius="0" />
             <Button Text="编辑" CornerRadius="0" />
             <Button Text="视图" CornerRadius="0" />
-        </StackLayout>
+        </StackPanel>
         
         <Container BackgroundColor="White" Padding="16">
             <Label Text="主内容区域 - 自动填充剩余空间" />
@@ -42,15 +42,15 @@
     <Label Text="3. 侧边栏布局 (Left + Fill)" FontSize="16" />
     
     <DockPanel BackgroundColor="White" Height="250">
-        <StackLayout BackgroundColor="#2C3E50" Padding="16" Spacing="12" Width="120" DockPanel.Dock="Left">
+        <StackPanel BackgroundColor="#2C3E50" Padding="16" Spacing="12" Width="120" DockPanel.Dock="Left">
             <Label Text="导航菜单" Color="White" FontWeight="Bold" />
             <Label Text="首页" Color="LightGray" />
             <Label Text="设置" Color="LightGray" />
             <Label Text="关于" Color="LightGray" />
-        </StackLayout>
+        </StackPanel>
         
         <Container BackgroundColor="#ECF0F1" Padding="16">
             <Label Text="主内容区域" FontSize="18" />
         </Container>
     </DockPanel>
-</StackLayout>
+</StackPanel>

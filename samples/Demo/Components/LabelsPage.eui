@@ -1,6 +1,6 @@
-@using Eclipse.Controls
+﻿@using Eclipse.Controls
 
-<StackLayout Spacing="16" Padding="20">
+<StackPanel Spacing="16" Padding="20">
     <Label Text="Label 标签" FontSize="20" FontWeight="Bold" />
     
     <Label Text="普通文本 - 默认样式" FontSize="14" />
@@ -18,7 +18,7 @@
     <Label Text="带背景的标签" FontSize="14" BackgroundColor="#007AFF" Color="White" Padding="10" />
     
     <Label Text="右对齐文本" FontSize="14" TextAlignment="Right" BackgroundColor="#F0F0F0" Padding="10" />
-</StackLayout>
+</StackPanel>
 
 @code {
 }

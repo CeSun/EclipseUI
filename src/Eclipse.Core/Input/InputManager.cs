@@ -512,7 +512,6 @@ public sealed class InputManager
         Vector delta,
         KeyModifiers modifiers)
     {
-        Console.WriteLine($"[InputManager] RaisePointerWheel: target={target.GetType().Name}");
         var args = new PointerWheelEventArgs(pointer, position, delta)
         {
             KeyModifiers = modifiers
@@ -520,7 +519,6 @@ public sealed class InputManager
         
         args.RoutedEvent = ComponentBase.PointerWheelChangedEvent;
         target.RaiseEvent(args);
-        Console.WriteLine($"[InputManager] RaisePointerWheel: event raised, Handled={args.Handled}");
         
         PointerWheel?.Invoke(this, args);
     }

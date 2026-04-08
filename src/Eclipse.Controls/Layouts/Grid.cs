@@ -59,6 +59,56 @@ public class Grid : ComponentBase
     private List<GridLength> _columnDefinitions = new();
     
     /// <summary>
+    /// 列定义（用于 Eui 标记，如 "*" 或 "*, *, 100"）
+    /// </summary>
+    public string? ColumnDefinitions 
+    { 
+        get => null;
+        set
+        {
+            if (string.IsNullOrEmpty(value)) return;
+            _columnDefinitions.Clear();
+            foreach (var part in value.Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                var trimmed = part.Trim();
+                if (trimmed == "*" || trimmed == "1*")
+                    _columnDefinitions.Add(GridLength.Star(1));
+                else if (trimmed.EndsWith("*"))
+                    _columnDefinitions.Add(GridLength.Star(double.Parse(trimmed.TrimEnd('*'))));
+                else if (trimmed.Equals("Auto", StringComparison.OrdinalIgnoreCase))
+                    _columnDefinitions.Add(GridLength.Auto);
+                else if (double.TryParse(trimmed, out var num))
+                    _columnDefinitions.Add(GridLength.Absolute(num));
+            }
+        }
+    }
+    
+    /// <summary>
+    /// 行定义（用于 Eui 标记，如 "*" 或 "*, *, 100"）
+    /// </summary>
+    public string? RowDefinitions 
+    { 
+        get => null;
+        set
+        {
+            if (string.IsNullOrEmpty(value)) return;
+            _rowDefinitions.Clear();
+            foreach (var part in value.Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                var trimmed = part.Trim();
+                if (trimmed == "*" || trimmed == "1*")
+                    _rowDefinitions.Add(GridLength.Star(1));
+                else if (trimmed.EndsWith("*"))
+                    _rowDefinitions.Add(GridLength.Star(double.Parse(trimmed.TrimEnd('*'))));
+                else if (trimmed.Equals("Auto", StringComparison.OrdinalIgnoreCase))
+                    _rowDefinitions.Add(GridLength.Auto);
+                else if (double.TryParse(trimmed, out var num))
+                    _rowDefinitions.Add(GridLength.Absolute(num));
+            }
+        }
+    }
+    
+    /// <summary>
     /// 行间距
     /// </summary>
     public double RowSpacing { get; set; } = 0;
@@ -136,12 +186,40 @@ public class Grid : ComponentBase
     /// <summary>
     /// 行数
     /// </summary>
-    public int RowCount => _rowDefinitions.Count > 0 ? _rowDefinitions.Count : 1;
+    public int RowCount => _rowDefinitions.Count > 0 ? _rowDefinitions.Count : Math.Max(1, GetMaxRow() + 1);
     
     /// <summary>
     /// 列数
     /// </summary>
-    public int ColumnCount => _columnDefinitions.Count > 0 ? _columnDefinitions.Count : 1;
+    public int ColumnCount => _columnDefinitions.Count > 0 ? _columnDefinitions.Count : Math.Max(1, GetMaxColumn() + 1);
+    
+    /// <summary>
+    /// 获取子元素中的最大行索引
+    /// </summary>
+    private int GetMaxRow()
+    {
+        int maxRow = 0;
+        foreach (var child in Children)
+        {
+            var row = child.Get(RowProperty);
+            maxRow = Math.Max(maxRow, row);
+        }
+        return maxRow;
+    }
+    
+    /// <summary>
+    /// 获取子元素中的最大列索引
+    /// </summary>
+    private int GetMaxColumn()
+    {
+        int maxCol = 0;
+        foreach (var child in Children)
+        {
+            var col = child.Get(ColumnProperty);
+            maxCol = Math.Max(maxCol, col);
+        }
+        return maxCol;
+    }
     
     /// <summary>
     /// 测量网格所需尺寸

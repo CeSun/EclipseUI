@@ -40,13 +40,13 @@ public class LayoutTests
     
     private readonly TestDrawingContext _context = new();
     
-    // === StackLayout Measure 测试 ===
+    // === StackPanel Measure 测试 ===
     
     [Fact]
-    public void StackLayout_Measure_ShouldReturnCorrectSize_ForEmptyStack()
+    public void StackPanel_Measure_ShouldReturnCorrectSize_ForEmptyStack()
     {
         // Arrange
-        var stack = new StackLayout { Padding = 10 };
+        var stack = new StackPanel { Padding = 10 };
         
         // Act
         var size = stack.Measure(Size.Empty, _context);
@@ -57,10 +57,10 @@ public class LayoutTests
     }
     
     [Fact]
-    public void StackLayout_Measure_ShouldReturnCorrectSize_ForVerticalStack()
+    public void StackPanel_Measure_ShouldReturnCorrectSize_ForVerticalStack()
     {
         // Arrange
-        var stack = new StackLayout 
+        var stack = new StackPanel 
         { 
             Orientation = Orientation.Vertical,
             Spacing = 10,
@@ -84,10 +84,10 @@ public class LayoutTests
     }
     
     [Fact]
-    public void StackLayout_Measure_ShouldReturnCorrectSize_ForHorizontalStack()
+    public void StackPanel_Measure_ShouldReturnCorrectSize_ForHorizontalStack()
     {
         // Arrange
-        var stack = new StackLayout 
+        var stack = new StackPanel 
         { 
             Orientation = Orientation.Horizontal,
             Spacing = 10,
@@ -196,7 +196,7 @@ public class LayoutTests
     public void Grid_RowCount_ShouldDefaultToOne()
     {
         // Arrange & Act
-        var grid = new GridLayout();
+        var grid = new Grid();
         
         // Assert
         Assert.Equal(1, grid.RowCount);
@@ -206,7 +206,7 @@ public class LayoutTests
     public void Grid_ColumnCount_ShouldDefaultToOne()
     {
         // Arrange & Act
-        var grid = new GridLayout();
+        var grid = new Grid();
         
         // Assert
         Assert.Equal(1, grid.ColumnCount);
@@ -216,7 +216,7 @@ public class LayoutTests
     public void Grid_SetRowDefinitions_ShouldUpdateRowCount()
     {
         // Arrange
-        var grid = new GridLayout();
+        var grid = new Grid();
         
         // Act
         grid.SetRowDefinitions(GridLength.Auto, GridLength.Star(1), GridLength.Absolute(50));
@@ -229,7 +229,7 @@ public class LayoutTests
     public void Grid_SetColumnDefinitions_ShouldUpdateColumnCount()
     {
         // Arrange
-        var grid = new GridLayout();
+        var grid = new Grid();
         
         // Act
         grid.SetColumnDefinitions(GridLength.Star(1), GridLength.Star(2));

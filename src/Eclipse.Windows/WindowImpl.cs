@@ -224,12 +224,11 @@ public class WindowImpl : IDisposable
             {
                 _angleContext = new AngleD3D11Context(_hwnd);
                 _grContext = _angleContext.GrContext;
-                Console.WriteLine("Using ANGLE (D3D11) backend");
+                // Using ANGLE (D3D11) backend
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to initialize ANGLE: {ex.Message}");
-                Console.WriteLine("Falling back to OpenGL backend");
+                // Failed to initialize ANGLE, falling back to OpenGL
                 _backend = RenderBackend.OpenGL;
             }
         }
@@ -240,19 +239,18 @@ public class WindowImpl : IDisposable
             {
                 _glContext = new WglContext(_hwnd);
                 _grContext = _glContext.GrContext;
-                Console.WriteLine("Using OpenGL backend");
+                // Using OpenGL backend
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to initialize OpenGL: {ex.Message}");
-                Console.WriteLine("Falling back to CPU backend");
+                // Failed to initialize OpenGL, falling back to CPU
                 _backend = RenderBackend.CPU;
             }
         }
 
         if (_backend == RenderBackend.CPU)
         {
-            Console.WriteLine("Using CPU backend");
+            // Using CPU backend
         }
     }
 

@@ -1,4 +1,4 @@
-@using Eclipse.Controls
+﻿@using Eclipse.Controls
 
 <Button Text=@Text 
         OnClick=@OnClick
