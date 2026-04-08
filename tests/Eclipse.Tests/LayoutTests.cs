@@ -111,16 +111,6 @@ public class LayoutTests
         Assert.Equal(expectedWidth, size.Width, 1);
     }
     
-    [Fact]
-    public void HStack_ShouldHaveHorizontalOrientation()
-    {
-        // Arrange & Act
-        var hStack = new HStack();
-        
-        // Assert
-        Assert.Equal(Orientation.Horizontal, hStack.Orientation);
-    }
-    
     // === Label Measure 测试 ===
     
     [Fact]

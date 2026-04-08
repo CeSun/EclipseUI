@@ -1,4 +1,4 @@
-﻿using Eclipse.Core;
+using Eclipse.Core;
 using Eclipse.Core.Abstractions;
 using Eclipse.Input;
 using Eclipse.Rendering;
@@ -46,9 +46,9 @@ public static class Grid
 }
 
 /// <summary>
-/// 网格布局控件
+/// 网格布局面板
 /// </summary>
-public class GridLayout : ComponentBase
+public class GridPanel : ComponentBase
 {
     /// <summary>
     /// 行定义

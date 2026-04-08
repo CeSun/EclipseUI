@@ -2,6 +2,7 @@ using Eclipse.Core;
 using Eclipse.Core.Abstractions;
 using Eclipse.Input;
 using Eclipse.Rendering;
+using System.Collections.Generic;
 
 namespace Eclipse.Controls;
 
@@ -53,9 +54,9 @@ public static class Canvas
 }
 
 /// <summary>
-/// 绝对定位布局控件
+/// 绝对定位布局面板
 /// </summary>
-public class CanvasLayout : ComponentBase
+public class CanvasPanel : ComponentBase
 {
     public Color BackgroundColor { get; set; } = Color.Transparent;
     

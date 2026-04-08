@@ -305,16 +305,16 @@ public class DockPanel : ComponentBase
     {
         if (child is InteractiveControl interactiveControl)
             return interactiveControl.Measure(availableSize, context);
-        if (child is StackLayout stackLayout)
-            return stackLayout.Measure(availableSize, context);
+        if (child is StackPanel stackPanel)
+            return stackPanel.Measure(availableSize, context);
         if (child is DockPanel dockPanel)
             return dockPanel.Measure(availableSize, context);
         if (child is Label label)
             return label.Measure(availableSize, context);
         if (child is ScrollView scrollView)
             return scrollView.Measure(availableSize, context);
-        if (child is GridLayout gridLayout)
-            return gridLayout.Measure(availableSize, context);
+        if (child is GridPanel gridPanel)
+            return gridPanel.Measure(availableSize, context);
         if (child is Container container)
             return MeasureContainer(container, availableSize, context);
         if (child is ComponentBase componentBase)

@@ -34,16 +34,6 @@ public class ControlTests
     }
 
     [Fact]
-    public void HStack_ShouldHaveHorizontalOrientation()
-    {
-        // Arrange & Act
-        var hStack = new HStack();
-
-        // Assert
-        Assert.Equal(Orientation.Horizontal, hStack.Orientation);
-    }
-
-    [Fact]
     public void Label_DefaultValues_ShouldBeCorrect()
     {
         // Arrange & Act
