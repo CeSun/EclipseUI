@@ -114,7 +114,7 @@ public class HarfBuzzTextRenderer
     /// </summary>
     private SKTypeface DetermineTypeface(int codePoint, SKTypeface baseTypeface)
     {
-        System.Diagnostics.Debug.WriteLine($"[DetermineTypeface] codePoint={codePoint:X}, baseTypeface={baseTypeface?.FamilyName ?? "null"}");
+        System.Diagnostics.Debug.WriteLine($"[TextInput] DetermineTypeface cp={codePoint:X} base={baseTypeface?.FamilyName ?? "null"}");
         
         // Emoji 优先
         if (EmojiDetector.IsEmoji(codePoint) || EmojiDetector.HasEmojiPresentation(codePoint))
@@ -126,7 +126,7 @@ public class HarfBuzzTextRenderer
         var utf16 = EncodeCodePoint(codePoint);
         if (baseTypeface.CountGlyphs(utf16) > 0)
         {
-            System.Diagnostics.Debug.WriteLine($"[DetermineTypeface] baseTypeface has glyph");
+            System.Diagnostics.Debug.WriteLine($"[TextInput] DetermineTypeface: baseTypeface has glyph");
             return baseTypeface;
         }
         
@@ -140,6 +140,8 @@ public class HarfBuzzTextRenderer
             SKFontStyleSlant.Upright,
             new[] { "zh", "ja", "ko", "en" },
             searchChar);
+        
+        System.Diagnostics.Debug.WriteLine($"[TextInput] DetermineTypeface: matched={matched?.FamilyName ?? "null"}");
         
         if (matched != null)
         {
@@ -161,7 +163,7 @@ public class HarfBuzzTextRenderer
         SKFont baseFont,
         SKPaint paint)
     {
-        System.Diagnostics.Debug.WriteLine($"[DrawSegment] text='{segment.Text}', typeface={segment.Typeface?.FamilyName ?? "null"}");
+        System.Diagnostics.Debug.WriteLine($"[TextInput] DrawSegment text='{segment.Text}', typeface={segment.Typeface?.FamilyName ?? "null"}");
         
         using var font = new SKFont
         {
