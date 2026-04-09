@@ -31,12 +31,21 @@ public sealed class InputManager
     private IInputElement? _rootElement;
     
     /// <summary>
-    /// 根元素（用于 Hit Testing）
+    /// 设置根元素（用于 Hit Testing）
     /// </summary>
     public IInputElement? RootElement 
     { 
         get => _rootElement;
         set => _rootElement = value;
+    }
+
+    /// <summary>
+    /// 设置根元素并同步 FocusScope（用于 Tab 焦点切换）
+    /// </summary>
+    public void SetRootElementAndFocusScope(IInputElement root)
+    {
+        _rootElement = root;
+        FocusManager.SetFocusScope(root);
     }
     
     /// <summary>

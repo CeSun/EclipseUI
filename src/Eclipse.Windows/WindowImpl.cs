@@ -85,11 +85,11 @@ public class WindowImpl : IDisposable, IPlatformWindow
             {
                 if (_content is IInputElement inputElement)
                 {
-                    _inputManager.RootElement = inputElement;
+                    _inputManager.SetRootElementAndFocusScope(inputElement);
                 }
                 else if (_content?.Children.Count > 0 && _content.Children[0] is IInputElement firstChild)
                 {
-                    _inputManager.RootElement = firstChild;
+                    _inputManager.SetRootElementAndFocusScope(firstChild);
                 }
             }
             

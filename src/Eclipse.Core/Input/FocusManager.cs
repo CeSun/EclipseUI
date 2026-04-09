@@ -78,8 +78,17 @@ public sealed class FocusManager
     /// </summary>
     public bool MoveFocusForward()
     {
+        // 如果没有当前焦点，尝试获取第一个可聚焦元素
         if (_focusedElement == null)
+        {
+            if (_focusScope == null)
+                return false;
+            
+            var first = FindFirstFocusable(_focusScope);
+            if (first != null)
+                return SetFocus(first);
             return false;
+        }
         
         var next = GetNextFocusable(_focusedElement, forward: true);
         if (next != null && next != _focusedElement)
@@ -95,8 +104,17 @@ public sealed class FocusManager
     /// </summary>
     public bool MoveFocusBackward()
     {
+        // 如果没有当前焦点，尝试获取第一个可聚焦元素
         if (_focusedElement == null)
+        {
+            if (_focusScope == null)
+                return false;
+            
+            var first = FindFirstFocusable(_focusScope);
+            if (first != null)
+                return SetFocus(first);
             return false;
+        }
         
         var prev = GetNextFocusable(_focusedElement, forward: false);
         if (prev != null && prev != _focusedElement)
