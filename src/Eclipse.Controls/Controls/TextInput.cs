@@ -21,15 +21,19 @@ public class TextInput : InteractiveControl
     
     private IClipboard GetClipboard()
     {
-        // 向上遍历组件树找到根组件，获取服务提供者
+        // 从静态应用宿主获取服务（App.Run 时设置）
+        if (ComponentBase.AppHost is IAppHost appHost)
+            return appHost.Services.GetRequiredService<IClipboard>();
+        
+        // 回退：向上遍历组件树（用于测试场景）
         IComponent? current = this;
         while (current != null)
         {
-            if (current is IAppHost appHost)
-                return appHost.Services.GetRequiredService<IClipboard>();
+            if (current is IAppHost h)
+                return h.Services.GetRequiredService<IClipboard>();
             current = current.Parent;
         }
-        throw new InvalidOperationException("IClipboard service not registered: no IAppHost found in component tree");
+        throw new InvalidOperationException("IClipboard service not registered: no IAppHost found");
     }
     private string? _text;
     private int _cursorPosition = 0;

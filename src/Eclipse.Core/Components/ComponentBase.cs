@@ -466,6 +466,11 @@ namespace Eclipse.Core
         // === 聚焦 ===
 
         private static IAppHost? _appHost;
+        
+        /// <summary>
+        /// 当前应用的宿主（静态访问点）
+        /// </summary>
+        public static IAppHost? AppHost => _appHost;
 
         /// <summary>
         /// 设置应用宿主（由 App 启动时设置）
