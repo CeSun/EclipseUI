@@ -99,7 +99,9 @@ public class Canvas : ComponentBase
     /// </summary>
     public override void Arrange(Rect finalBounds, IDrawingContext context)
     {
-        base.Arrange(finalBounds, context);
+        // 不调用 base.Arrange()：它会把所有子元素 Arrange 为 finalBounds，
+        // 而布局面板应该给每个子元素各自的 bounds
+        UpdateBounds(finalBounds);
         
         foreach (var child in Children)
         {

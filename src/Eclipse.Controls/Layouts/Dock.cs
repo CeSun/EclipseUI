@@ -151,7 +151,13 @@ public class DockPanel : ComponentBase
     /// </summary>
     public override void Arrange(Rect finalBounds, IDrawingContext context)
     {
-        base.Arrange(finalBounds, context);
+        // 注意：不调用 base.Arrange()，因为它会用 finalBounds 排列所有子元素，
+        // 这对 Dock 布局是错误的——子元素应该获得各自的 Dock 区域 bounds，
+        // 而不是整个 DockPanel 的 bounds。
+        // 例如 ScrollView 在 Fill 区域时，base.Arrange 会先给它完整的 DockPanel bounds，
+        // 导致 _maxScrollY 被错误计算为 contentSize - fullDockHeight，
+        // 使得底部内容无法滚动到。
+        UpdateBounds(finalBounds);
         
         var paddingValue = Padding * context.Scale;
         var spacingValue = Spacing * context.Scale;

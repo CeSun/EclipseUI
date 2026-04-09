@@ -98,7 +98,9 @@ public class StackPanel : ComponentBase
     
     public override void Arrange(Rect finalBounds, IDrawingContext context)
     {
-        base.Arrange(finalBounds, context);
+        // 不调用 base.Arrange()：它会把所有子元素 Arrange 为 finalBounds，
+        // 而布局面板应该给每个子元素各自的 bounds
+        UpdateBounds(finalBounds);
         
         var spacingValue = Spacing * context.Scale;
         var paddingValue = Padding * context.Scale;
@@ -156,25 +158,29 @@ public class StackPanel : ComponentBase
         if (Orientation == Orientation.Vertical)
         {
             double y = contentBounds.Y;
+            double remainingHeight = contentBounds.Height;
             foreach (var child in Children)
             {
-                var childHeight = child.Measure(new Size(contentBounds.Width, contentBounds.Height), context).Height;
-                var childBounds = new Rect(contentBounds.X, y, contentBounds.Width, childHeight);
+                var childSize = child.Measure(new Size(contentBounds.Width, Math.Max(0, remainingHeight)), context);
+                var childBounds = new Rect(contentBounds.X, y, contentBounds.Width, childSize.Height);
                 child.Arrange(childBounds, context);
                 child.Render(context, childBounds);
-                y += childHeight + spacingValue;
+                y += childSize.Height + spacingValue;
+                remainingHeight -= childSize.Height + spacingValue;
             }
         }
         else
         {
             double x = contentBounds.X;
-            var childWidth = (contentBounds.Width - spacingValue * (Children.Count - 1)) / Children.Count;
+            double remainingWidth = contentBounds.Width;
             foreach (var child in Children)
             {
-                var childBounds = new Rect(x, contentBounds.Y, childWidth, contentBounds.Height);
+                var childSize = child.Measure(new Size(Math.Max(0, remainingWidth), contentBounds.Height), context);
+                var childBounds = new Rect(x, contentBounds.Y, childSize.Width, contentBounds.Height);
                 child.Arrange(childBounds, context);
                 child.Render(context, childBounds);
-                x += childWidth + spacingValue;
+                x += childSize.Width + spacingValue;
+                remainingWidth -= childSize.Width + spacingValue;
             }
         }
     }

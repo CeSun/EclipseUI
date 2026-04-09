@@ -243,7 +243,11 @@ public class ScrollView : ComponentBase
     public override void Arrange(Rect finalBounds, IDrawingContext context)
     {
         _bounds = finalBounds;
-        base.Arrange(finalBounds, context);
+        // 不调用 base.Arrange()：它会用 finalBounds（视口尺寸）排列子元素，
+        // 而 ScrollView 的子元素应该用完整内容区域来 Arrange，
+        // 视口裁剪只在 Render 时处理。base.Arrange() 还会导致子元素
+        // 被错误地 Arrange 为视口大小，影响其内部布局计算。
+        UpdateBounds(finalBounds);
         
         // 计算最大滚动范围
         _maxScrollX = Math.Max(0, _contentSize.Width - finalBounds.Width);

@@ -259,7 +259,9 @@ public class Grid : ComponentBase
     /// </summary>
     public override void Arrange(Rect finalBounds, IDrawingContext context)
     {
-        base.Arrange(finalBounds, context);
+        // 不调用 base.Arrange()：它会把所有子元素 Arrange 为 finalBounds，
+        // 而布局面板应该给每个子元素各自的 bounds
+        UpdateBounds(finalBounds);
         
         var scaledPadding = Padding * context.Scale;
         var scaledRowSpacing = RowSpacing * context.Scale;
@@ -316,7 +318,7 @@ public class Grid : ComponentBase
             }
             
             var childBounds = new Rect(childX, childY, childWidth, childHeight);
-            ArrangeChild(child, childBounds, context);
+            child.Arrange(childBounds, context);
         }
     }
     
@@ -417,7 +419,7 @@ public class Grid : ComponentBase
                     var row = child.Get(RowProperty);
                     if (row == i)
                     {
-                        var size = MeasureChild(child, context);
+                        var size = MeasureChild(child, new Size(double.PositiveInfinity, availableHeight), context);
                         maxHeight = Math.Max(maxHeight, size.Height);
                     }
                 }
@@ -482,7 +484,7 @@ public class Grid : ComponentBase
                     var col = child.Get(ColumnProperty);
                     if (col == i)
                     {
-                        var size = MeasureChild(child, context);
+                        var size = MeasureChild(child, new Size(availableWidth, double.PositiveInfinity), context);
                         maxWidth = Math.Max(maxWidth, size.Width);
                     }
                 }
@@ -517,19 +519,11 @@ public class Grid : ComponentBase
     }
     
     /// <summary>
-    /// 测量子元素 - 现在直接调用子元素的 Measure 方法
+    /// 测量子元素 - 使用传入的约束尺寸
     /// </summary>
-    private Size MeasureChild(IComponent child, IDrawingContext context)
+    private Size MeasureChild(IComponent child, Size availableSize, IDrawingContext context)
     {
-        return child.Measure(Size.Empty, context);
-    }
-    
-    /// <summary>
-    /// 安排子元素 - 现在直接调用子元素的 Arrange 方法
-    /// </summary>
-    private void ArrangeChild(IComponent child, Rect bounds, IDrawingContext context)
-    {
-        child.Arrange(bounds, context);
+        return child.Measure(availableSize, context);
     }
 }
 
