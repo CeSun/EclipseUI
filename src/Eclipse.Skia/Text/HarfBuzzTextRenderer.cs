@@ -122,7 +122,7 @@ public class HarfBuzzTextRenderer
         
         // 检查基础字体是否支持
         var utf16 = EncodeCodePoint(codePoint);
-        if (baseTypeface != null && baseTypeface.CountGlyphs(utf16) > 0)
+        if (baseTypeface.CountGlyphs(utf16) > 0)
         {
             return baseTypeface;
         }
@@ -130,9 +130,8 @@ public class HarfBuzzTextRenderer
         // 使用 font manager 查找 - MatchCharacter 需要 char，对于超过 0xFFFF 的码点简化处理
         char searchChar = codePoint <= 0xFFFF ? (char)codePoint : '中';
         
-        // 不传 familyName，让 font manager 自动搜索所有字体
         var matched = _fontManager.MatchCharacter(
-            null,
+            baseTypeface.FamilyName,
             SKFontStyleWeight.Normal,
             SKFontStyleWidth.Normal,
             SKFontStyleSlant.Upright,
@@ -211,8 +210,8 @@ public class HarfBuzzTextRenderer
             }
         }
         
-        // 如果找不到 emoji 字体，使用中文字体作为备选（支持基本 emoji presentation）
-        return GetChineseTypeface();
+        _emojiTypeface = SKTypeface.Default;
+        return _emojiTypeface;
     }
     
     /// <summary>
