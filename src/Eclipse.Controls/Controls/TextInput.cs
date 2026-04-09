@@ -870,7 +870,6 @@ public class TextInput : InteractiveControl
             // 绘制已确认文本
             if (!string.IsNullOrEmpty(displayText))
             {
-                System.Diagnostics.Debug.WriteLine($"[TextInput.Render] drawing='{displayText}', x={textBounds.X}, y={textY}, fontSize={scaledFontSize}, bounds={bounds}");
                 context.DrawText(displayText, textBounds.X, textY, scaledFontSize);
             }
             

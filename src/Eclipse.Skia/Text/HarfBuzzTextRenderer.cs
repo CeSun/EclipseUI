@@ -30,15 +30,12 @@ public class HarfBuzzTextRenderer
     {
         if (string.IsNullOrEmpty(text)) return;
         
-        System.Diagnostics.Debug.WriteLine($"[DrawText] text='{text}', x={x}, y={y}, baseFont.Typeface={baseFont.Typeface?.FamilyName}");
-        
         // 分段处理
         var segments = SegmentText(text, baseFont);
         
         var currentX = x;
         foreach (var segment in segments)
         {
-            System.Diagnostics.Debug.WriteLine($"[DrawText] segment='{segment.Text}', typeface={segment.Typeface?.FamilyName}, x={currentX}, y={y}");
             DrawSegment(canvas, segment, currentX, y, baseFont, paint);
             currentX += segment.Width;
         }
