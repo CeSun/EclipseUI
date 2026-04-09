@@ -290,7 +290,6 @@ public class SkiaDrawingContext : IDrawingContext
                 {
                     // 测试是否能渲染中文字符
                     var glyphCount = typeface.CountGlyphs("中");
-                    System.Diagnostics.Debug.WriteLine($"[Font] {fontName}: glyphCount = {glyphCount}");
                     if (glyphCount > 0)
                     {
                         _chineseTypeface = typeface;
@@ -307,7 +306,6 @@ public class SkiaDrawingContext : IDrawingContext
         
         // 最后尝试 MatchCharacter 来查找支持中文的字体
         var fallback = fontManager.MatchCharacter('中');
-        System.Diagnostics.Debug.WriteLine($"[Font] MatchCharacter fallback: {_chineseTypeface?.FamilyName ?? "null"}");
         if (fallback != null)
         {
             _chineseTypeface = fallback;
@@ -315,7 +313,6 @@ public class SkiaDrawingContext : IDrawingContext
         }
         
         // 最最后使用默认字体
-        System.Diagnostics.Debug.WriteLine($"[Font] Using SKTypeface.Default");
         _chineseTypeface = SKTypeface.Default;
         return _chineseTypeface;
     }
