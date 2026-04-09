@@ -165,21 +165,20 @@ public class HarfBuzzTextRenderer
     {
         System.Diagnostics.Debug.WriteLine($"[TextInput] DrawSegment text='{segment.Text}', typeface={segment.Typeface?.FamilyName ?? "null"}");
         
-        // 关键：创建新 font 时必须显式设置 embeddedBitmapCjk = true 以支持中文内嵌位图字体
-        using var font = new SKFont
+        // 使用 SKPaint 替代 SKFont - 更好地支持 CJK
+        using var segmentPaint = new SKPaint
         {
             Typeface = segment.Typeface,
-            Size = segment.IsEmoji ? baseFont.Size * 1.1f : baseFont.Size, // Emoji 稍大
-            Edging = baseFont.Edging,
-            Subpixel = baseFont.Subpixel
+            TextSize = segment.IsEmoji ? baseFont.Size * 1.1f : baseFont.Size,
+            IsAntialias = true,
+            SubpixelText = baseFont.Subpixel
         };
         
-        // 使用 HarfBuzz 塑形（可选）
-        // var shaper = HarfBuzzTextShaper.GetOrCreate(segment.Typeface);
-        // var glyphs = shaper.Shape(segment.Text, font.Size);
+        // 复制颜色
+        segmentPaint.Color = paint.Color;
         
         // 简单渲染
-        canvas.DrawText(segment.Text, x, y, font, paint);
+        canvas.DrawText(segment.Text, x, y, segmentPaint);
     }
     
     /// <summary>
