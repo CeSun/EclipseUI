@@ -109,26 +109,20 @@ public class SkiaDrawingContext : IDrawingContext
         if (string.IsNullOrEmpty(text))
             return;
         
-        using var font = new SKFont
-        {
-            Size = (float)fontSize,
-            Edging = SKFontEdging.SubpixelAntialias,
-            Subpixel = true
-        };
-        
-        font.Typeface = GetTypeface(fontFamily, fontWeight);
-        
+        // 使用 SKPaint 旧 API，自动处理 CJK 字体回退
+        #pragma warning disable CS0618
         using var paint = new SKPaint
         {
             IsAntialias = true,
+            SubpixelText = true,
             Color = color != default ? ToSKColor(color) : SKColors.Black
         };
         
-        var metrics = font.Metrics;
-        var visualCenter = (metrics.Top + metrics.Bottom) / 2;
-        var baseline = (float)(y - visualCenter);
+        paint.Typeface = GetTypeface(fontFamily, fontWeight);
+        paint.TextSize = (float)fontSize;
         
-        _textRenderer.DrawText(_canvas, text, (float)x, baseline, font, paint);
+        _canvas.DrawText(text, (float)x, (float)y, paint);
+        #pragma warning restore CS0618
     }
     
     public double MeasureText(string text, double fontSize, string? fontFamily = null)
@@ -136,9 +130,16 @@ public class SkiaDrawingContext : IDrawingContext
         if (string.IsNullOrEmpty(text))
             return 0;
         
-        using var font = new SKFont { Size = (float)fontSize };
-        font.Typeface = GetTypeface(fontFamily, null);
-        return _textRenderer.MeasureText(text, font);
+        // 使用 SKPaint 测量
+        #pragma warning disable CS0618
+        using var paint = new SKPaint
+        {
+            Typeface = GetTypeface(fontFamily, null),
+            TextSize = (float)fontSize
+        };
+        
+        return paint.MeasureText(text);
+        #pragma warning restore CS0618
     }
     
     public string? LoadImage(string source)
