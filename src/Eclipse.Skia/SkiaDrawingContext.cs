@@ -266,24 +266,53 @@ public class SkiaDrawingContext : IDrawingContext
         if (_chineseTypeface != null)
             return _chineseTypeface;
         
+        // 使用 SkiaSharp 的字体管理器查找支持中文的字体
+        var fontManager = SKFontManager.Default;
+        
+        // 尝试多种中文字体
         var chineseFonts = new[] { 
-            "Microsoft YaHei", "PingFang SC", "SimSun", 
-            "Noto Sans CJK SC", "Segoe UI"
+            // Windows 常用
+            "Microsoft YaHei UI", "Microsoft YaHei", "SimSun", "SimHei", "KaiTi", "FangSong",
+            // macOS
+            "PingFang SC", "PingFang TC", "STHeiti", "STSong",
+            // Linux
+            "Noto Sans CJK SC", "Noto Sans CJK TC", "Noto Sans CJK JP",
+            // 跨平台备选
+            "Segoe UI", "Arial Unicode MS"
         };
         
         foreach (var fontName in chineseFonts)
         {
-            var typeface = SKTypeface.FromFamilyName(fontName, 
-                SKFontStyleWeight.Normal, 
-                SKFontStyleWidth.Normal, 
-                SKFontStyleSlant.Upright);
-            if (typeface != null && typeface.CountGlyphs("中") > 0)
+            try
             {
-                _chineseTypeface = typeface;
-                return typeface;
+                var typeface = fontManager.MatchFamily(fontName, SKFontStyle.Normal);
+                if (typeface != null)
+                {
+                    // 测试是否能渲染中文字符
+                    var glyphCount = typeface.CountGlyphs("中");
+                    if (glyphCount > 0)
+                    {
+                        _chineseTypeface = typeface;
+                        return typeface;
+                    }
+                    typeface.Dispose();
+                }
+            }
+            catch
+            {
+                // 忽略字体加载失败
             }
         }
         
+        // 最后尝试 MatchCharacter 来查找支持中文的字体
+        var fallback = fontManager.MatchCharacter('中');
+        if (fallback != null)
+        {
+            _chineseTypeface = fallback;
+            return _chineseTypeface;
+        }
+        
+        // 最最后使用默认字体
         _chineseTypeface = SKTypeface.Default;
         return _chineseTypeface;
     }
