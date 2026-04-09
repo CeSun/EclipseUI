@@ -16,6 +16,9 @@ internal sealed class WindowsInputAdapter : IInputAdapter
     private readonly ImeContext _imeContext;
     private bool _isDisposed;
     
+    // IME 组合状态 - 组合期间忽略 WM_CHAR，避免重复输入
+    private bool _isImeComposing = false;
+    
     public WindowsInputAdapter(IntPtr hwnd, InputManager inputManager)
     {
         _hwnd = hwnd;
@@ -133,6 +136,7 @@ internal sealed class WindowsInputAdapter : IInputAdapter
     
     private void OnImeCompositionStarted(object? sender, EventArgs e)
     {
+        _isImeComposing = true; // 开始组合，忽略 WM_CHAR
         _inputManager.ProcessCompositionStarted();
     }
     
@@ -143,12 +147,16 @@ internal sealed class WindowsInputAdapter : IInputAdapter
     
     private void OnImeCompositionEnded(object? sender, EventArgs e)
     {
+        // 用户取消组合（如按 Escape）或组合已完成（ResultReceived 已处理）
+        // 无论哪种情况，都允许后续 WM_CHAR
+        _isImeComposing = false;
         _inputManager.ProcessCompositionEnded();
     }
     
     private void OnImeResultReceived(object? sender, Eclipse.Core.Abstractions.ResultEventArgs e)
     {
         _inputManager.ProcessTextInput(e.Result);
+        _isImeComposing = false; // 结果已处理，允许后续 WM_CHAR
     }
     
     /// <summary>
@@ -348,6 +356,10 @@ internal sealed class WindowsInputAdapter : IInputAdapter
     
     private void OnChar(IntPtr wParam, IntPtr lParam)
     {
+        // IME 组合期间忽略 WM_CHAR，避免双重输入
+        if (_isImeComposing)
+            return;
+        
         var charCode = wParam.ToInt32();
         
         // 忽略控制字符
