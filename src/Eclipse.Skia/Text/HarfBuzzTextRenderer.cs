@@ -165,6 +165,7 @@ public class HarfBuzzTextRenderer
     {
         System.Diagnostics.Debug.WriteLine($"[TextInput] DrawSegment text='{segment.Text}', typeface={segment.Typeface?.FamilyName ?? "null"}");
         
+        // 关键：创建新 font 时必须显式设置 embeddedBitmapCjk = true 以支持中文内嵌位图字体
         using var font = new SKFont
         {
             Typeface = segment.Typeface,
