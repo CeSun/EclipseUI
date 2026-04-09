@@ -284,10 +284,13 @@ public class WindowImpl : IDisposable, IPlatformWindow
     public void ShowDialog()
     {
         Show();
-        RunGameLoop();
+        RunMainLoop();
     }
 
-    private void RunGameLoop()
+    /// <summary>
+    /// 主循环 - 每帧处理消息、更新控件、触发重绘
+    /// </summary>
+    private void RunMainLoop()
     {
         _isRunning = true;
         var lastTime = DateTime.Now;
