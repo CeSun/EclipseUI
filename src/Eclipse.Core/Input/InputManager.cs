@@ -10,14 +10,22 @@ namespace Eclipse.Input;
 /// </summary>
 public sealed class InputManager
 {
-    // 焦点管理器
-    public FocusManager FocusManager { get; } = new();
+    // 焦点管理器（由 DI 注入，与 ComponentBase.Focus() 使用同一实例）
+    public FocusManager FocusManager { get; }
     
     // 当前指针状态
     private readonly Dictionary<int, PointerState> _pointerStates = new();
     
     // 鼠标悬停元素
     private IInputElement? _pointerOverElement;
+    
+    /// <summary>
+    /// 构造函数 - 注入 FocusManager
+    /// </summary>
+    public InputManager(FocusManager focusManager)
+    {
+        FocusManager = focusManager;
+    }
     
     // 根元素
     private IInputElement? _rootElement;
@@ -210,6 +218,21 @@ public sealed class InputManager
     /// </summary>
     public void ProcessKeyDown(Key key, int keyCode, KeyModifiers modifiers = KeyModifiers.None, bool isRepeat = false)
     {
+        // Tab 键：切换焦点
+        if (key == Key.Tab)
+        {
+            var shiftPressed = (modifiers & KeyModifiers.Shift) != 0;
+            if (shiftPressed)
+            {
+                FocusManager.MoveFocusBackward();
+            }
+            else
+            {
+                FocusManager.MoveFocusForward();
+            }
+            return;
+        }
+        
         var focusedElement = FocusManager.FocusedElement ?? RootElement;
         
         if (focusedElement != null)

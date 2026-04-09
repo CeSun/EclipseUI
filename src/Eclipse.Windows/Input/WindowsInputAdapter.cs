@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using Eclipse.Core.Abstractions;
 using Eclipse.Input;
 using Eclipse.Windows;
 
@@ -8,11 +9,12 @@ namespace Eclipse.Windows.Input;
 /// <summary>
 /// Windows 平台输入适配器
 /// </summary>
-internal sealed class WindowsInputAdapter
+internal sealed class WindowsInputAdapter : IInputAdapter
 {
     private readonly IntPtr _hwnd;
     private readonly InputManager _inputManager;
     private readonly ImeContext _imeContext;
+    private bool _isDisposed;
     
     public WindowsInputAdapter(IntPtr hwnd, InputManager inputManager)
     {
@@ -27,14 +29,10 @@ internal sealed class WindowsInputAdapter
         _imeContext.ResultReceived += OnImeResultReceived;
     }
     
-    /// <summary>
-    /// 获取 IME 上下文
-    /// </summary>
-    public ImeContext ImeContext => _imeContext;
+    /// <inheritdoc/>
+    public IImeContext? ImeContext => _imeContext;
     
-    /// <summary>
-    /// 处理 Windows 消息
-    /// </summary>
+    /// <inheritdoc/>
     public void ProcessMessage(uint msg, IntPtr wParam, IntPtr lParam)
     {
         switch (msg)
@@ -138,7 +136,7 @@ internal sealed class WindowsInputAdapter
         _inputManager.ProcessCompositionStarted();
     }
     
-    private void OnImeCompositionChanged(object? sender, ImeContext.CompositionChangedEventArgs e)
+    private void OnImeCompositionChanged(object? sender, Eclipse.Core.Abstractions.CompositionChangedEventArgs e)
     {
         _inputManager.ProcessCompositionChanged(e.CompositionText, e.CursorPosition);
     }
@@ -148,7 +146,7 @@ internal sealed class WindowsInputAdapter
         _inputManager.ProcessCompositionEnded();
     }
     
-    private void OnImeResultReceived(object? sender, ImeContext.ResultEventArgs e)
+    private void OnImeResultReceived(object? sender, Eclipse.Core.Abstractions.ResultEventArgs e)
     {
         _inputManager.ProcessTextInput(e.Result);
     }
@@ -372,6 +370,20 @@ internal sealed class WindowsInputAdapter
             modifiers |= KeyModifiers.Alt;
         
         return modifiers;
+    }
+    
+    public void Dispose()
+    {
+        if (_isDisposed) return;
+        _isDisposed = true;
+        
+        // 取消 IME 事件订阅
+        _imeContext.CompositionStarted -= OnImeCompositionStarted;
+        _imeContext.CompositionChanged -= OnImeCompositionChanged;
+        _imeContext.CompositionEnded -= OnImeCompositionEnded;
+        _imeContext.ResultReceived -= OnImeResultReceived;
+        
+        _imeContext.Dispose();
     }
 }
 

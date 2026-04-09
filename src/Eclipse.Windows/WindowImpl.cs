@@ -14,7 +14,7 @@ namespace Eclipse.Windows;
 /// <summary>
 /// 基于 Win32 API 的窗口实现，支持 CPU、OpenGL 和 ANGLE 渲染
 /// </summary>
-public class WindowImpl : IDisposable
+public class WindowImpl : IDisposable, IPlatformWindow
 {
     private static readonly NativeMethods.WndProcDelegate WndProcDelegate = WndProc;
     private static readonly IntPtr DefaultCursor = NativeMethods.LoadCursor(IntPtr.Zero, NativeMethods.IDC_ARROW);
@@ -207,7 +207,7 @@ public class WindowImpl : IDisposable
     private void InitializeRenderer(InputManager? inputManager)
     {
         // 使用注入的 InputManager，如果没有则创建新的
-        _inputManager = inputManager ?? new InputManager();
+        _inputManager = inputManager ?? new InputManager(new FocusManager());
         _inputAdapter = new WindowsInputAdapter(_hwnd, _inputManager);
         
         // 注册 IME 位置更新处理器

@@ -41,7 +41,8 @@ public static class Application
     /// <param name="rootComponent">根组件</param>
     public static void Run(IComponent rootComponent)
     {
-        var inputManager = new InputManager();
+        var focusManager = new FocusManager();
+        var inputManager = new InputManager(focusManager);
         
         using var window = new WindowImpl(WindowImpl.RenderBackend.Angle, inputManager)
         {

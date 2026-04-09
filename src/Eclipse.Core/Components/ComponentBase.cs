@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using Microsoft.Extensions.DependencyInjection;
 using Eclipse.Core.Abstractions;
 using Eclipse.Input;
 using Eclipse.Rendering;
@@ -464,11 +465,26 @@ namespace Eclipse.Core
 
         // === 聚焦 ===
 
+        private static IAppHost? _appHost;
+
+        /// <summary>
+        /// 设置应用宿主（由 App 启动时设置）
+        /// </summary>
+        public static void SetAppHost(IAppHost appHost) => _appHost = appHost;
+
         public virtual bool Focus()
         {
             if (!IsFocusable || !IsVisible)
                 return false;
 
+            // 通过 FocusManager 设置焦点（自动清除其他元素的焦点）
+            var focusManager = _appHost?.Services.GetService<Eclipse.Input.FocusManager>();
+            if (focusManager != null)
+            {
+                return focusManager.SetFocus(this);
+            }
+
+            // 降级方案：直接设置（不应该发生，除非没有初始化）
             IsFocused = true;
             return true;
         }

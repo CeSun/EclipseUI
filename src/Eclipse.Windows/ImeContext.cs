@@ -1,13 +1,14 @@
 using System;
 using System.Runtime.InteropServices;
 using System.Text;
+using Eclipse.Core.Abstractions;
 
 namespace Eclipse.Windows;
 
 /// <summary>
 /// Windows IME 上下文 - 使用 IMM32 API 实现输入法支持
 /// </summary>
-public sealed class ImeContext : IDisposable
+public sealed class ImeContext : IImeContext, IDisposable
 {
     private IntPtr _hwnd;
     private IntPtr _himc;
@@ -44,7 +45,7 @@ public sealed class ImeContext : IDisposable
     /// <summary>
     /// 组合文本变化事件
     /// </summary>
-    public event EventHandler<CompositionChangedEventArgs>? CompositionChanged;
+    public event EventHandler<Eclipse.Core.Abstractions.CompositionChangedEventArgs>? CompositionChanged;
     
     /// <summary>
     /// 组合结束事件
@@ -54,7 +55,7 @@ public sealed class ImeContext : IDisposable
     /// <summary>
     /// 结果文本事件（组合完成后触发）
     /// </summary>
-    public event EventHandler<ResultEventArgs>? ResultReceived;
+    public event EventHandler<Eclipse.Core.Abstractions.ResultEventArgs>? ResultReceived;
     
     public ImeContext(IntPtr hwnd)
     {
@@ -146,7 +147,7 @@ public sealed class ImeContext : IDisposable
             _resultText = GetCompositionString(NativeMethods.GCS_RESULTSTR);
         }
         
-        CompositionChanged?.Invoke(this, new CompositionChangedEventArgs(_compositionText, _compositionCursor));
+        CompositionChanged?.Invoke(this, new Eclipse.Core.Abstractions.CompositionChangedEventArgs(_compositionText, _compositionCursor));
     }
     
     /// <summary>
@@ -159,7 +160,7 @@ public sealed class ImeContext : IDisposable
         // 如果有结果文本，发送结果事件
         if (!string.IsNullOrEmpty(_resultText))
         {
-            ResultReceived?.Invoke(this, new ResultEventArgs(_resultText));
+            ResultReceived?.Invoke(this, new Eclipse.Core.Abstractions.ResultEventArgs(_resultText));
         }
         
         CompositionEnded?.Invoke(this, EventArgs.Empty);
@@ -266,33 +267,6 @@ public sealed class ImeContext : IDisposable
         }
     }
     
-    /// <summary>
-    /// 组合文本变化事件参数
-    /// </summary>
-    public class CompositionChangedEventArgs : EventArgs
-    {
-        public string CompositionText { get; }
-        public int CursorPosition { get; }
-        
-        public CompositionChangedEventArgs(string compositionText, int cursorPosition)
-        {
-            CompositionText = compositionText;
-            CursorPosition = cursorPosition;
-        }
-    }
-    
-    /// <summary>
-    /// 结果文本事件参数
-    /// </summary>
-    public class ResultEventArgs : EventArgs
-    {
-        public string Result { get; }
-        
-        public ResultEventArgs(string result)
-        {
-            Result = result;
-        }
-    }
 }
 
 /// <summary>

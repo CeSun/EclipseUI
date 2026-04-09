@@ -77,6 +77,9 @@ public class App : IApp
     
     public void Run(ComponentBase component)
     {
+        // 设置应用宿主（供 ComponentBase.Focus() 使用）
+        ComponentBase.SetAppHost(this);
+
         var rootComponent = BuildComponent(component);
         
         var inputManager = _services.GetRequiredService<InputManager>();

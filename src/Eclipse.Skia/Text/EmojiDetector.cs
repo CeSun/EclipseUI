@@ -33,10 +33,9 @@ public static class EmojiDetector
         (0x2700, 0x27BF),
         // Misc Technical (部分)
         (0x2300, 0x23FF),
-        // Keycaps 基础字符
-        (0x0030, 0x0039), // 0-9
-        (0x0023, 0x0023), // #
-        (0x002A, 0x002A), // *
+        // 注意：Keycaps 基础字符 (0-9, #, *) 不包含在此
+        // 它们只在组合 VS16 (U+FE0F) 或 Keycap (U+20E3) 序列时才表现为 emoji
+        // 单独出现时应按普通文本渲染
     };
     
     /// <summary>

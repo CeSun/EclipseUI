@@ -71,8 +71,8 @@ public abstract class AppBuilderBase : IAppBuilder
     protected virtual void ConfigureDefaultServices(IServiceCollection services)
     {
         // 核心服务
-        services.AddSingleton<Eclipse.Input.InputManager>();
         services.AddSingleton<Eclipse.Input.FocusManager>();
+        services.AddSingleton<Eclipse.Input.InputManager>();
     }
     
     public IAppBuilder ConfigureServices(Action<IServiceCollection> configure)

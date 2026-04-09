@@ -1,16 +1,16 @@
-using Eclipse.Core;
+﻿using Eclipse.Core;
 using Eclipse.Input;
 using Xunit;
 
 namespace Eclipse.Tests;
 
 /// <summary>
-/// InputManager 单元测试
+/// InputManager 鍗曞厓娴嬭瘯
 /// </summary>
 public class InputManagerTests
 {
     /// <summary>
-    /// 测试用的输入元素
+    /// 娴嬭瘯鐢ㄧ殑杈撳叆鍏冪礌
     /// </summary>
     private class TestInputElement : ComponentBase
     {
@@ -39,13 +39,13 @@ public class InputManagerTests
         }
     }
     
-    // === 指针事件测试 ===
+    // === 鎸囬拡浜嬩欢娴嬭瘯 ===
     
     [Fact]
     public void ProcessPointerPressed_ShouldRaisePointerPressedEvent()
     {
         // Arrange
-        var inputManager = new InputManager();
+        var inputManager = new InputManager(new FocusManager());
         var element = new TestInputElement { IsHitTestVisible = true };
         inputManager.RootElement = element;
         
@@ -64,7 +64,7 @@ public class InputManagerTests
     public void ProcessPointerMoved_ShouldRaisePointerMovedEvent()
     {
         // Arrange
-        var inputManager = new InputManager();
+        var inputManager = new InputManager(new FocusManager());
         var element = new TestInputElement { IsHitTestVisible = true };
         inputManager.RootElement = element;
         
@@ -82,7 +82,7 @@ public class InputManagerTests
     public void ProcessPointerReleased_ShouldRaisePointerReleasedEvent()
     {
         // Arrange
-        var inputManager = new InputManager();
+        var inputManager = new InputManager(new FocusManager());
         var element = new TestInputElement { IsHitTestVisible = true };
         inputManager.RootElement = element;
         
@@ -90,10 +90,10 @@ public class InputManagerTests
         var pressPosition = new Point(50, 50);
         var properties = new PointerPointProperties { IsLeftButtonPressed = true };
         
-        // 先按下
+        // 鍏堟寜涓?
         inputManager.ProcessPointerPressed(pointer, pressPosition, properties);
         
-        // Act - 释放
+        // Act - 閲婃斁
         inputManager.ProcessPointerReleased(pointer, pressPosition, PointerButtons.Left);
         
         // Assert
@@ -104,7 +104,7 @@ public class InputManagerTests
     public void ProcessPointerPressed_ShouldRaiseTapped_WhenQuickRelease()
     {
         // Arrange
-        var inputManager = new InputManager();
+        var inputManager = new InputManager(new FocusManager());
         var element = new TestInputElement { IsHitTestVisible = true };
         inputManager.RootElement = element;
         
@@ -112,11 +112,11 @@ public class InputManagerTests
         var position = new Point(50, 50);
         var properties = new PointerPointProperties { IsLeftButtonPressed = true };
         
-        // Act - 按下并快速释放
+        // Act - 鎸変笅骞跺揩閫熼噴鏀?
         inputManager.ProcessPointerPressed(pointer, position, properties);
         inputManager.ProcessPointerReleased(pointer, position, PointerButtons.Left);
         
-        // Assert - Tapped 应该触发
+        // Assert - Tapped 搴旇瑙﹀彂
         Assert.Contains("Tapped:(50.0, 50.0)", element.EventLog);
     }
     
@@ -124,7 +124,7 @@ public class InputManagerTests
     public void ProcessPointerWheel_ShouldRaisePointerWheelEvent()
     {
         // Arrange
-        var inputManager = new InputManager();
+        var inputManager = new InputManager(new FocusManager());
         var element = new TestInputElement { IsHitTestVisible = true };
         inputManager.RootElement = element;
         
@@ -142,13 +142,13 @@ public class InputManagerTests
         Assert.True(wheelEventRaised);
     }
     
-    // === Hit Testing 测试 ===
+    // === Hit Testing 娴嬭瘯 ===
     
     [Fact]
     public void HitTest_ShouldFindElementAtPosition()
     {
         // Arrange
-        var inputManager = new InputManager();
+        var inputManager = new InputManager(new FocusManager());
         var parent = new TestInputElement { IsHitTestVisible = true };
         parent.SetBounds(new Rect(0, 0, 200, 200));
         
@@ -159,12 +159,12 @@ public class InputManagerTests
         inputManager.RootElement = parent;
         
         var pointer = Pointer.GetOrCreate(0, PointerType.Mouse);
-        var position = new Point(75, 75); // 在 child 内
+        var position = new Point(75, 75); // 鍦?child 鍐?
         
         // Act
         inputManager.ProcessPointerPressed(pointer, position, new PointerPointProperties { IsLeftButtonPressed = true });
         
-        // Assert - child 应该收到事件
+        // Assert - child 搴旇鏀跺埌浜嬩欢
         Assert.Contains("PointerPressed:(75.0, 75.0)", child.EventLog);
         Assert.DoesNotContain("PointerPressed", parent.EventLog);
     }
@@ -173,7 +173,7 @@ public class InputManagerTests
     public void HitTest_ShouldReturnNull_WhenElementNotVisible()
     {
         // Arrange
-        var inputManager = new InputManager();
+        var inputManager = new InputManager(new FocusManager());
         var element = new TestInputElement();
         element.IsHitTestVisible = false;
         element.SetBounds(new Rect(0, 0, 100, 100));
@@ -186,7 +186,7 @@ public class InputManagerTests
         // Act
         inputManager.ProcessPointerPressed(pointer, position, new PointerPointProperties { IsLeftButtonPressed = true });
         
-        // Assert - 没有事件触发
+        // Assert - 娌℃湁浜嬩欢瑙﹀彂
         Assert.Empty(element.EventLog);
     }
     
@@ -194,29 +194,29 @@ public class InputManagerTests
     public void HitTest_ShouldReturnNull_WhenPointOutsideBounds()
     {
         // Arrange
-        var inputManager = new InputManager();
+        var inputManager = new InputManager(new FocusManager());
         var element = new TestInputElement { IsHitTestVisible = true };
         element.SetBounds(new Rect(0, 0, 100, 100));
         
         inputManager.RootElement = element;
         
         var pointer = Pointer.GetOrCreate(0, PointerType.Mouse);
-        var position = new Point(200, 200); // 在 bounds 外
+        var position = new Point(200, 200); // 鍦?bounds 澶?
         
         // Act
         inputManager.ProcessPointerPressed(pointer, position, new PointerPointProperties { IsLeftButtonPressed = true });
         
-        // Assert - 没有事件触发
+        // Assert - 娌℃湁浜嬩欢瑙﹀彂
         Assert.Empty(element.EventLog);
     }
     
-    // === 指针捕获测试 ===
+    // === 鎸囬拡鎹曡幏娴嬭瘯 ===
     
     [Fact]
     public void PointerCapture_ShouldSendAllEventsToCapturedElement()
     {
         // Arrange
-        var inputManager = new InputManager();
+        var inputManager = new InputManager(new FocusManager());
         var element = new TestInputElement { IsHitTestVisible = true };
         element.SetBounds(new Rect(0, 0, 100, 100));
         
@@ -225,23 +225,23 @@ public class InputManagerTests
         var pointer = Pointer.GetOrCreate(0, PointerType.Mouse);
         var position = new Point(50, 50);
         
-        // Act - 捕获指针
+        // Act - 鎹曡幏鎸囬拡
         element.CapturePointer(pointer);
         
-        // 移动到 bounds 外
+        // 绉诲姩鍒?bounds 澶?
         inputManager.ProcessPointerMoved(pointer, new Point(200, 200));
         
-        // Assert - 事件仍然发送到捕获的元素
+        // Assert - 浜嬩欢浠嶇劧鍙戦€佸埌鎹曡幏鐨勫厓绱?
         Assert.Contains("PointerMoved:(200.0, 200.0)", element.EventLog);
     }
     
-    // === 悬停状态测试 ===
+    // === 鎮仠鐘舵€佹祴璇?===
     
     [Fact]
     public void ProcessPointerMoved_ShouldRaisePointerEntered_WhenEnteringElement()
     {
         // Arrange
-        var inputManager = new InputManager();
+        var inputManager = new InputManager(new FocusManager());
         var element = new TestInputElement { IsHitTestVisible = true };
         element.SetBounds(new Rect(0, 0, 100, 100));
         
@@ -249,9 +249,9 @@ public class InputManagerTests
         
         var pointer = Pointer.GetOrCreate(0, PointerType.Mouse);
         
-        // Act - 从外部移动到元素内
-        inputManager.ProcessPointerMoved(pointer, new Point(-10, -10)); // 外部
-        inputManager.ProcessPointerMoved(pointer, new Point(50, 50));   // 进入
+        // Act - 浠庡閮ㄧЩ鍔ㄥ埌鍏冪礌鍐?
+        inputManager.ProcessPointerMoved(pointer, new Point(-10, -10)); // 澶栭儴
+        inputManager.ProcessPointerMoved(pointer, new Point(50, 50));   // 杩涘叆
         
         // Assert
         Assert.Contains("PointerEntered", element.EventLog);
@@ -261,7 +261,7 @@ public class InputManagerTests
     public void ProcessPointerMoved_ShouldRaisePointerExited_WhenLeavingElement()
     {
         // Arrange
-        var inputManager = new InputManager();
+        var inputManager = new InputManager(new FocusManager());
         var element = new TestInputElement { IsHitTestVisible = true };
         element.SetBounds(new Rect(0, 0, 100, 100));
         
@@ -269,22 +269,22 @@ public class InputManagerTests
         
         var pointer = Pointer.GetOrCreate(0, PointerType.Mouse);
         
-        // Act - 先进入再离开
-        inputManager.ProcessPointerMoved(pointer, new Point(50, 50));   // 进入
-        inputManager.ProcessPointerMoved(pointer, new Point(200, 200)); // 离开
+        // Act - 鍏堣繘鍏ュ啀绂诲紑
+        inputManager.ProcessPointerMoved(pointer, new Point(50, 50));   // 杩涘叆
+        inputManager.ProcessPointerMoved(pointer, new Point(200, 200)); // 绂诲紑
         
         // Assert
         Assert.Contains("PointerEntered", element.EventLog);
         Assert.Contains("PointerExited", element.EventLog);
     }
     
-    // === 键盘事件测试 ===
+    // === 閿洏浜嬩欢娴嬭瘯 ===
     
     [Fact]
     public void ProcessKeyDown_ShouldRaiseKeyDownEvent()
     {
         // Arrange
-        var inputManager = new InputManager();
+        var inputManager = new InputManager(new FocusManager());
         var element = new TestInputElement { IsFocusable = true };
         inputManager.RootElement = element;
         inputManager.FocusManager.SetFocus(element);
@@ -300,7 +300,7 @@ public class InputManagerTests
     public void ProcessKeyUp_ShouldRaiseKeyUpEvent()
     {
         // Arrange
-        var inputManager = new InputManager();
+        var inputManager = new InputManager(new FocusManager());
         var element = new TestInputElement { IsFocusable = true };
         inputManager.RootElement = element;
         inputManager.FocusManager.SetFocus(element);
@@ -316,7 +316,7 @@ public class InputManagerTests
     public void ProcessTextInput_ShouldRaiseTextInputEvent()
     {
         // Arrange
-        var inputManager = new InputManager();
+        var inputManager = new InputManager(new FocusManager());
         var element = new TestInputElement { IsFocusable = true };
         inputManager.RootElement = element;
         inputManager.FocusManager.SetFocus(element);
@@ -332,25 +332,25 @@ public class InputManagerTests
     public void ProcessKeyDown_ShouldUseRootElement_WhenNoFocusedElement()
     {
         // Arrange
-        var inputManager = new InputManager();
+        var inputManager = new InputManager(new FocusManager());
         var element = new TestInputElement { IsFocusable = true };
         inputManager.RootElement = element;
-        // 不设置焦点
+        // 涓嶈缃劍鐐?
         
         // Act
         inputManager.ProcessKeyDown(Key.Space, 32);
         
-        // Assert - 事件应该发送到 RootElement
+        // Assert - 浜嬩欢搴旇鍙戦€佸埌 RootElement
         Assert.Contains("KeyDown:Space", element.EventLog);
     }
     
-    // === 键盘修饰键测试 ===
+    // === 閿洏淇グ閿祴璇?===
     
     [Fact]
     public void ProcessKeyDown_ShouldIncludeModifiers()
     {
         // Arrange
-        var inputManager = new InputManager();
+        var inputManager = new InputManager(new FocusManager());
         var element = new TestInputElement { IsFocusable = true };
         inputManager.RootElement = element;
         inputManager.FocusManager.SetFocus(element);
@@ -367,13 +367,13 @@ public class InputManagerTests
         Assert.True(receivedArgs.HasModifier(KeyModifiers.Control));
     }
     
-    // === Touch 指针测试 ===
+    // === Touch 鎸囬拡娴嬭瘯 ===
     
     [Fact]
     public void TouchPointer_ShouldBeRemovedAfterRelease()
     {
         // Arrange
-        var inputManager = new InputManager();
+        var inputManager = new InputManager(new FocusManager());
         var element = new TestInputElement { IsHitTestVisible = true };
         inputManager.RootElement = element;
         
@@ -385,17 +385,17 @@ public class InputManagerTests
         inputManager.ProcessPointerPressed(pointer, position, properties);
         inputManager.ProcessPointerReleased(pointer, position, PointerButtons.Left);
         
-        // Assert - 触摸指针应该被移除
+        // Assert - 瑙︽懜鎸囬拡搴旇琚Щ闄?
         Assert.False(pointer.IsCaptured);
     }
     
-    // === 事件传播测试 ===
+    // === 浜嬩欢浼犳挱娴嬭瘯 ===
     
     [Fact]
     public void PreviewPointerPressed_ShouldRaiseBeforePointerPressed()
     {
         // Arrange
-        var inputManager = new InputManager();
+        var inputManager = new InputManager(new FocusManager());
         var element = new TestInputElement { IsHitTestVisible = true };
         inputManager.RootElement = element;
         
@@ -409,7 +409,7 @@ public class InputManagerTests
         // Act
         inputManager.ProcessPointerPressed(pointer, position, new PointerPointProperties { IsLeftButtonPressed = true });
         
-        // Assert - Preview 应该先触发
+        // Assert - Preview 搴旇鍏堣Е鍙?
         Assert.Equal(new[] { "Preview", "Bubble" }, eventOrder);
     }
     
@@ -417,7 +417,7 @@ public class InputManagerTests
     public void PreviewEvent_ShouldStopPropagation_WhenHandled()
     {
         // Arrange
-        var inputManager = new InputManager();
+        var inputManager = new InputManager(new FocusManager());
         var element = new TestInputElement { IsHitTestVisible = true };
         inputManager.RootElement = element;
         
@@ -435,7 +435,7 @@ public class InputManagerTests
         // Act
         inputManager.ProcessPointerPressed(pointer, position, new PointerPointProperties { IsLeftButtonPressed = true });
         
-        // Assert - Bubble 应该被阻止
+        // Assert - Bubble 搴旇琚樆姝?
         Assert.Equal(new[] { "Preview" }, eventOrder);
     }
 }
