@@ -25,6 +25,8 @@ public class WindowImpl : IDisposable, IPlatformWindow
     private float _scaling = 1.0f;
     private bool _isDisposed;
     private uint _cursorTimerId; // 光标闪烁定时器 ID
+    private bool _isRunning; // 主循环运行状态
+    private int _targetFPS = 60; // 目标帧率
 
     // 输入系统
     private InputManager? _inputManager;
@@ -282,10 +284,53 @@ public class WindowImpl : IDisposable, IPlatformWindow
     public void ShowDialog()
     {
         Show();
-        RunMessageLoop();
+        RunGameLoop();
     }
 
-    private void RunMessageLoop()
+    private void RunGameLoop()
+    {
+        _isRunning = true;
+        var lastTime = DateTime.Now;
+        var targetFrameTime = TimeSpan.FromMilliseconds(1000.0 / _targetFPS);
+
+        while (_isRunning)
+        {
+            // 处理所有待处理消息（非阻塞）
+            while (NativeMethods.PeekMessage(out var msg, IntPtr.Zero, 0, 0, 1)) // PM_REMOVE
+            {
+                if (msg.message == NativeMethods.WM_QUIT)
+                {
+                    _isRunning = false;
+                    break;
+                }
+
+                NativeMethods.TranslateMessage(ref msg);
+                NativeMethods.DispatchMessage(ref msg);
+            }
+
+            if (!_isRunning) break;
+
+            // 主循环更新
+            var now = DateTime.Now;
+            var deltaTime = (now - lastTime).TotalSeconds;
+            lastTime = now;
+
+            // 更新所有控件
+            _content?.Update(deltaTime);
+
+            // 触发重绘
+            Invalidate();
+
+            // 帧率控制
+            var elapsed = DateTime.Now - now;
+            if (elapsed < targetFrameTime)
+            {
+                Thread.Sleep(targetFrameTime - elapsed);
+            }
+        }
+    }
+
+    private void RunMessageLoop()  // 保留传统模式（可选）
     {
         while (NativeMethods.GetMessage(out var msg, IntPtr.Zero, 0, 0))
         {

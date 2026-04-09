@@ -28,6 +28,11 @@ namespace Eclipse.Core.Abstractions
         void RemoveChild(IComponent child);
         Size Measure(Size availableSize, IDrawingContext context);
         void Arrange(Rect finalBounds, IDrawingContext context);
+        
+        /// <summary>
+        /// 每帧调用，用于动画更新
+        /// </summary>
+        void Update(double deltaTime);
     }
 
     /// <summary>

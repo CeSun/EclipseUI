@@ -50,6 +50,9 @@ internal static partial class NativeMethods
     public static extern bool GetMessage(out MSG lpMsg, IntPtr hWnd, uint wMsgFilterMin, uint wMsgFilterMax);
 
     [DllImport("user32.dll")]
+    public static extern bool PeekMessage(out MSG lpMsg, IntPtr hWnd, uint wMsgFilterMin, uint wMsgFilterMax, uint wRemoveMsg);
+
+    [DllImport("user32.dll")]
     public static extern bool TranslateMessage(ref MSG lpMsg);
 
     [DllImport("user32.dll")]
@@ -258,6 +261,7 @@ internal static partial class NativeMethods
 
     // Window Messages
     public const uint WM_DESTROY = 0x0002;
+    public const uint WM_QUIT = 0x0012;
     public const uint WM_PAINT = 0x000F;
     public const uint WM_CLOSE = 0x0010;
     public const uint WM_SIZE = 0x0005;
@@ -279,6 +283,10 @@ internal static partial class NativeMethods
     public const uint RDW_INVALIDATE = 0x0001;
     public const uint RDW_ERASE = 0x0004;
     public const uint RDW_ALLCHILDREN = 0x0080;
+
+    // PeekMessage flags
+    public const uint PM_NOREMOVE = 0x0000;
+    public const uint PM_REMOVE = 0x0001;
 
     // Standard Cursors
     public static readonly IntPtr IDC_ARROW = new IntPtr(32512);

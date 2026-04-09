@@ -133,6 +133,17 @@ namespace Eclipse.Core
         public virtual void OnUnmounted() { _isMounted = false; }
 
         /// <summary>
+        /// 每帧调用，用于动画和状态更新
+        /// </summary>
+        public virtual void Update(double deltaTime)
+        {
+            foreach (var child in Children)
+            {
+                child.Update(deltaTime);
+            }
+        }
+
+        /// <summary>
         /// 添加子组件
         /// </summary>
         public void AddChild(IComponent child) { if (child == null) return; _children.Add(child); child.Parent = this; }
