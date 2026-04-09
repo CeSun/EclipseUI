@@ -165,20 +165,19 @@ public class HarfBuzzTextRenderer
     {
         System.Diagnostics.Debug.WriteLine($"[TextInput] DrawSegment text='{segment.Text}', typeface={segment.Typeface?.FamilyName ?? "null"}");
         
-        // 使用 SKPaint 替代 SKFont - 更好地支持 CJK
+        // 使用 SKPaint 旧 API 渲染 - CJK 支持更稳定
+        #pragma warning disable CS0618
         using var segmentPaint = new SKPaint
         {
             Typeface = segment.Typeface,
             TextSize = segment.IsEmoji ? baseFont.Size * 1.1f : baseFont.Size,
             IsAntialias = true,
-            SubpixelText = baseFont.Subpixel
+            SubpixelText = true,
+            Color = paint.Color
         };
         
-        // 复制颜色
-        segmentPaint.Color = paint.Color;
-        
-        // 简单渲染
         canvas.DrawText(segment.Text, x, y, segmentPaint);
+        #pragma warning restore CS0618
     }
     
     /// <summary>
