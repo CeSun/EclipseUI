@@ -35,6 +35,9 @@ public class AppBuilder : AppBuilderBase
         
         // 后端配置
         services.AddSingleton(new BackendConfig { Backend = _backend });
+        
+        // Windows 平台服务
+        services.AddSingleton<IClipboard, WindowsClipboard>();
     }
     
     public override IApp Build()

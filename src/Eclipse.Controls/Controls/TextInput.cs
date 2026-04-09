@@ -1,7 +1,9 @@
+using Eclipse.Core;
 using Eclipse.Core.Abstractions;
 using Eclipse.Input;
 using Eclipse.Rendering;
 using System;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Eclipse.Controls;
 
@@ -10,6 +12,25 @@ namespace Eclipse.Controls;
 /// </summary>
 public class TextInput : InteractiveControl
 {
+    private IClipboard? _clipboard;
+    
+    /// <summary>
+    /// 剪贴板服务（通过依赖注入获取）
+    /// </summary>
+    protected IClipboard Clipboard => _clipboard ??= GetClipboard();
+    
+    private IClipboard GetClipboard()
+    {
+        // 向上遍历组件树找到根组件，获取服务提供者
+        IComponent? current = this;
+        while (current != null)
+        {
+            if (current is IAppHost appHost)
+                return appHost.Services.GetRequiredService<IClipboard>();
+            current = current.Parent;
+        }
+        throw new InvalidOperationException("IClipboard service not registered: no IAppHost found in component tree");
+    }
     private string? _text;
     private int _cursorPosition = 0;
     private bool _isCursorVisible = true;
@@ -434,7 +455,7 @@ public class TextInput : InteractiveControl
                 // Ctrl+V 精贴
                 if (hasControl)
                 {
-                    var clipboardText = ClipboardService.GetText();
+                    var clipboardText = Clipboard.GetText();
                     if (!string.IsNullOrEmpty(clipboardText))
                     {
                         if (HasSelection)
@@ -767,7 +788,7 @@ public class TextInput : InteractiveControl
             return;
         
         var selectedText = _text.Substring(SelectionStart, SelectionLength);
-        ClipboardService.SetText(selectedText);
+        Clipboard.SetText(selectedText);
     }
     
     /// <summary>

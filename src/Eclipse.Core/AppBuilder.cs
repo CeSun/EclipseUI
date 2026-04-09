@@ -26,13 +26,8 @@ public interface IAppBuilder
 /// <summary>
 /// 应用接口
 /// </summary>
-public interface IApp
+public interface IApp : IAppHost
 {
-    /// <summary>
-    /// 服务提供者
-    /// </summary>
-    IServiceProvider Services { get; }
-    
     /// <summary>
     /// 运行应用
     /// </summary>
@@ -42,6 +37,17 @@ public interface IApp
     /// 运行指定组件
     /// </summary>
     void Run(ComponentBase component);
+}
+
+/// <summary>
+/// 应用宿主接口 - 提供服务访问
+/// </summary>
+public interface IAppHost
+{
+    /// <summary>
+    /// 服务提供者
+    /// </summary>
+    IServiceProvider Services { get; }
 }
 
 /// <summary>
