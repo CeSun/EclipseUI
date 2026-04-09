@@ -322,34 +322,34 @@ internal static partial class NativeMethods
     [DllImport("imm32.dll")]
     public static extern bool ImmDestroyContext(IntPtr hIMC);
     
-    [DllImport("imm32.dll")]
+    [DllImport("imm32.dll", CharSet = CharSet.Unicode)]
     public static extern IntPtr ImmAssociateContext(IntPtr hWnd, IntPtr hIMC);
     
-    [DllImport("imm32.dll")]
+    [DllImport("imm32.dll", CharSet = CharSet.Unicode)]
     public static extern int ImmGetCompositionString(IntPtr hIMC, uint dwIndex, IntPtr lpBuf, uint dwBufLen);
     
-    [DllImport("imm32.dll")]
+    [DllImport("imm32.dll", CharSet = CharSet.Unicode)]
     public static extern int ImmGetCompositionString(IntPtr hIMC, uint dwIndex, [Out] byte[]? lpBuf, int dwBufLen);
     
-    [DllImport("imm32.dll")]
+    [DllImport("imm32.dll", CharSet = CharSet.Unicode)]
     public static extern bool ImmSetCompositionWindow(IntPtr hIMC, ref COMPOSITIONFORM lpCompForm);
     
-    [DllImport("imm32.dll")]
+    [DllImport("imm32.dll", CharSet = CharSet.Unicode)]
     public static extern bool ImmSetCandidateWindow(IntPtr hIMC, ref CANDIDATEFORM lpCandidate);
     
-    [DllImport("imm32.dll")]
+    [DllImport("imm32.dll", CharSet = CharSet.Unicode)]
     public static extern bool ImmGetOpenStatus(IntPtr hIMC);
     
-    [DllImport("imm32.dll")]
+    [DllImport("imm32.dll", CharSet = CharSet.Unicode)]
     public static extern bool ImmSetOpenStatus(IntPtr hIMC, bool fOpen);
     
-    [DllImport("imm32.dll")]
+    [DllImport("imm32.dll", CharSet = CharSet.Unicode)]
     public static extern bool ImmGetConversionStatus(IntPtr hIMC, out int lpfdwConversion, out int lpfdwSentence);
     
-    [DllImport("imm32.dll")]
+    [DllImport("imm32.dll", CharSet = CharSet.Unicode)]
     public static extern bool ImmSetConversionStatus(IntPtr hIMC, int fdwConversion, int fdwSentence);
     
-    [DllImport("imm32.dll")]
+    [DllImport("imm32.dll", CharSet = CharSet.Unicode)]
     public static extern bool ImmNotifyIME(IntPtr hIMC, uint dwAction, uint dwIndex, uint dwValue);
     
     // 结构体

@@ -322,11 +322,10 @@ public class WindowImpl : IDisposable, IPlatformWindow
             if (_inputAdapter != null)
             {
                 _inputAdapter.ProcessMessage(uMsg, wParam, lParam);
-                // 对于 IME 组合消息，需要继续默认处理
-                if (uMsg != NativeMethods.WM_IME_STARTCOMPOSITION &&
-                    uMsg != NativeMethods.WM_IME_COMPOSITION &&
-                    uMsg != NativeMethods.WM_IME_ENDCOMPOSITION &&
-                    uMsg != NativeMethods.WM_IME_SETCONTEXT)
+                // WM_IME_SETCONTEXT 需要 DefWindowProc 让系统绘制组合窗口
+                // WM_IME_COMPOSITION / START / END 由应用自行处理，不能走 DefWindowProc
+                // 否则 DefWindowProc 会从 GCS_RESULTSTR 生成额外的 WM_CHAR，导致中文重复输入
+                if (uMsg != NativeMethods.WM_IME_SETCONTEXT)
                 {
                     return IntPtr.Zero;
                 }

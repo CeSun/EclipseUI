@@ -515,7 +515,7 @@ public class TextInput : InteractiveControl
     /// <summary>
     /// 处理文本输入事件
     /// </summary>
-    private void OnTextInput(object? sender, TextInputEventArgs e)
+    private void OnTextInput(object? sender, TextInputEventArgs     e)
     {
         if (!IsFocused || string.IsNullOrEmpty(e.Text))
             return;
