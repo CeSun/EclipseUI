@@ -74,6 +74,12 @@ internal static partial class NativeMethods
     public static extern bool InvalidateRect(IntPtr hWnd, IntPtr lpRect, bool bErase);
 
     [DllImport("user32.dll")]
+    public static extern uint SetTimer(IntPtr hWnd, uint nIDEvent, uint uElapse, IntPtr lpTimerFunc);
+
+    [DllImport("user32.dll")]
+    public static extern bool KillTimer(IntPtr hWnd, uint nIDEvent);
+
+    [DllImport("user32.dll")]
     public static extern bool RedrawWindow(IntPtr hWnd, ref RECT lprcUpdate, IntPtr hrgnUpdate, uint flags);
 
     [DllImport("user32.dll")]
@@ -259,6 +265,7 @@ internal static partial class NativeMethods
     public const uint WM_SETFOCUS = 0x0007;
     public const uint WM_KILLFOCUS = 0x0008;
     public const uint WM_ERASEBKGND = 0x0014;
+    public const uint WM_TIMER = 0x0113;
     public const uint WM_DPICHANGED = 0x02E0;
 
     // Blend Operations
