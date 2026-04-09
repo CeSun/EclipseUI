@@ -977,8 +977,6 @@ public class TextInput : InteractiveControl
         {
             _isCursorVisible = !_isCursorVisible;
             _lastCursorToggle = now;
-            // 触发重绘以更新光标闪烁状态
-            StateHasChanged();
         }
         
         return _isCursorVisible;
