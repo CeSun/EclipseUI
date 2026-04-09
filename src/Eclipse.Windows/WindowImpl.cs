@@ -24,7 +24,6 @@ public class WindowImpl : IDisposable, IPlatformWindow
     private IComponent? _content;
     private float _scaling = 1.0f;
     private bool _isDisposed;
-    private uint _cursorTimerId; // 光标闪烁定时器 ID
 
     // 输入系统
     private InputManager? _inputManager;
@@ -274,9 +273,6 @@ public class WindowImpl : IDisposable, IPlatformWindow
     {
         NativeMethods.ShowWindow(_hwnd, NativeMethods.SW_SHOWNORMAL);
         NativeMethods.UpdateWindow(_hwnd);
-        
-        // 启动光标闪烁定时器 (500ms 间隔)
-        _cursorTimerId = NativeMethods.SetTimer(_hwnd, 1, 500, IntPtr.Zero);
     }
 
     public void ShowDialog()
@@ -296,12 +292,6 @@ public class WindowImpl : IDisposable, IPlatformWindow
 
     public void Close()
     {
-        // 停止光标闪烁定时器
-        if (_cursorTimerId != 0)
-        {
-            NativeMethods.KillTimer(_hwnd, _cursorTimerId);
-            _cursorTimerId = 0;
-        }
         NativeMethods.DestroyWindow(_hwnd);
     }
 
@@ -350,11 +340,6 @@ public class WindowImpl : IDisposable, IPlatformWindow
 
             case NativeMethods.WM_ERASEBKGND:
                 return new IntPtr(1);
-
-            case NativeMethods.WM_TIMER:
-                // 光标闪烁定时器触发 - 触发重绘让光标更新状态
-                Invalidate();
-                return IntPtr.Zero;
 
             case NativeMethods.WM_SIZE:
                 OnSize(wParam, lParam);
