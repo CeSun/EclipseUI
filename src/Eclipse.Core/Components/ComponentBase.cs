@@ -245,6 +245,24 @@ namespace Eclipse.Core
 
             // 清除脏标记
             ClearDirty();
+
+            // 新构建的子组件不应处于脏状态，否则会导致无限重建循环
+            ClearChildrenDirtyFlags();
+        }
+        
+        /// <summary>
+        /// 递归清除所有子组件的脏标记
+        /// </summary>
+        private void ClearChildrenDirtyFlags()
+        {
+            foreach (var child in Children)
+            {
+                if (child is ComponentBase childComponent)
+                {
+                    childComponent.ClearDirty();
+                    childComponent.ClearChildrenDirtyFlags();
+                }
+            }
         }
 
         /// <summary>
