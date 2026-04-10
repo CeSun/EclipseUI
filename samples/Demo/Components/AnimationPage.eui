@@ -1,0 +1,153 @@
+@using Eclipse.Controls
+@using Eclipse.Core.Animation
+
+<StackPanel Spacing="16" Padding="20">
+    <Label Text="Animation Demo" FontSize="20" FontWeight="Bold" />
+    
+    <Label Text="Scale Animation:" FontSize="14" FontWeight="Bold" />
+    <StackPanel Orientation="Horizontal" Spacing="8">
+        <Button Text="Scale Up" OnClick=@OnScaleUp BackgroundColor="#DC3545" />
+        <Button Text="Scale Down" OnClick=@OnScaleDown BackgroundColor="#DC3545" />
+        <Button Text="Reset" OnClick=@OnScaleReset BackgroundColor="#6C757D" />
+    </StackPanel>
+    <Label Text=@(_scaleText) FontSize="16" Color="#DC3545" />
+    
+    <Label Text="" FontSize="8" />
+    
+    <Label Text="Easing Functions:" FontSize="14" FontWeight="Bold" />
+    <StackPanel Orientation="Horizontal" Spacing="8">
+        <Button Text="Linear" OnClick=@OnEasingLinear BackgroundColor="#6C757D" />
+        <Button Text="EaseOut" OnClick=@OnEasingEaseOut BackgroundColor="#FFC107" TextColor="#333333" />
+        <Button Text="Bounce" OnClick=@OnEasingBounce BackgroundColor="#17A2B8" />
+    </StackPanel>
+    <Label Text=@(_currentEasing) FontSize="12" Color="#666666" />
+    
+    <Label Text="" FontSize="8" />
+    
+    <Label Text="Loop Animation (Pulse):" FontSize="14" FontWeight="Bold" />
+    <StackPanel Orientation="Horizontal" Spacing="8">
+        <Button Text="Start Pulse" OnClick=@OnStartPulse BackgroundColor="#17A2B8" />
+        <Button Text="Stop" OnClick=@OnStopPulse BackgroundColor="#6C757D" />
+    </StackPanel>
+    <Label Text=@(_pulseText) FontSize="16" Color="#17A2B8" />
+    
+    <Label Text="" FontSize="8" />
+    
+    <Label Text="Animation Status" FontSize="12" FontWeight="Bold" />
+    <Label Text=@(_statusText) FontSize="11" Color="#666666" />
+</StackPanel>
+
+@code {
+    private string _scaleText = "Scale: 1.0x";
+    private double _scaleValue = 1.0;
+    private DoubleAnimation? _scaleAnim;
+    
+    private string _currentEasing = "Easing: None";
+    private DoubleAnimation? _easingAnim;
+    
+    private string _pulseText = "Pulse: Ready";
+    private DoubleAnimation? _pulseAnim;
+    private bool _isPulsing;
+    
+    private string _statusText = "Active: 0";
+    private int _activeAnimations;
+    
+    public override void Update(double deltaTime)
+    {
+        base.Update(deltaTime);
+        _activeAnimations = Animations.Count;
+        _statusText = $"Active: {_activeAnimations}";
+    }
+    
+    private void OnScaleUp(object? sender, EventArgs e)
+    {
+        _scaleAnim?.Stop();
+        _scaleAnim = new DoubleAnimation(_scaleValue, 2.0, 0.3);
+        _scaleAnim.Easing = new EasingFunction(EasingType.EaseOutBack);
+        _scaleAnim.ValueChanged += (s, v) => 
+        {
+            _scaleValue = v;
+            _scaleText = $"Scale: {_scaleValue:F1}x";
+            StateHasChanged();
+        };
+        Animations.Add(_scaleAnim);
+        _scaleAnim.Play();
+    }
+    
+    private void OnScaleDown(object? sender, EventArgs e)
+    {
+        _scaleAnim?.Stop();
+        _scaleAnim = new DoubleAnimation(_scaleValue, 0.5, 0.3);
+        _scaleAnim.Easing = new EasingFunction(EasingType.EaseOutBack);
+        _scaleAnim.ValueChanged += (s, v) => 
+        {
+            _scaleValue = v;
+            _scaleText = $"Scale: {_scaleValue:F1}x";
+            StateHasChanged();
+        };
+        Animations.Add(_scaleAnim);
+        _scaleAnim.Play();
+    }
+    
+    private void OnScaleReset(object? sender, EventArgs e)
+    {
+        _scaleAnim?.Stop();
+        _scaleValue = 1.0;
+        _scaleText = "Scale: 1.0x";
+        StateHasChanged();
+    }
+    
+    private void PlayEasingDemo(EasingType easingType)
+    {
+        _easingAnim?.Stop();
+        _currentEasing = $"Easing: {easingType} (running...)";
+        
+        _easingAnim = new DoubleAnimation(0, 1.0, 1.0);
+        _easingAnim.Easing = new EasingFunction(easingType);
+        _easingAnim.ValueChanged += (s, v) => 
+        {
+            _currentEasing = $"Easing: {easingType} ({v:P0})";
+            StateHasChanged();
+        };
+        _easingAnim.Completed += (s, e) => 
+        {
+            _currentEasing = $"Easing: {easingType} (done)";
+            StateHasChanged();
+        };
+        
+        Animations.Add(_easingAnim);
+        _easingAnim.Play();
+    }
+    
+    private void OnEasingLinear(object? sender, EventArgs e) => PlayEasingDemo(EasingType.Linear);
+    private void OnEasingEaseOut(object? sender, EventArgs e) => PlayEasingDemo(EasingType.EaseOutQuad);
+    private void OnEasingBounce(object? sender, EventArgs e) => PlayEasingDemo(EasingType.EaseOutBounce);
+    
+    private void OnStartPulse(object? sender, EventArgs e)
+    {
+        if (_isPulsing) return;
+        _isPulsing = true;
+        _pulseText = "Pulse: Running";
+        
+        _pulseAnim = new DoubleAnimation(0, 1.0, 0.5);
+        _pulseAnim.Easing = new EasingFunction(EasingType.EaseInOutQuad);
+        _pulseAnim.IsPingPong = true;
+        _pulseAnim.IsLooping = true;
+        _pulseAnim.ValueChanged += (s, v) => 
+        {
+            _pulseText = $"Pulse: {v:P0}";
+            StateHasChanged();
+        };
+        
+        Animations.Add(_pulseAnim);
+        _pulseAnim.Play();
+    }
+    
+    private void OnStopPulse(object? sender, EventArgs e)
+    {
+        _isPulsing = false;
+        _pulseAnim?.Stop();
+        _pulseText = "Pulse: Stopped";
+        StateHasChanged();
+    }
+}

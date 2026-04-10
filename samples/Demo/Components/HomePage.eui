@@ -9,6 +9,7 @@
         <TabButton Text="布局" IsActive=@(_currentTab == 2) OnClick=@((s, e) => SwitchTab(2)) />
         <TabButton Text="输入" IsActive=@(_currentTab == 3) OnClick=@((s, e) => SwitchTab(3)) />
         <TabButton Text="Dock布局" IsActive=@(_currentTab == 4) OnClick=@((s, e) => SwitchTab(4)) />
+        <TabButton Text="动画" IsActive=@(_currentTab == 5) OnClick=@((s, e) => SwitchTab(5)) />
     </StackPanel>
 
     <Footer DockPanel.Dock="Bottom" Text="© 2026 EclipseUI Demo - 声明式 UI 框架" />
@@ -33,6 +34,10 @@
         @if (_currentTab == 4)
         {
             <DockPage />
+        }
+        @if (_currentTab == 5)
+        {
+            <AnimationPage />
         }
     </ScrollView>
 </DockPanel>
