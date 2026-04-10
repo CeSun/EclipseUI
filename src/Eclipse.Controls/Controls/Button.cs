@@ -56,28 +56,28 @@ public class Button : InteractiveControl
     {
         if (!IsEnabled) return;
         _isHovered = true;
-        StateHasChanged();
+        InvalidateVisual();
     }
     
     private void OnPointerExited(object? sender, PointerEventArgs e)
     {
         _isHovered = false;
         _isPressed = false;
-        StateHasChanged();
+        InvalidateVisual();
     }
     
     private void OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
         if (!IsEnabled) return;
         _isPressed = true;
-        StateHasChanged();
+        InvalidateVisual();
     }
     
     private void OnPointerReleased(object? sender, PointerReleasedEventArgs e)
     {
         if (!IsEnabled) return;
         _isPressed = false;
-        StateHasChanged();
+        InvalidateVisual();
     }
     
     private Color GetCurrentBackgroundColor()

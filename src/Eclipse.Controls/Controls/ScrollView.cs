@@ -198,26 +198,9 @@ public class ScrollView : ComponentBase
     }
     
     /// <summary>
-    /// ScrollView 不拥有子组件结构，所以 Rebuild() 不应该清空子组件
-    /// 只清除脏标记，保留子组件
+    /// ScrollView 不需要结构重建，子组件由父组件创建
     /// </summary>
-    public override void Rebuild()
-    {
-        if (!IsDirty)
-            return;
-        
-        // 不调用 ClearChildren()！子组件由父组件的 Build() 创建
-        ClearDirty();
-        
-        // 递归清除子组件的脏标记
-        foreach (var child in Children)
-        {
-            if (child is ComponentBase childComponent)
-            {
-                childComponent.ClearDirty();
-            }
-        }
-    }
+    protected override bool ShouldRebuild() => false;
     
     #endregion
     
@@ -596,7 +579,7 @@ public class ScrollView : ComponentBase
         _lastScrollTime = DateTime.Now;
         _scrollBarOpacity = 1.0;
         ScrollChanged?.Invoke(this, new ScrollChangedEventArgs(_scrollX, _scrollY, _maxScrollX, _maxScrollY));
-        StateHasChanged();
+        InvalidateVisual();
     }
     
     #endregion
@@ -791,7 +774,7 @@ public class ScrollView : ComponentBase
         {
             _verticalScrollBarHovered = vHovered;
             _horizontalScrollBarHovered = hHovered;
-            StateHasChanged();
+            InvalidateVisual();
         }
     }
     
@@ -809,7 +792,7 @@ public class ScrollView : ComponentBase
             }
 
             e.Handled = true;
-            StateHasChanged();
+            InvalidateVisual();
         }
     }
     
@@ -817,7 +800,7 @@ public class ScrollView : ComponentBase
     {
         // 鼠标进入时显示滚动条
         _scrollBarOpacity = 1.0;
-        StateHasChanged();
+        InvalidateVisual();
     }
     
     private void OnPointerExitedHandler(object? sender, PointerEventArgs e)
@@ -827,7 +810,7 @@ public class ScrollView : ComponentBase
         
         if (!_verticalThumbDragging && !_horizontalThumbDragging)
         {
-            StateHasChanged();
+            InvalidateVisual();
         }
     }
     

@@ -21,7 +21,8 @@ namespace Eclipse.Core
         private bool _isInitialized;
         private bool _isMounted;
         private bool _isDisposed;
-        private bool _isDirty = true; // 脏标记，初始为 true 以确保首次渲染
+        private bool _needsRebuild = true; // 是否需要结构重建（初始为 true 确保首次渲染）
+        private bool _needsRender = true;  // 是否需要重绘
         private Rect _bounds = new Rect(0, 0, 0, 0);
         protected Size _desiredSize = new Size(100, 40); // 默认期望尺寸
         
@@ -52,7 +53,7 @@ namespace Eclipse.Core
         public IReadOnlyList<IComponent> Children => _children;
 
         /// <summary>
-        /// 状态变化事件
+        /// 状态变化事件（仅用于通知 Window 触发重绘）
         /// </summary>
         public event EventHandler? StateChanged;
 
@@ -69,73 +70,103 @@ namespace Eclipse.Core
         /// <summary>
         /// 是否需要重建（脏标记）
         /// </summary>
-        public bool IsDirty => _isDirty;
+        public bool NeedsRebuild => _needsRebuild;
 
         /// <summary>
-        /// 标记组件为脏，需要重建
+        /// 是否需要重绘
         /// </summary>
-        public void MarkDirty()
+        public bool NeedsRender => _needsRender;
+
+        /// <summary>
+        /// 标记组件需要重建（显式调用，用于组件自己知道结构需要改变时）
+        /// </summary>
+        public void MarkNeedsRebuild()
         {
-            _isDirty = true;
+            _needsRebuild = true;
+            _needsRender = true;
             StateChanged?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>
-        /// 清除脏标记（重建完成后调用）
+        /// 清除重建和重绘标记
         /// </summary>
-        public void ClearDirty()
+        public void ClearNeedsRebuild()
         {
-            _isDirty = false;
+            _needsRebuild = false;
+        }
+
+        public void ClearNeedsRender()
+        {
+            _needsRender = false;
         }
 
         /// <summary>
-        /// 触发状态改变并标记为脏
+        /// 触发状态改变并标记需要重绘（仅视觉更新，不触发结构重建）
+        /// </summary>
+        protected void InvalidateVisual()
+        {
+            _needsRender = true;
+            StateChanged?.Invoke(this, EventArgs.Empty);
+
+            if (_parent is ComponentBase parentComponent)
+            {
+                parentComponent.OnChildVisualInvalidated(this);
+            }
+        }
+
+        /// <summary>
+        /// 触发状态改变：既需要重建结构，也需要重绘
         /// </summary>
         protected void StateHasChanged()
         {
-            _isDirty = true;
+            _needsRebuild = true;
+            _needsRender = true;
             StateChanged?.Invoke(this, EventArgs.Empty);
 
-            // 事件冒泡到父元素
             if (_parent is ComponentBase parentComponent)
             {
-                parentComponent.OnChildStateChanged(this);
+                parentComponent.OnChildVisualInvalidated(this);
             }
         }
 
         /// <summary>
-        /// 子元素状态变化时的回调
+        /// 子元素视觉失效时的回调（冒泡通知，让 Window 能收到重绘信号）
         /// </summary>
-        protected virtual void OnChildStateChanged(IComponent child)
+        protected virtual void OnChildVisualInvalidated(IComponent child)
         {
-            // 触发自己的 StateChanged 事件（让 WindowImpl 能收到重绘信号）
             StateChanged?.Invoke(this, EventArgs.Empty);
 
-            // 继续冒泡到父元素（但不设置 _isDirty，避免整棵树重建）
             if (_parent is ComponentBase parentComponent)
             {
-                parentComponent.OnChildStateChanged(this);
+                parentComponent.OnChildVisualInvalidated(this);
             }
         }
 
         /// <summary>
-        /// 递归重建所有脏组件（只重建自身，不影响兄弟节点）
+        /// 组件是否需要重建结构。默认返回 true，子类可覆盖。
+        /// 例如：ScrollView 覆盖返回 false，因为它的子组件由父组件创建，重建会破坏结构。
+        /// </summary>
+        protected virtual bool ShouldRebuild()
+        {
+            return _needsRebuild;
+        }
+
+        /// <summary>
+        /// 递归重建所有需要重建的组件
         /// </summary>
         public void RebuildDirtySubtree()
         {
-            if (_isDirty)
+            if (ShouldRebuild())
             {
                 Rebuild();
+                return;
             }
-            else
+
+            foreach (var child in Children)
             {
-                // 自身不脏，检查子组件
-                foreach (var child in Children)
+                if (child is ComponentBase childComponent)
                 {
-                    if (child is ComponentBase childComponent)
-                    {
-                        childComponent.RebuildDirtySubtree();
-                    }
+                    childComponent.RebuildDirtySubtree();
                 }
             }
         }
@@ -232,35 +263,33 @@ namespace Eclipse.Core
         }
 
         /// <summary>
-        /// 重建组件树 - 仅在脏标记为 true 时才执行
+        /// 重建组件树
         /// </summary>
         public virtual void Rebuild()
         {
-            if (!_isDirty)
-                return; // 不是脏的，跳过重建
+            if (!ShouldRebuild())
+                return;
 
             ClearChildren();
             var context = new BuildContext(this);
             Build(context);
+            ClearNeedsRebuild();
 
-            // 清除脏标记
-            ClearDirty();
-
-            // 新构建的子组件不应处于脏状态，否则会导致无限重建循环
-            ClearChildrenDirtyFlags();
+            // 新构建的子组件不应处于脏状态
+            ClearChildrenNeedsRebuild();
         }
         
         /// <summary>
-        /// 递归清除所有子组件的脏标记
+        /// 递归清除所有子组件的重建标记
         /// </summary>
-        private void ClearChildrenDirtyFlags()
+        private void ClearChildrenNeedsRebuild()
         {
             foreach (var child in Children)
             {
                 if (child is ComponentBase childComponent)
                 {
-                    childComponent.ClearDirty();
-                    childComponent.ClearChildrenDirtyFlags();
+                    childComponent.ClearNeedsRebuild();
+                    childComponent.ClearChildrenNeedsRebuild();
                 }
             }
         }
@@ -273,7 +302,8 @@ namespace Eclipse.Core
             ClearChildren();
             var context = new BuildContext(this);
             Build(context);
-            ClearDirty();
+            ClearNeedsRebuild();
+            ClearChildrenNeedsRebuild();
         }
 
         /// <summary>
@@ -647,7 +677,7 @@ namespace Eclipse.Core
         /// <summary>
         /// 设置属性
         /// </summary>
-        public void SetProps(TProps props) { var oldProps = _props; _props = props; OnPropsChanged(oldProps, props); OnParametersSet(); StateHasChanged(); }
+        public void SetProps(TProps props) { var oldProps = _props; _props = props; OnPropsChanged(oldProps, props); OnParametersSet(); MarkNeedsRebuild(); }
 
         /// <summary>
         /// 获取属性

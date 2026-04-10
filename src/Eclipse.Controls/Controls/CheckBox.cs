@@ -23,7 +23,7 @@ public class CheckBox : InteractiveControl
                 var oldValue = _isChecked;
                 _isChecked = value;
                 CheckedChanged?.Invoke(this, new ValueChangedEventArgs<bool>(oldValue, value));
-                StateHasChanged();
+                InvalidateVisual();
             }
         }
     }

@@ -76,7 +76,7 @@ public class TextInput : InteractiveControl
                 // 清除选择
                 ClearSelectionInternal();
                 TextChanged?.Invoke(this, new ValueChangedEventArgs<string?>(oldText, value));
-                StateHasChanged();
+                InvalidateVisual();
             }
         }
     }
@@ -221,7 +221,7 @@ public class TextInput : InteractiveControl
             var oldText = _text;
             _text = newText;
             TextChanged?.Invoke(this, new ValueChangedEventArgs<string?>(oldText, newText));
-            StateHasChanged();
+            InvalidateVisual();
         }
     }
     
@@ -235,7 +235,7 @@ public class TextInput : InteractiveControl
         _selectionEnd = length;
         _cursorPosition = length;
         OnSelectionChanged();
-        StateHasChanged();
+        InvalidateVisual();
     }
     
     /// <summary>
@@ -244,11 +244,11 @@ public class TextInput : InteractiveControl
     public void ClearSelection()
     {
         ClearSelectionInternal();
-        StateHasChanged();
+        InvalidateVisual();
     }
     
     /// <summary>
-    /// 内部清除选择（不触发 StateHasChanged）
+    /// 内部清除选择（不触发 InvalidateVisual）
     /// </summary>
     private void ClearSelectionInternal()
     {
@@ -273,7 +273,7 @@ public class TextInput : InteractiveControl
         _selectionEnd = start + length;
         _cursorPosition = _selectionEnd;
         OnSelectionChanged();
-        StateHasChanged();
+        InvalidateVisual();
     }
     
     /// <summary>
@@ -327,7 +327,7 @@ public class TextInput : InteractiveControl
                     TextChanged?.Invoke(this, new ValueChangedEventArgs<string?>(_text, _text));
                 }
                 e.Handled = true;
-                StateHasChanged();
+                InvalidateVisual();
                 break;
                 
             case Key.Delete:
@@ -341,7 +341,7 @@ public class TextInput : InteractiveControl
                     TextChanged?.Invoke(this, new ValueChangedEventArgs<string?>(_text, _text));
                 }
                 e.Handled = true;
-                StateHasChanged();
+                InvalidateVisual();
                 break;
                 
             case Key.Left:
@@ -364,7 +364,7 @@ public class TextInput : InteractiveControl
                     }
                 }
                 e.Handled = true;
-                StateHasChanged();
+                InvalidateVisual();
                 break;
                 
             case Key.Right:
@@ -387,7 +387,7 @@ public class TextInput : InteractiveControl
                     }
                 }
                 e.Handled = true;
-                StateHasChanged();
+                InvalidateVisual();
                 break;
                 
             case Key.Home:
@@ -405,7 +405,7 @@ public class TextInput : InteractiveControl
                     ClearSelectionInternal();
                 }
                 e.Handled = true;
-                StateHasChanged();
+                InvalidateVisual();
                 break;
                 
             case Key.End:
@@ -423,7 +423,7 @@ public class TextInput : InteractiveControl
                     ClearSelectionInternal();
                 }
                 e.Handled = true;
-                StateHasChanged();
+                InvalidateVisual();
                 break;
                 
             case Key.A:
@@ -451,7 +451,7 @@ public class TextInput : InteractiveControl
                     CopyToClipboard();
                     DeleteSelection();
                     e.Handled = true;
-                    StateHasChanged();
+                    InvalidateVisual();
                 }
                 break;
                 
@@ -469,7 +469,7 @@ public class TextInput : InteractiveControl
                         InsertText(clipboardText);
                     }
                     e.Handled = true;
-                    StateHasChanged();
+                    InvalidateVisual();
                 }
                 break;
                 
@@ -532,7 +532,7 @@ public class TextInput : InteractiveControl
         
         // 在光标位置插入文本
         InsertText(e.Text);
-        StateHasChanged();
+        InvalidateVisual();
     }
     
     /// <summary>
@@ -546,7 +546,7 @@ public class TextInput : InteractiveControl
         _isComposing = true;
         _compositionText = string.Empty;
         _compositionCursor = 0;
-        StateHasChanged();
+        InvalidateVisual();
     }
     
     /// <summary>
@@ -560,7 +560,7 @@ public class TextInput : InteractiveControl
         _compositionText = e.CompositionText;
         _compositionCursor = e.CursorPosition;
         CompositionChanged?.Invoke(this, e);
-        StateHasChanged();
+        InvalidateVisual();
     }
     
     /// <summary>
@@ -574,7 +574,7 @@ public class TextInput : InteractiveControl
         _isComposing = false;
         _compositionText = string.Empty;
         _compositionCursor = 0;
-        StateHasChanged();
+        InvalidateVisual();
     }
     
     /// <summary>
@@ -644,7 +644,7 @@ public class TextInput : InteractiveControl
         
         e.Handled = true;
         OnSelectionChanged();
-        StateHasChanged();
+        InvalidateVisual();
     }
     
     /// <summary>
@@ -663,7 +663,7 @@ public class TextInput : InteractiveControl
         _cursorPosition = charIndex;
         
         OnSelectionChanged();
-        StateHasChanged();
+        InvalidateVisual();
         e.Handled = true;
     }
     
@@ -1011,7 +1011,7 @@ public class TextInput : InteractiveControl
         base.OnGotFocus();
         _isCursorVisible = true;
         _lastCursorToggle = DateTime.Now;
-        StateHasChanged();
+        InvalidateVisual();
     }
     
     protected override void OnLostFocus()
@@ -1020,6 +1020,6 @@ public class TextInput : InteractiveControl
         _isCursorVisible = false;
         ClearSelectionInternal();
         _clickCount = 0; // 重置点击计数
-        StateHasChanged();
+        InvalidateVisual();
     }
 }
