@@ -108,6 +108,9 @@ namespace Eclipse.Core
         /// </summary>
         protected virtual void OnChildStateChanged(IComponent child)
         {
+            // 标记自己也变脏了（需要重建）
+            _isDirty = true;
+            
             // 触发自己的 StateChanged 事件（让 WindowImpl 能收到）
             StateChanged?.Invoke(this, EventArgs.Empty);
 
