@@ -108,16 +108,35 @@ namespace Eclipse.Core
         /// </summary>
         protected virtual void OnChildStateChanged(IComponent child)
         {
-            // 标记自己也变脏了（需要重建）
-            _isDirty = true;
-            
-            // 触发自己的 StateChanged 事件（让 WindowImpl 能收到）
+            // 触发自己的 StateChanged 事件（让 WindowImpl 能收到重绘信号）
             StateChanged?.Invoke(this, EventArgs.Empty);
 
-            // 继续冒泡到父元素
+            // 继续冒泡到父元素（但不设置 _isDirty，避免整棵树重建）
             if (_parent is ComponentBase parentComponent)
             {
                 parentComponent.OnChildStateChanged(this);
+            }
+        }
+
+        /// <summary>
+        /// 递归重建所有脏组件（只重建自身，不影响兄弟节点）
+        /// </summary>
+        public void RebuildDirtySubtree()
+        {
+            if (_isDirty)
+            {
+                Rebuild();
+            }
+            else
+            {
+                // 自身不脏，检查子组件
+                foreach (var child in Children)
+                {
+                    if (child is ComponentBase childComponent)
+                    {
+                        childComponent.RebuildDirtySubtree();
+                    }
+                }
             }
         }
 
