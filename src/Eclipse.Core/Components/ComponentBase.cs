@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Eclipse.Core.Abstractions;
+using Eclipse.Core.Animation;
 using Eclipse.Input;
 using Eclipse.Rendering;
 
@@ -23,6 +24,11 @@ namespace Eclipse.Core
         private bool _isDirty = true; // 脏标记，初始为 true 以确保首次渲染
         private Rect _bounds = new Rect(0, 0, 0, 0);
         protected Size _desiredSize = new Size(100, 40); // 默认期望尺寸
+        
+        /// <summary>
+        /// 动画管理器（每个组件可以有独立的动画）
+        /// </summary>
+        protected AnimationManager? _animationManager;
 
         protected ComponentBase() => _id = Interlocked.Increment(ref _nextId);
 
@@ -137,11 +143,20 @@ namespace Eclipse.Core
         /// </summary>
         public virtual void Update(double deltaTime)
         {
+            // 更新组件自身的动画
+            _animationManager?.Update(deltaTime);
+            
+            // 更新子组件
             foreach (var child in Children)
             {
                 child.Update(deltaTime);
             }
         }
+        
+        /// <summary>
+        /// 获取或创建动画管理器
+        /// </summary>
+        protected AnimationManager Animations => _animationManager ??= new AnimationManager();
 
         /// <summary>
         /// 添加子组件
