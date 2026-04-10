@@ -191,7 +191,33 @@ public class ScrollView : ComponentBase
         }
     }
     
-    public override void Build(IBuildContext context) { }
+    public override void Build(IBuildContext context)
+    {
+        // ScrollView 的子组件由父组件的 Build() 创建，
+        // 这里不需要做任何事。重建由父组件控制。
+    }
+    
+    /// <summary>
+    /// ScrollView 不拥有子组件结构，所以 Rebuild() 不应该清空子组件
+    /// 只清除脏标记，保留子组件
+    /// </summary>
+    public override void Rebuild()
+    {
+        if (!IsDirty)
+            return;
+        
+        // 不调用 ClearChildren()！子组件由父组件的 Build() 创建
+        ClearDirty();
+        
+        // 递归清除子组件的脏标记
+        foreach (var child in Children)
+        {
+            if (child is ComponentBase childComponent)
+            {
+                childComponent.ClearDirty();
+            }
+        }
+    }
     
     #endregion
     

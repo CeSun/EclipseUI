@@ -234,7 +234,7 @@ namespace Eclipse.Core
         /// <summary>
         /// 重建组件树 - 仅在脏标记为 true 时才执行
         /// </summary>
-        public void Rebuild()
+        public virtual void Rebuild()
         {
             if (!_isDirty)
                 return; // 不是脏的，跳过重建
