@@ -1,0 +1,42 @@
+@using Eclipse.Controls
+@using Eclipse.Core.Animation
+
+<StackPanel Spacing="20" Padding="20">
+    <Label Text="Simple Animation Demo" FontSize="24" FontWeight="Bold" />
+    
+    <Button Text="Click Me" BackgroundColor=@_btnColor OnClick=@OnClick />
+    
+    <Label Text=@_status FontSize="14" Color="#666666" />
+</StackPanel>
+
+@code {
+    private Color _btnColor = Color.FromRgb(66, 133, 244);
+    private string _status = "Click the button!";
+    private ColorAnimation? _colorAnim;
+    
+    private void OnClick(object? sender, EventArgs e)
+    {
+        _status = "Animating...";
+        
+        // Stop any existing animation
+        _colorAnim?.Stop();
+        
+        // Create color animation: blue -> red -> blue
+        _colorAnim = new ColorAnimation(
+            _btnColor, 
+            Color.FromRgb(255, 100, 100), 
+            0.5);
+        
+        // When animation completes, go back to blue (ping-pong)
+        _colorAnim.IsPingPong = true;
+        
+        // Update color as animation runs
+        _colorAnim.ValueChanged += (s, color) => {
+            _btnColor = color;
+            StateHasChanged();
+        };
+        
+        Animations.Add(_colorAnim);
+        _colorAnim.Play();
+    }
+}
