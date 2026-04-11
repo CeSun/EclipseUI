@@ -244,16 +244,26 @@ namespace Eclipse.Generator
 
         private PropertyTypeInfo CreatePropertyTypeInfo(ITypeSymbol propType)
         {
+            // 处理可空类型，提取内部类型
+            var underlyingType = propType;
+            var isNullable = false;
+            if (propType is INamedTypeSymbol namedType && namedType.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T)
+            {
+                underlyingType = namedType.TypeArguments.First();
+                isNullable = true;
+            }
+            
             return new PropertyTypeInfo
             {
                 TypeName = propType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat),
-                IsEnum = propType.TypeKind == TypeKind.Enum,
-                IsNumeric = IsNumericType(propType),
-                IsBoolean = propType.SpecialType == SpecialType.System_Boolean,
-                IsString = propType.SpecialType == SpecialType.System_String,
-                EnumTypeName = propType.TypeKind == TypeKind.Enum
-                    ? propType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)
-                    : null
+                IsEnum = underlyingType.TypeKind == TypeKind.Enum,
+                IsNumeric = IsNumericType(underlyingType),
+                IsBoolean = underlyingType.SpecialType == SpecialType.System_Boolean,
+                IsString = underlyingType.SpecialType == SpecialType.System_String,
+                EnumTypeName = underlyingType.TypeKind == TypeKind.Enum
+                    ? underlyingType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)
+                    : null,
+                IsNullable = isNullable
             };
         }
 
@@ -823,7 +833,7 @@ namespace Eclipse.Generator
             if (typeInfo == null)
                 return value;
 
-            // 数字类型：去掉引号
+            // 数字类型：去掉引号（支持可空类型）
             if (typeInfo.IsNumeric)
             {
                 if (double.TryParse(innerValue, out _))
@@ -1222,6 +1232,7 @@ namespace Eclipse.Generator
             public bool IsBoolean { get; set; }
             public bool IsString { get; set; }
             public string? EnumTypeName { get; set; }
+            public bool IsNullable { get; set; }
         }
 
         private class ParsedEui

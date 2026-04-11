@@ -4,7 +4,7 @@
 <StackPanel Spacing="20" Padding="20">
     <Label Text="Simple Animation Demo" FontSize="24" FontWeight="Bold" />
     
-    <Button Text="Click Me" BackgroundColor=@_btnColor OnClick=@OnClick />
+    <Button Text="Click Me" Width="120" Height="40" BackgroundColor=@_btnColor OnClick=@OnClick />
     
     <Label Text=@_status FontSize="14" Color="#666666" />
 </StackPanel>

@@ -27,6 +27,16 @@ public class Button : InteractiveControl
     public double BorderWidth { get; set; } = 0;
     public double CornerRadius { get; set; } = 4;
     
+    /// <summary>
+    /// 按钮宽度。如果为 null，则根据文字内容自动计算。
+    /// </summary>
+    public double? Width { get; set; }
+    
+    /// <summary>
+    /// 按钮高度。如果为 null，则根据文字内容自动计算。
+    /// </summary>
+    public double? Height { get; set; }
+    
     public event EventHandler? Click;
     
     public event EventHandler? OnClick
@@ -101,16 +111,36 @@ public class Button : InteractiveControl
     
     public override Size Measure(Size availableSize, IDrawingContext context)
     {
-        if (string.IsNullOrEmpty(Text))
+        double width, height;
+        
+        if (Width.HasValue)
         {
-            _desiredSize = new Size(80 * context.Scale, 44 * context.Scale);
-            return _desiredSize;
+            width = Width.Value * context.Scale;
+        }
+        else
+        {
+            if (string.IsNullOrEmpty(Text))
+            {
+                width = 80 * context.Scale;
+            }
+            else
+            {
+                var scaledFontSize = FontSize * context.Scale;
+                var textWidth = context.MeasureText(Text, scaledFontSize, FontFamily);
+                width = textWidth + 40 * context.Scale;
+            }
         }
         
-        var scaledFontSize = FontSize * context.Scale;
-        var textWidth = context.MeasureText(Text, scaledFontSize, FontFamily);
+        if (Height.HasValue)
+        {
+            height = Height.Value * context.Scale;
+        }
+        else
+        {
+            height = 44 * context.Scale;
+        }
         
-        _desiredSize = new Size(textWidth + 40 * context.Scale, 44 * context.Scale);
+        _desiredSize = new Size(width, height);
         return _desiredSize;
     }
     
