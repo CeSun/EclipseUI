@@ -1,4 +1,5 @@
 using System;
+using Eclipse.Rendering;
 
 namespace Eclipse.Core.Animation
 {
@@ -58,13 +59,13 @@ namespace Eclipse.Core.Animation
     /// </summary>
     public class ColorAnimation : AnimationBase
     {
-        public SKColor From { get; set; }
-        public SKColor To { get; set; }
-        public SKColor CurrentValue { get; private set; }
+        public Color From { get; set; }
+        public Color To { get; set; }
+        public Color CurrentValue { get; private set; }
         
-        public event EventHandler<SKColor>? ValueChanged;
+        public event EventHandler<Color>? ValueChanged;
         
-        public ColorAnimation(SKColor from, SKColor to, double duration = 1.0)
+        public ColorAnimation(Color from, Color to, double duration = 1.0)
             : base(duration)
         {
             From = from;
@@ -82,13 +83,13 @@ namespace Eclipse.Core.Animation
             ValueChanged?.Invoke(this, CurrentValue);
         }
         
-        private static SKColor InterpolateColor(SKColor from, SKColor to, double t)
+        private static Color InterpolateColor(Color from, Color to, double t)
         {
-            return new SKColor(
-                (byte)(from.Red + (to.Red - from.Red) * t),
-                (byte)(from.Green + (to.Green - from.Green) * t),
-                (byte)(from.Blue + (to.Blue - from.Blue) * t),
-                (byte)(from.Alpha + (to.Alpha - from.Alpha) * t)
+            return new Color(
+                (byte)(from.R + (to.R - from.R) * t),
+                (byte)(from.G + (to.G - from.G) * t),
+                (byte)(from.B + (to.B - from.B) * t),
+                (byte)(from.A + (to.A - from.A) * t)
             );
         }
         
@@ -97,31 +98,5 @@ namespace Eclipse.Core.Animation
             base.Reset();
             CurrentValue = From;
         }
-    }
-    
-    // 简单颜色结构（避免依赖 SkiaSharp）
-    public readonly struct SKColor
-    {
-        public byte Red { get; }
-        public byte Green { get; }
-        public byte Blue { get; }
-        public byte Alpha { get; }
-        
-        public SKColor(byte red, byte green, byte blue, byte alpha = 255)
-        {
-            Red = red;
-            Green = green;
-            Blue = blue;
-            Alpha = alpha;
-        }
-        
-        public static SKColor Transparent => new(0, 0, 0, 0);
-        public static SKColor Black => new(0, 0, 0);
-        public static SKColor White => new(255, 255, 255);
-        public static SKColor ColorRed => new(255, 0, 0);
-        public static SKColor ColorGreen => new(0, 255, 0);
-        public static SKColor ColorBlue => new(0, 0, 255);
-        
-        public SKColor WithAlpha(byte alpha) => new(Red, Green, Blue, alpha);
     }
 }
