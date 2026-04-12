@@ -174,6 +174,11 @@ namespace Eclipse.Generator
                 {
                     CollectControlTypesFromNodes(foreachNode.Body, types);
                 }
+                else if (node is ForNode forNode)
+                {
+                    CollectControlTypesFromNodes(forNode.Body, types);
+                }
+                // CommentNode 不需要处理
             }
         }
 
@@ -702,6 +707,9 @@ namespace Eclipse.Generator
                         break;
                     case ForNode forNode:
                         GenerateFor(forNode, sb, ref indent, WriteLine, ref seq, propertyTypes);
+                        break;
+                    case CommentNode:
+                        // XML 注释，忽略不生成代码
                         break;
                 }
             }

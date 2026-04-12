@@ -61,6 +61,11 @@ public class ForeachNode : MarkupNode
     public List<MarkupNode> Body { get; set; } = new();
 }
 
+public class CommentNode : MarkupNode
+{
+    public string Comment { get; set; } = string.Empty;
+}
+
 public class ForNode : MarkupNode
 {
     public string Initializer { get; set; } = string.Empty;
@@ -114,10 +119,16 @@ public class EclipseMarkupParser
         }
     }
 
-    private ControlNode? ParseControl()
+    private MarkupNode? ParseControl()
     {
         var startPos = _position;
         if (Read() != '<') return null;
+        
+        // 检查是否是 XML 注释 <!-- -->
+        if (Peek() == '!' && Peek(1) == '-' && Peek(2) == '-')
+        {
+            return ParseComment(startPos);
+        }
         
         var tagName = ReadIdentifier();
         
@@ -228,6 +239,29 @@ public class EclipseMarkupParser
         }
         
         return control;
+    }
+
+    private CommentNode ParseComment(int startPos)
+    {
+        // 跳过 '!--'
+        Read(); // !
+        Read(); // -
+        Read(); // -
+        
+        var sb = new StringBuilder();
+        
+        // 查找 '-->' 结束标记
+        while (!IsAtEnd())
+        {
+            if (Peek() == '-' && Peek(1) == '-' && Peek(2) == '>')
+            {
+                Read(); Read(); Read(); // 消耗 '-->'
+                return new CommentNode { Comment = sb.ToString() };
+            }
+            sb.Append(Read());
+        }
+        
+        throw new FormatException($"Unclosed XML comment at position {startPos}, expected '-->'");
     }
 
     private MarkupNode? ParseRazorExpression()
