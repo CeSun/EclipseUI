@@ -2,14 +2,20 @@
   <Folder Name="/samples/">
     <Project Path="samples/Demo/Eclipse.Demo.csproj" />
   </Folder>
-  <Folder Name="/src/">
-    <Project Path="src/Eclipse.Controls/Eclipse.Controls.csproj" />
+  <Folder Name="/tests/">
+    <Project Path="tests/Eclipse.Tests/Eclipse.Tests.csproj" />
+  </Folder>
+  <Folder Name="/src-core/">
     <Project Path="src/Eclipse.Core/Eclipse.Core.csproj" />
-    <Project Path="src/Eclipse.Generator/Eclipse.Generator.csproj" />
+  </Folder>
+  <Folder Name="/src-controls/">
+    <Project Path="src/Eclipse.Controls/Eclipse.Controls.csproj" />
+  </Folder>
+  <Folder Name="/src-platform/">
     <Project Path="src/Eclipse.Skia/Eclipse.Skia.csproj" />
     <Project Path="src/Eclipse.Windows/Eclipse.Windows.csproj" />
   </Folder>
-  <Folder Name="/tests/">
-    <Project Path="tests/Eclipse.Tests/Eclipse.Tests.csproj" />
+  <Folder Name="/src-tools/">
+    <Project Path="src/Eclipse.Generator/Eclipse.Generator.csproj" />
   </Folder>
 </Solution>
