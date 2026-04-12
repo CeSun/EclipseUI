@@ -1,42 +1,285 @@
 @using Eclipse.Controls
 @using Eclipse.Core.Animation
 
-<StackPanel Spacing="20" Padding="20">
-    <Label Text="Simple Animation Demo" FontSize="24" FontWeight="Bold" />
+<StackPanel Spacing="24" Padding="20">
+    <Label Text="Animation Demo" FontSize="24" FontWeight="Bold" />
     
-    <Button Text="Click Me" Width="120" Height="40" BackgroundColor=@_btnColor OnClick=@OnClick />
+    <!-- 1. 颜色动画 -->
+    <Label Text="1. Color Animation" FontSize="16" FontWeight="Bold" />
+    <Button Text="Click Me!" Width="140" Height="50" BackgroundColor=@_btnColor OnClick=@OnColorClick />
+    <Label Text=@($"Current: RGB({_btnColor.R}, {_btnColor.G}, {_btnColor.B})") FontSize="12" Color="#666666" />
     
-    <Label Text=@_status FontSize="14" Color="#666666" />
+    <!-- 2. 宽度动画 (展开/收缩) -->
+    <Label Text="2. Width Animation (Expand/Collapse)" FontSize="16" FontWeight="Bold" />
+    <StackPanel Orientation="Horizontal" Spacing="8">
+        <StackPanel Width=@_boxWidth Height="50" BackgroundColor="#DC3545" Spacing="0">
+            <Label Text="Box" FontSize="16" Color="#FFFFFF" />
+        </StackPanel>
+        <StackPanel Spacing="4">
+            <Button Text="Expand →" Width="100" Height="30" BackgroundColor="#6C757D" OnClick=@OnExpand />
+            <Button Text="← Collapse" Width="100" Height="30" BackgroundColor="#6C757D" OnClick=@OnCollapse />
+        </StackPanel>
+    </StackPanel>
+    
+    <!-- 3. 高度动画 -->
+    <Label Text="3. Height Animation (Grow/Shrink)" FontSize="16" FontWeight="Bold" />
+    <StackPanel Orientation="Horizontal" Spacing="8">
+        <StackPanel Width="80" Height=@_tallBox BackgroundColor="#17A2B8" Spacing="0">
+            <Label Text=@($"H:{_tallBox:F0}") FontSize="14" Color="#FFFFFF" />
+        </StackPanel>
+        <StackPanel Spacing="4">
+            <Button Text="Grow ↑" Width="100" Height="30" BackgroundColor="#17A2B8" OnClick=@OnGrow />
+            <Button Text="Shrink ↓" Width="100" Height="30" BackgroundColor="#17A2B8" OnClick=@OnShrink />
+        </StackPanel>
+    </StackPanel>
+    
+    <!-- 4. 按钮变形 -->
+    <Label Text="4. Button Morph Animation" FontSize="16" FontWeight="Bold" />
+    <StackPanel Orientation="Horizontal" Spacing="8">
+        <Button Text=@_morphBtnText Width=@_morphBtnWidth Height="44" BackgroundColor="#28A745" OnClick=@OnMorph />
+    </StackPanel>
+    
+    <!-- 5. 面板颜色脉冲 -->
+    <Label Text="5. Panel Color Pulse" FontSize="16" FontWeight="Bold" />
+    <StackPanel Width="200" Height="60" BackgroundColor=@_panelColor Spacing="0" Padding="10">
+        <Label Text="Pulsing Panel" FontSize="14" Color="#FFFFFF" />
+    </StackPanel>
+    <StackPanel Orientation="Horizontal" Spacing="8">
+        <Button Text="Start Pulse" Width="90" Height="30" BackgroundColor="#FFC107" OnClick=@OnStartPanelPulse />
+        <Button Text="Stop" Width="70" Height="30" BackgroundColor="#6C757D" OnClick=@OnStopPanelPulse />
+    </StackPanel>
+    
+    <!-- 6. 多动画组合 -->
+    <Label Text="6. Combined Animation (All at once!)" FontSize="16" FontWeight="Bold" />
+    <StackPanel Orientation="Horizontal" Spacing="12">
+        <StackPanel Width=@_comboWidth Height=@_comboHeight BackgroundColor=@_comboColor Spacing="0">
+            <Label Text="COMBO!" FontSize="16" Color="#FFFFFF" />
+        </StackPanel>
+        <Button Text="Play All!" Width="100" Height="60" BackgroundColor="#6F42C1" OnClick=@OnPlayCombo />
+    </StackPanel>
+    
+    <!-- 状态显示 -->
+    <StackPanel Spacing="4" Padding="10" BackgroundColor="#F8F8F8">
+        <Label Text=@($"Status: {_status}") FontSize="12" Color="#333333" />
+        <Label Text=@($"Active Animations: {_activeCount}") FontSize="11" Color="#666666" />
+    </StackPanel>
 </StackPanel>
 
 @code {
+    // 1. 颜色动画
     private Color _btnColor = Color.FromRgb(66, 133, 244);
-    private string _status = "Click the button!";
-    private ColorAnimation? _colorAnim;
+    private ColorAnimation? _btnColorAnim;
     
-    private void OnClick(object? sender, EventArgs e)
+    // 2. 宽度动画
+    private double _boxWidth = 60;
+    private DoubleAnimation? _widthAnim;
+    
+    // 3. 高度动画
+    private double _tallBox = 40;
+    private DoubleAnimation? _heightAnim;
+    
+    // 4. 按钮变形
+    private double _morphBtnWidth = 80;
+    private string _morphBtnText = "Click!";
+    private DoubleAnimation? _morphAnim;
+    private bool _isExpanded;
+    
+    // 5. 面板脉冲
+    private Color _panelColor = Color.FromRgb(220, 53, 69);
+    private ColorAnimation? _panelPulseAnim;
+    private bool _isPulsing;
+    
+    // 6. 组合动画
+    private double _comboWidth = 60;
+    private double _comboHeight = 60;
+    private Color _comboColor = Color.FromRgb(111, 66, 193);
+    
+    // 状态
+    private string _status = "Ready";
+    private int _activeCount = 0;
+    
+    public override void Update(double deltaTime)
     {
-        _status = "Animating...";
+        base.Update(deltaTime);
+        _activeCount = Animations.Count;
+    }
+    
+    // 1. 颜色动画
+    private void OnColorClick(object? sender, EventArgs e)
+    {
+        _status = "Animating color...";
+        _btnColorAnim?.Stop();
         
-        // Stop any existing animation
-        _colorAnim?.Stop();
+        var targetColor = _btnColor.Equals(Color.FromRgb(66, 133, 244)) 
+            ? Color.FromRgb(255, 80, 80) 
+            : Color.FromRgb(66, 133, 244);
         
-        // Create color animation: blue -> red -> blue
-        _colorAnim = new ColorAnimation(
-            _btnColor, 
-            Color.FromRgb(255, 100, 100), 
-            0.5);
-        
-        // When animation completes, go back to blue (ping-pong)
-        _colorAnim.IsPingPong = true;
-        
-        // Update color as animation runs
-        _colorAnim.ValueChanged += (s, color) => {
+        _btnColorAnim = new ColorAnimation(_btnColor, targetColor, 0.5);
+        _btnColorAnim.IsPingPong = true;
+        _btnColorAnim.ValueChanged += (s, color) => {
             _btnColor = color;
             StateHasChanged();
         };
         
-        Animations.Add(_colorAnim);
-        _colorAnim.Play();
+        Animations.Add(_btnColorAnim);
+        _btnColorAnim.Play();
+    }
+    
+    // 2. 宽度动画
+    private void OnExpand(object? sender, EventArgs e)
+    {
+        _status = "Expanding...";
+        _widthAnim?.Stop();
+        
+        _widthAnim = new DoubleAnimation(_boxWidth, 160, 0.35);
+        _widthAnim.Easing = new EasingFunction(EasingType.EaseOutBack);
+        _widthAnim.ValueChanged += (s, v) => {
+            _boxWidth = v;
+            StateHasChanged();
+        };
+        
+        Animations.Add(_widthAnim);
+        _widthAnim.Play();
+    }
+    
+    private void OnCollapse(object? sender, EventArgs e)
+    {
+        _status = "Collapsing...";
+        _widthAnim?.Stop();
+        
+        _widthAnim = new DoubleAnimation(_boxWidth, 60, 0.35);
+        _widthAnim.Easing = new EasingFunction(EasingType.EaseInBack);
+        _widthAnim.ValueChanged += (s, v) => {
+            _boxWidth = v;
+            StateHasChanged();
+        };
+        
+        Animations.Add(_widthAnim);
+        _widthAnim.Play();
+    }
+    
+    // 3. 高度动画
+    private void OnGrow(object? sender, EventArgs e)
+    {
+        _status = "Growing...";
+        _heightAnim?.Stop();
+        
+        _heightAnim = new DoubleAnimation(_tallBox, 100, 0.4);
+        _heightAnim.Easing = new EasingFunction(EasingType.EaseOutBounce);
+        _heightAnim.ValueChanged += (s, v) => {
+            _tallBox = v;
+            StateHasChanged();
+        };
+        
+        Animations.Add(_heightAnim);
+        _heightAnim.Play();
+    }
+    
+    private void OnShrink(object? sender, EventArgs e)
+    {
+        _status = "Shrinking...";
+        _heightAnim?.Stop();
+        
+        _heightAnim = new DoubleAnimation(_tallBox, 20, 0.4);
+        _heightAnim.Easing = new EasingFunction(EasingType.EaseInQuad);
+        _heightAnim.ValueChanged += (s, v) => {
+            _tallBox = v;
+            StateHasChanged();
+        };
+        
+        Animations.Add(_heightAnim);
+        _heightAnim.Play();
+    }
+    
+    // 4. 按钮变形
+    private void OnMorph(object? sender, EventArgs e)
+    {
+        _morphAnim?.Stop();
+        
+        if (_isExpanded)
+        {
+            _morphBtnText = "Click!";
+            _morphAnim = new DoubleAnimation(_morphBtnWidth, 80, 0.3);
+            _morphAnim.Easing = new EasingFunction(EasingType.EaseInBack);
+        }
+        else
+        {
+            _morphBtnText = "Clicked! ✓";
+            _morphAnim = new DoubleAnimation(_morphBtnWidth, 140, 0.3);
+            _morphAnim.Easing = new EasingFunction(EasingType.EaseOutBack);
+        }
+        
+        _isExpanded = !_isExpanded;
+        _status = _isExpanded ? "Expanded!" : "Collapsed!";
+        
+        _morphAnim.ValueChanged += (s, v) => {
+            _morphBtnWidth = v;
+            StateHasChanged();
+        };
+        
+        Animations.Add(_morphAnim);
+        _morphAnim.Play();
+    }
+    
+    // 5. 面板脉冲
+    private void OnStartPanelPulse(object? sender, EventArgs e)
+    {
+        if (_isPulsing) return;
+        _isPulsing = true;
+        _status = "Panel pulsing...";
+        
+        _panelPulseAnim = new ColorAnimation(_panelColor, Color.FromRgb(255, 100, 100), 0.4);
+        _panelPulseAnim.IsPingPong = true;
+        _panelPulseAnim.IsLooping = true;
+        _panelPulseAnim.ValueChanged += (s, color) => {
+            _panelColor = color;
+            StateHasChanged();
+        };
+        
+        Animations.Add(_panelPulseAnim);
+        _panelPulseAnim.Play();
+    }
+    
+    private void OnStopPanelPulse(object? sender, EventArgs e)
+    {
+        _isPulsing = false;
+        _panelPulseAnim?.Stop();
+        _panelColor = Color.FromRgb(220, 53, 69);
+        _status = "Pulse stopped";
+        StateHasChanged();
+    }
+    
+    // 6. 组合动画
+    private void OnPlayCombo(object? sender, EventArgs e)
+    {
+        _status = "Playing combo animation!";
+        
+        // 同时执行多个动画
+        var colorAnim = new ColorAnimation(_comboColor, Color.FromRgb(40, 167, 69), 0.6);
+        colorAnim.IsPingPong = true;
+        colorAnim.ValueChanged += (s, color) => {
+            _comboColor = color;
+            StateHasChanged();
+        };
+        Animations.Add(colorAnim);
+        colorAnim.Play();
+        
+        var widthAnim = new DoubleAnimation(_comboWidth, 140, 0.6);
+        widthAnim.Easing = new EasingFunction(EasingType.EaseOutElastic);
+        widthAnim.ValueChanged += (s, v) => {
+            _comboWidth = v;
+            StateHasChanged();
+        };
+        Animations.Add(widthAnim);
+        widthAnim.Play();
+        
+        var heightAnim = new DoubleAnimation(_comboHeight, 100, 0.6);
+        heightAnim.Easing = new EasingFunction(EasingType.EaseOutElastic);
+        heightAnim.ValueChanged += (s, v) => {
+            _comboHeight = v;
+            StateHasChanged();
+        };
+        Animations.Add(heightAnim);
+        heightAnim.Play();
     }
 }
