@@ -1,2 +1,10 @@
 <Solution>
+	<Project Path="src/Eclipse.Core/Eclipse.Core.csproj" Type="DotNetCliToolReference" />
+	<Project Path="src/Eclipse.Controls/Eclipse.Controls.csproj" Type="DotNetCliToolReference" />
+	<Project Path="src/Eclipse.Skia/Eclipse.Skia.csproj" Type="DotNetCliToolReference" />
+	<Project Path="src/Eclipse.Generator/Eclipse.Generator.csproj" Type="DotNetCliToolReference" />
+	<Project Path="src/Eclipse.Windows/Eclipse.Windows.csproj" Type="DotNetCliToolReference" />
+	<Project Path="samples/Demo/Eclipse.Demo.csproj" Type="DotNetCliToolReference" />
+	<Project Path="tests/Eclipse.Tests/Eclipse.Tests.csproj" Type="DotNetCliToolReference" />
+	<Content Type="Text" Path="README.md" />
 </Solution>
