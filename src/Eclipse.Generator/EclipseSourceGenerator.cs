@@ -729,15 +729,15 @@ namespace Eclipse.Generator
             {
                 if (attr.IsTwoWayBinding)
                 {
-                    // 双向绑定：设置属性值 + 事件处理器更新变量
+                    // 双向绑定：设置属性值 + 事件处理器更新变量并触发重建
                     // 1. 设置属性
                     WriteLine($"{varName}.{attr.Name} = {attr.Value};");
 
-                    // 2. 生成事件处理器
+                    // 2. 生成事件处理器：更新变量 + 触发 StateHasChanged
                     var eventName = GetChangedEventName(attr.Name);
                     var eventArgsType = GetEventArgsType(attr.Name);
                     var variableName = attr.Value;
-                    WriteLine($"{varName}.{eventName} += (s, e) => {variableName} = e.NewValue;");
+                    WriteLine($"{varName}.{eventName} += (s, e) => {{ {variableName} = e.NewValue; StateHasChanged(); }};");
                 }
                 else if (attr.IsAttached)
                 {
