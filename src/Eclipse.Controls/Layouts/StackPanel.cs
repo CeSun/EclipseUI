@@ -49,18 +49,27 @@ public class StackPanel : ComponentBase
     
     public override Size Measure(Size availableSize, IDrawingContext context)
     {
-        if (Children.Count == 0)
-        {
-            _desiredSize = new Size(Padding * 2, Padding * 2);
-            return _desiredSize;
-        }
-        
         var spacingValue = Spacing * context.Scale;
         var paddingValue = Padding * context.Scale;
         
+        // 如果设置了固定宽度/高度，用它约束 availableSize 传给子元素
+        var constrainedAvailable = availableSize;
+        if (Width >= 0)
+            constrainedAvailable = new Size(Width, constrainedAvailable.Height);
+        if (Height >= 0)
+            constrainedAvailable = new Size(constrainedAvailable.Width, Height);
+        
+        if (Children.Count == 0)
+        {
+            _desiredSize = new Size(
+                Width >= 0 ? Width : paddingValue * 2,
+                Height >= 0 ? Height : paddingValue * 2);
+            return _desiredSize;
+        }
+        
         var contentAvailableSize = new Size(
-            availableSize.Width - paddingValue * 2,
-            availableSize.Height - paddingValue * 2);
+            constrainedAvailable.Width - paddingValue * 2,
+            constrainedAvailable.Height - paddingValue * 2);
         
         double totalWidth = 0;
         double totalHeight = 0;
@@ -92,7 +101,9 @@ public class StackPanel : ComponentBase
         totalWidth += paddingValue * 2;
         totalHeight += paddingValue * 2;
         
-        _desiredSize = new Size(totalWidth, totalHeight);
+        _desiredSize = new Size(
+            Width >= 0 ? Width : totalWidth,
+            Height >= 0 ? Height : totalHeight);
         return _desiredSize;
     }
     
